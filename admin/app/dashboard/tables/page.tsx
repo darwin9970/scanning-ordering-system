@@ -1,0 +1,350 @@
+"use client";
+
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { api } from "@/lib/api";
+import { TABLE_STATUS_MAP } from "@/lib/utils";
+import { tableSchema, tableBatchSchema, type TableFormData, type TableBatchFormData } from "@/lib/validations";
+import type { Table } from "@/types";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Plus, QrCode, RefreshCw, Edit, Trash2 } from "lucide-react";
+
+export default function TablesPage() {
+  const queryClient = useQueryClient();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const [editingTable, setEditingTable] = useState<Table | null>(null);
+
+  const form = useForm<TableFormData>({
+    resolver: zodResolver(tableSchema),
+    defaultValues: { storeId: 1, name: "", capacity: 4 },
+  });
+
+  const batchForm = useForm<TableBatchFormData>({
+    resolver: zodResolver(tableBatchSchema),
+    defaultValues: { storeId: 1, prefix: "A", startNum: 1, count: 10, capacity: 4 },
+  });
+
+  const { data: tables, isLoading } = useQuery({
+    queryKey: ["tables"],
+    queryFn: () => api.getTables({ pageSize: 100 }),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: TableFormData) => api.createTable(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+      setDialogOpen(false);
+    },
+  });
+
+  const createBatchMutation = useMutation({
+    mutationFn: (data: TableBatchFormData) => api.createTablesBatch(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+      setBatchDialogOpen(false);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<TableFormData> }) =>
+      api.updateTable(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+      setDialogOpen(false);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => api.deleteTable(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+    },
+  });
+
+  const regenerateQrMutation = useMutation({
+    mutationFn: (id: number) => api.regenerateQrCode(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tables"] });
+    },
+  });
+
+  const openCreateDialog = () => {
+    setEditingTable(null);
+    form.reset({ storeId: 1, name: "", capacity: 4 });
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (table: Table) => {
+    setEditingTable(table);
+    form.reset({ storeId: table.storeId, name: table.name, capacity: table.capacity });
+    setDialogOpen(true);
+  };
+
+  const onSubmit = (data: TableFormData) => {
+    if (editingTable) {
+      updateMutation.mutate({ id: editingTable.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const onBatchSubmit = (data: TableBatchFormData) => {
+    createBatchMutation.mutate(data);
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("确定要删除这个桌台吗？")) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const handleRegenerateQr = (id: number) => {
+    if (confirm("确定要重新生成二维码吗？原二维码将失效。")) {
+      regenerateQrMutation.mutate(id);
+    }
+  };
+
+  // 按状态分组
+  const groupedTables = tables?.list.reduce(
+    (acc: any, table: any) => {
+      acc[table.status] = acc[table.status] || [];
+      acc[table.status].push(table);
+      return acc;
+    },
+    { FREE: [], OCCUPIED: [], RESERVED: [] }
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">桌台管理</h2>
+          <p className="text-muted-foreground">管理门店桌台，生成点餐二维码</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setBatchDialogOpen(true)}>
+            批量创建
+          </Button>
+          <Button onClick={openCreateDialog}>
+            <Plus className="mr-2 h-4 w-4" />
+            添加桌台
+          </Button>
+        </div>
+      </div>
+
+      {/* 统计卡片 */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">空闲桌台</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {groupedTables?.FREE?.length || 0}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">使用中</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {groupedTables?.OCCUPIED?.length || 0}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">已预约</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">
+              {groupedTables?.RESERVED?.length || 0}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 桌台列表 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>桌台列表</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex h-32 items-center justify-center">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {tables?.list.map((table: any) => (
+                <Card key={table.id} className="relative">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-lg font-bold">{table.name}</h3>
+                        <p className="text-sm text-muted-foreground">{table.capacity}人桌</p>
+                      </div>
+                      <Badge className={TABLE_STATUS_MAP[table.status]?.color || ""}>
+                        {TABLE_STATUS_MAP[table.status]?.label}
+                      </Badge>
+                    </div>
+                    <div className="mt-4 flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleRegenerateQr(table.id)}
+                        title="重新生成二维码"
+                      >
+                        <QrCode className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openEditDialog(table)}
+                        title="编辑"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDelete(table.id)}
+                        title="删除"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 添加/编辑桌台弹窗 */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingTable ? "编辑桌台" : "添加桌台"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label>桌台号 *</Label>
+              <Input
+                {...form.register("name")}
+                placeholder="如 A01、B02（1-50字符）"
+              />
+              {form.formState.errors.name && (
+                <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>容纳人数</Label>
+              <Input
+                type="number"
+                {...form.register("capacity", { valueAsNumber: true })}
+                placeholder="1-50人"
+              />
+              {form.formState.errors.capacity && (
+                <p className="text-sm text-red-500">{form.formState.errors.capacity.message}</p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {editingTable ? "保存" : "添加"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 批量创建弹窗 */}
+      <Dialog open={batchDialogOpen} onOpenChange={setBatchDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>批量创建桌台</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={batchForm.handleSubmit(onBatchSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>前缀 *</Label>
+                <Input
+                  {...batchForm.register("prefix")}
+                  placeholder="如 A、B"
+                />
+                {batchForm.formState.errors.prefix && (
+                  <p className="text-sm text-red-500">{batchForm.formState.errors.prefix.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>起始编号 *</Label>
+                <Input
+                  type="number"
+                  {...batchForm.register("startNum", { valueAsNumber: true })}
+                />
+                {batchForm.formState.errors.startNum && (
+                  <p className="text-sm text-red-500">{batchForm.formState.errors.startNum.message}</p>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>创建数量 *</Label>
+                <Input
+                  type="number"
+                  {...batchForm.register("count", { valueAsNumber: true })}
+                />
+                {batchForm.formState.errors.count && (
+                  <p className="text-sm text-red-500">{batchForm.formState.errors.count.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>容纳人数</Label>
+                <Input
+                  type="number"
+                  {...batchForm.register("capacity", { valueAsNumber: true })}
+                />
+                {batchForm.formState.errors.capacity && (
+                  <p className="text-sm text-red-500">{batchForm.formState.errors.capacity.message}</p>
+                )}
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              将创建: {batchForm.watch("prefix")}
+              {String(batchForm.watch("startNum")).padStart(2, "0")} ~ {batchForm.watch("prefix")}
+              {String(batchForm.watch("startNum") + batchForm.watch("count") - 1).padStart(2, "0")}
+            </p>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setBatchDialogOpen(false)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={batchForm.formState.isSubmitting}>
+                批量创建
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
