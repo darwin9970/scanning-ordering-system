@@ -13,6 +13,14 @@ import { printerRoutes } from "./routes/printers";
 import { dashboardRoutes } from "./routes/dashboard";
 import { staffRoutes } from "./routes/staff";
 import { settingsRoutes } from "./routes/settings";
+import { cartRoutes } from "./routes/cart";
+import { couponRoutes } from "./routes/coupons";
+import { promotionRoutes } from "./routes/promotions";
+import { memberRoutes } from "./routes/members";
+import { comboRoutes } from "./routes/combos";
+import { serviceRoutes } from "./routes/service";
+import { uploadRoutes } from "./routes/upload";
+import { roleRoutes } from "./routes/roles";
 import { wsRoutes } from "./ws";
 
 const app = new Elysia()
@@ -41,6 +49,14 @@ const app = new Elysia()
           { name: "Dashboard", description: "数据看板接口" },
           { name: "Staff", description: "员工管理接口" },
           { name: "Settings", description: "系统设置接口" },
+          { name: "Cart", description: "购物车接口" },
+          { name: "Coupons", description: "优惠券接口" },
+          { name: "Promotions", description: "营销活动接口" },
+          { name: "Members", description: "会员积分接口" },
+          { name: "Combos", description: "套餐管理接口" },
+          { name: "Service", description: "服务呼叫接口" },
+          { name: "Upload", description: "文件上传接口" },
+          { name: "Roles", description: "角色权限配置接口" },
         ],
       },
     })
@@ -70,7 +86,25 @@ const app = new Elysia()
   .use(dashboardRoutes)
   .use(staffRoutes)
   .use(settingsRoutes)
+  .use(cartRoutes)
+  .use(couponRoutes)
+  .use(promotionRoutes)
+  .use(memberRoutes)
+  .use(comboRoutes)
+  .use(serviceRoutes)
+  .use(uploadRoutes)
+  .use(roleRoutes)
   .use(wsRoutes)
+  // 静态文件服务 - 上传的图片
+  .get("/uploads/*", async ({ params }) => {
+    const fileName = (params as { "*": string })["*"];
+    const filePath = `${process.cwd()}/uploads/${fileName}`;
+    const file = Bun.file(filePath);
+    if (await file.exists()) {
+      return new Response(file);
+    }
+    return new Response("Not found", { status: 404 });
+  })
   .listen(process.env.PORT || 4000);
 
 console.log(`🦊 Elysia server is running at ${app.server?.hostname}:${app.server?.port}`);

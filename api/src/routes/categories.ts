@@ -2,8 +2,11 @@ import { Elysia, t } from "elysia";
 import { eq, and, asc, count } from "drizzle-orm";
 import { db, categories, stores, products, categoryPrinters, printers } from "../db";
 import { success, error, pagination } from "../lib/utils";
+import { requirePermission } from "../lib/auth";
 
 export const categoryRoutes = new Elysia({ prefix: "/api/categories" })
+  // 分类读取需要 category:read 权限
+  .use(requirePermission("category:read"))
   .get(
     "/",
     async ({ query }) => {
@@ -135,6 +138,32 @@ export const categoryRoutes = new Elysia({ prefix: "/api/categories" })
         status: t.Optional(t.String()),
       }),
       detail: { tags: ["Categories"], summary: "更新分类" },
+    }
+  )
+  .put(
+    "/sort",
+    async ({ body }) => {
+      const { items } = body;
+
+      // 批量更新排序
+      await Promise.all(
+        items.map((item) =>
+          db.update(categories).set({ sort: item.sort }).where(eq(categories.id, item.id))
+        )
+      );
+
+      return success(null, "排序更新成功");
+    },
+    {
+      body: t.Object({
+        items: t.Array(
+          t.Object({
+            id: t.Number(),
+            sort: t.Number(),
+          })
+        ),
+      }),
+      detail: { tags: ["Categories"], summary: "批量更新分类排序" },
     }
   )
   .delete(

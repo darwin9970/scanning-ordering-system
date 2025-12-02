@@ -2,8 +2,11 @@ import { Elysia, t } from "elysia";
 import { eq, and, asc, count } from "drizzle-orm";
 import { db, tables, stores } from "../db";
 import { success, error, pagination, generateQrToken } from "../lib/utils";
+import { requirePermission } from "../lib/auth";
 
 export const tableRoutes = new Elysia({ prefix: "/api/tables" })
+  // 桌台读取需要 table:read 权限
+  .use(requirePermission("table:read"))
   .get(
     "/",
     async ({ query }) => {

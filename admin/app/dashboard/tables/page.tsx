@@ -20,13 +20,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, QrCode, RefreshCw, Edit, Trash2 } from "lucide-react";
+import { Plus, QrCode, RefreshCw, Edit, Trash2, Download, Eye } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function TablesPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [editingTable, setEditingTable] = useState<Table | null>(null);
+  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+
+  // 小程序基础URL（实际部署时替换为真实地址）
+  const MINI_PROGRAM_URL = process.env.NEXT_PUBLIC_MINI_PROGRAM_URL || "https://your-mini-program.com";
 
   const form = useForm<TableFormData>({
     resolver: zodResolver(tableSchema),
@@ -116,6 +122,45 @@ export default function TablesPage() {
     if (confirm("确定要重新生成二维码吗？原二维码将失效。")) {
       regenerateQrMutation.mutate(id);
     }
+  };
+
+  const handleViewQr = (table: Table) => {
+    setSelectedTable(table);
+    setQrDialogOpen(true);
+  };
+
+  const getQrCodeUrl = (table: Table) => {
+    return `${MINI_PROGRAM_URL}/order?storeId=${table.storeId}&tableId=${table.id}&code=${table.qrCode}`;
+  };
+
+  const handleDownloadQr = () => {
+    if (!selectedTable) return;
+
+    const svg = document.getElementById("qr-code-svg");
+    if (!svg) return;
+
+    // 创建canvas
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const img = new Image();
+
+    img.onload = () => {
+      canvas.width = 300;
+      canvas.height = 300;
+      if (ctx) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, 300, 300);
+
+        const link = document.createElement("a");
+        link.download = `桌台-${selectedTable.name}-二维码.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      }
+    };
+
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
   };
 
   // 按状态分组
@@ -208,10 +253,18 @@ export default function TablesPage() {
                       <Button
                         size="sm"
                         variant="outline"
+                        onClick={() => handleViewQr(table)}
+                        title="查看二维码"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => handleRegenerateQr(table.id)}
                         title="重新生成二维码"
                       >
-                        <QrCode className="h-4 w-4" />
+                        <RefreshCw className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
@@ -343,6 +396,49 @@ export default function TablesPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 二维码预览弹窗 */}
+      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5" />
+              桌台二维码 - {selectedTable?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedTable && (
+            <div className="flex flex-col items-center space-y-4">
+              <div className="rounded-lg border bg-white p-4">
+                <QRCodeSVG
+                  id="qr-code-svg"
+                  value={getQrCodeUrl(selectedTable)}
+                  size={240}
+                  level="H"
+                  includeMargin
+                />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="font-medium text-lg">{selectedTable.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedTable.capacity}人桌
+                </p>
+              </div>
+              <div className="text-xs text-muted-foreground break-all px-4 text-center">
+                {getQrCodeUrl(selectedTable)}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
+                  关闭
+                </Button>
+                <Button onClick={handleDownloadQr}>
+                  <Download className="h-4 w-4 mr-2" />
+                  下载二维码
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

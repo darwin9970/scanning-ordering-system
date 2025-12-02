@@ -1,9 +1,12 @@
 import { Elysia, t } from "elysia";
-import { eq, like, or, desc, sql, count } from "drizzle-orm";
+import { eq, like, or, desc, count } from "drizzle-orm";
 import { db, stores, tables, categories, printers, products, orders } from "../db";
 import { success, error, pagination } from "../lib/utils";
+import { requirePermission } from "../lib/auth";
 
 export const storeRoutes = new Elysia({ prefix: "/api/stores" })
+  // 门店管理需要 store:read 权限（仅超管拥有 store:write/delete）
+  .use(requirePermission("store:read"))
   .get(
     "/",
     async ({ query }) => {

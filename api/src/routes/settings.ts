@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { eq, and, isNull } from "drizzle-orm";
 import { db, settings } from "../db";
 import { success, error } from "../lib/utils";
+import { requireManager } from "../lib/auth";
 
 // 默认设置
 const DEFAULT_SETTINGS: Record<string, { value: string; description: string }> = {
@@ -22,14 +23,9 @@ export const settingsRoutes = new Elysia({ prefix: "/api/settings" })
       const { storeId } = query;
 
       // 查询数据库中的设置
-      const whereClause = storeId
-        ? eq(settings.storeId, storeId)
-        : isNull(settings.storeId);
+      const whereClause = storeId ? eq(settings.storeId, storeId) : isNull(settings.storeId);
 
-      const dbSettings = await db
-        .select()
-        .from(settings)
-        .where(whereClause);
+      const dbSettings = await db.select().from(settings).where(whereClause);
 
       // 合并默认设置和数据库设置
       const result: Record<string, { value: string; description: string }> = {
@@ -62,11 +58,7 @@ export const settingsRoutes = new Elysia({ prefix: "/api/settings" })
         ? and(eq(settings.key, params.key), eq(settings.storeId, storeId))
         : and(eq(settings.key, params.key), isNull(settings.storeId));
 
-      const [setting] = await db
-        .select()
-        .from(settings)
-        .where(whereClause)
-        .limit(1);
+      const [setting] = await db.select().from(settings).where(whereClause).limit(1);
 
       if (setting) {
         return success({
@@ -95,7 +87,8 @@ export const settingsRoutes = new Elysia({ prefix: "/api/settings" })
       detail: { tags: ["Settings"], summary: "获取单个设置" },
     }
   )
-  // 更新设置
+  // 更新设置 - 需要店长权限
+  .use(requireManager)
   .put(
     "/:key",
     async ({ params, body, query }) => {

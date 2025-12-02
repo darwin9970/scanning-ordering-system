@@ -3,8 +3,11 @@ import { eq, and, desc, gte, count, sum } from "drizzle-orm";
 import { db, orders, orderItems, tables, products, productVariants, categories } from "../db";
 import { success, error, pagination, generateOrderNo } from "../lib/utils";
 import { broadcastToStore, broadcastToTable, WS_EVENTS } from "../ws";
+import { requirePermission } from "../lib/auth";
 
 export const orderRoutes = new Elysia({ prefix: "/api/orders" })
+  // 订单读取需要 order:read 权限
+  .use(requirePermission("order:read"))
   .get(
     "/",
     async ({ query }) => {
@@ -191,7 +194,7 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
 
         // 同时通知桌台
         broadcastToTable(order.storeId, order.tableId, WS_EVENTS.ORDER_STATUS_CHANGED, {
-        order,
+          order,
           newStatus: body.status,
         });
       }
@@ -224,6 +227,203 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
       params: t.Object({ id: t.Number() }),
       body: t.Object({ reason: t.Optional(t.String()) }),
       detail: { tags: ["Orders"], summary: "订单退款" },
+    }
+  )
+  // 部分退款（单品退款）
+  .post(
+    "/:id/partial-refund",
+    async ({ params, body }) => {
+      const { itemId, quantity, reason } = body;
+
+      // 获取订单项
+      const [item] = await db.select().from(orderItems).where(eq(orderItems.id, itemId)).limit(1);
+
+      if (!item) return error("订单项不存在", 404);
+      if (item.orderId !== params.id) return error("订单项不属于此订单", 400);
+
+      const refundableQty = item.quantity - (item.refundedQuantity || 0);
+      if (quantity > refundableQty) {
+        return error(`最多可退 ${refundableQty} 件`, 400);
+      }
+
+      const refundAmount = Number(item.price) * quantity;
+
+      // 更新订单项
+      await db
+        .update(orderItems)
+        .set({
+          refundedQuantity: (item.refundedQuantity || 0) + quantity,
+          refundedAmount: (Number(item.refundedAmount || 0) + refundAmount).toString(),
+          refundReason: reason,
+        })
+        .where(eq(orderItems.id, itemId));
+
+      // 获取更新后的订单
+      const [order] = await db.select().from(orders).where(eq(orders.id, params.id)).limit(1);
+
+      // 广播退款通知
+      if (order) {
+        broadcastToStore(order.storeId, WS_EVENTS.ORDER_REFUNDED, {
+          order,
+          itemId,
+          refundAmount,
+          isPartial: true,
+        });
+      }
+
+      return success({ itemId, refundedQuantity: quantity, refundAmount }, "部分退款成功");
+    },
+    {
+      params: t.Object({ id: t.Number() }),
+      body: t.Object({
+        itemId: t.Number(),
+        quantity: t.Number({ minimum: 1 }),
+        reason: t.Optional(t.String()),
+      }),
+      detail: { tags: ["Orders"], summary: "部分退款" },
+    }
+  )
+  // 加菜（创建关联订单）
+  .post(
+    "/:id/add-items",
+    async ({ params, body }) => {
+      const { items, remark } = body;
+
+      // 获取主订单
+      const [parentOrder] = await db.select().from(orders).where(eq(orders.id, params.id)).limit(1);
+
+      if (!parentOrder) return error("订单不存在", 404);
+      if (parentOrder.status !== "PAID" && parentOrder.status !== "PREPARING") {
+        return error("该订单状态不支持加菜", 400);
+      }
+
+      let totalAmount = 0;
+      const orderItemsData = [];
+
+      for (const item of items) {
+        const [variant] = await db
+          .select()
+          .from(productVariants)
+          .leftJoin(products, eq(productVariants.productId, products.id))
+          .leftJoin(categories, eq(products.categoryId, categories.id))
+          .where(eq(productVariants.id, item.variantId))
+          .limit(1);
+
+        if (!variant) continue;
+
+        const price = Number(variant.product_variants.price);
+        totalAmount += price * item.quantity;
+
+        orderItemsData.push({
+          productVariantId: item.variantId,
+          quantity: item.quantity,
+          price: price.toString(),
+          snapshot: {
+            name: variant.products?.name || "",
+            categoryName: variant.categories?.name || "",
+            specs: variant.product_variants.specs || {},
+          },
+          attributes: item.attributes || null,
+        });
+      }
+
+      // 创建加菜订单
+      const [addOrder] = await db
+        .insert(orders)
+        .values({
+          orderNo: generateOrderNo(),
+          storeId: parentOrder.storeId,
+          tableId: parentOrder.tableId,
+          userId: parentOrder.userId,
+          totalAmount: totalAmount.toString(),
+          payAmount: totalAmount.toString(),
+          remark: remark || "加菜",
+          isAddition: true,
+          parentOrderId: params.id,
+          status: "PAID", // 加菜默认已支付（合并结账）
+        })
+        .returning();
+
+      if (orderItemsData.length > 0) {
+        await db.insert(orderItems).values(
+          orderItemsData.map((item) => ({
+            orderId: addOrder!.id,
+            ...item,
+          }))
+        );
+      }
+
+      // 广播加菜通知
+      broadcastToStore(parentOrder.storeId, WS_EVENTS.NEW_ORDER, {
+        order: addOrder,
+        itemCount: orderItemsData.length,
+        isAddition: true,
+        parentOrderId: params.id,
+      });
+
+      // 同时通知桌台
+      broadcastToTable(parentOrder.storeId, parentOrder.tableId, WS_EVENTS.NEW_ORDER, {
+        order: addOrder,
+        isAddition: true,
+      });
+
+      return success(addOrder, "加菜成功");
+    },
+    {
+      params: t.Object({ id: t.Number() }),
+      body: t.Object({
+        items: t.Array(
+          t.Object({
+            variantId: t.Number(),
+            quantity: t.Number(),
+            attributes: t.Optional(t.Array(t.Any())),
+          })
+        ),
+        remark: t.Optional(t.String()),
+      }),
+      detail: { tags: ["Orders"], summary: "加菜" },
+    }
+  )
+  // 获取订单及其加菜单
+  .get(
+    "/:id/with-additions",
+    async ({ params }) => {
+      const [order] = await db
+        .select()
+        .from(orders)
+        .leftJoin(tables, eq(orders.tableId, tables.id))
+        .where(eq(orders.id, params.id))
+        .limit(1);
+
+      if (!order) return error("订单不存在", 404);
+
+      // 获取订单项
+      const items = await db.select().from(orderItems).where(eq(orderItems.orderId, params.id));
+
+      // 获取加菜单
+      const additions = await db.select().from(orders).where(eq(orders.parentOrderId, params.id));
+
+      // 获取加菜单的订单项
+      const additionItems = await Promise.all(
+        additions.map(async (add) => {
+          const addItems = await db.select().from(orderItems).where(eq(orderItems.orderId, add.id));
+          return { ...add, items: addItems };
+        })
+      );
+
+      return success({
+        ...order.orders,
+        table: order.tables,
+        items,
+        additions: additionItems,
+        totalWithAdditions:
+          Number(order.orders.payAmount) +
+          additions.reduce((sum, a) => sum + Number(a.payAmount), 0),
+      });
+    },
+    {
+      params: t.Object({ id: t.Number() }),
+      detail: { tags: ["Orders"], summary: "获取订单及加菜单" },
     }
   )
   .get(

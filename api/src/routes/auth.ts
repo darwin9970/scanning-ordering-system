@@ -3,6 +3,7 @@ import { jwt } from "@elysiajs/jwt";
 import { eq } from "drizzle-orm";
 import { db, admins, stores } from "../db";
 import { hashPassword, verifyPassword, success, error } from "../lib/utils";
+import { getRolePermissions, type Role } from "../lib/auth";
 
 export const authRoutes = new Elysia({ prefix: "/api/auth" })
   .use(
@@ -44,6 +45,9 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
         storeId: admin.admins.storeId,
       });
 
+      // 从数据库获取角色对应的权限列表
+      const permissions = await getRolePermissions(admin.admins.role as Role);
+
       return success({
         token,
         user: {
@@ -52,6 +56,7 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
           name: admin.admins.name,
           role: admin.admins.role,
           store: admin.stores,
+          permissions, // 返回权限列表
         },
       });
     },
@@ -139,12 +144,16 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
         return error("用户不存在", 404);
       }
 
+      // 从数据库获取角色对应的权限列表
+      const permissions = await getRolePermissions(admin.admins.role as Role);
+
       return success({
         id: admin.admins.id,
         username: admin.admins.username,
         name: admin.admins.name,
         role: admin.admins.role,
         store: admin.stores,
+        permissions, // 返回权限列表
       });
     },
     {

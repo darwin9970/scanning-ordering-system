@@ -1,9 +1,12 @@
 import { Elysia, t } from "elysia";
-import { eq, and, like, asc, desc, count } from "drizzle-orm";
-import { db, products, categories, productVariants, productAttributes, stores } from "../db";
+import { eq, and, like, desc, count } from "drizzle-orm";
+import { db, products, categories, productVariants, productAttributes } from "../db";
 import { success, error, pagination } from "../lib/utils";
+import { requirePermission } from "../lib/auth";
 
 export const productRoutes = new Elysia({ prefix: "/api/products" })
+  // 读取商品需要 product:read 权限
+  .use(requirePermission("product:read"))
   .get(
     "/",
     async ({ query }) => {

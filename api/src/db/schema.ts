@@ -39,6 +39,27 @@ export const printJobStatusEnum = pgEnum("print_job_status", [
   "DEAD",
 ]);
 
+// 优惠券类型
+export const couponTypeEnum = pgEnum("coupon_type", [
+  "FIXED", // 满减券（固定金额）
+  "PERCENT", // 折扣券（百分比）
+  "NO_THRESHOLD", // 无门槛券
+]);
+
+// 优惠券状态
+export const couponStatusEnum = pgEnum("coupon_status", ["ACTIVE", "INACTIVE", "EXPIRED"]);
+
+// 用户优惠券状态
+export const userCouponStatusEnum = pgEnum("user_coupon_status", ["UNUSED", "USED", "EXPIRED"]);
+
+// 活动类型
+export const promotionTypeEnum = pgEnum("promotion_type", [
+  "FULL_REDUCE", // 满减活动
+  "DISCOUNT", // 折扣活动
+  "NEW_USER", // 新人专享
+  "TIME_LIMITED", // 限时特价
+]);
+
 // ==================== 用户与管理员 ====================
 
 export const admins = pgTable(
@@ -282,9 +303,21 @@ export const orders = pgTable(
     totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
     payAmount: decimal("pay_amount", { precision: 10, scale: 2 }).notNull(),
     discount: decimal("discount", { precision: 10, scale: 2 }).notNull().default("0"),
+    // 新增字段
+    couponId: integer("coupon_id"), // 使用的优惠券ID
+    couponDiscount: decimal("coupon_discount", { precision: 10, scale: 2 }).default("0"),
+    promotionDiscount: decimal("promotion_discount", { precision: 10, scale: 2 }).default("0"),
+    pointsUsed: integer("points_used").default(0), // 使用的积分
+    pointsDiscount: decimal("points_discount", { precision: 10, scale: 2 }).default("0"),
+    dinersCount: integer("diners_count").default(1), // 就餐人数
+    tablewareFee: decimal("tableware_fee", { precision: 10, scale: 2 }).default("0"), // 餐具费
+    packingFee: decimal("packing_fee", { precision: 10, scale: 2 }).default("0"), // 打包费
     status: orderStatusEnum("status").notNull().default("PENDING"),
     payTime: timestamp("pay_time"),
     remark: varchar("remark", { length: 255 }),
+    // 加菜相关
+    isAddition: boolean("is_addition").default(false), // 是否为加菜订单
+    parentOrderId: integer("parent_order_id"), // 主订单ID（加菜时使用）
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()
@@ -316,6 +349,10 @@ export const orderItems = pgTable(
       .$type<{ name: string; categoryName: string; specs: Record<string, string> }>()
       .notNull(),
     attributes: json("attributes").$type<{ name: string; value: string }[]>(),
+    // 退款相关
+    refundedQuantity: integer("refunded_quantity").default(0), // 已退款数量
+    refundedAmount: decimal("refunded_amount", { precision: 10, scale: 2 }).default("0"),
+    refundReason: varchar("refund_reason", { length: 255 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => [index("order_items_order_id_idx").on(table.orderId)]
@@ -444,3 +481,267 @@ export const settings = pgTable("settings", {
 export const settingsRelations = relations(settings, ({ one }) => ({
   store: one(stores, { fields: [settings.storeId], references: [stores.id] }),
 }));
+
+// ==================== 优惠券系统 ====================
+
+// 优惠券模板表
+export const coupons = pgTable(
+  "coupons",
+  {
+    id: serial("id").primaryKey(),
+    storeId: integer("store_id").references(() => stores.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    type: couponTypeEnum("type").notNull().default("FIXED"),
+    value: decimal("value", { precision: 10, scale: 2 }).notNull(), // 优惠金额或折扣比例
+    minAmount: decimal("min_amount", { precision: 10, scale: 2 }).notNull().default("0"), // 最低消费金额
+    maxDiscount: decimal("max_discount", { precision: 10, scale: 2 }), // 最大优惠金额（折扣券用）
+    totalCount: integer("total_count").notNull().default(-1), // 发放总量，-1为不限
+    usedCount: integer("used_count").notNull().default(0), // 已使用数量
+    claimedCount: integer("claimed_count").notNull().default(0), // 已领取数量
+    perUserLimit: integer("per_user_limit").notNull().default(1), // 每人限领数量
+    startTime: timestamp("start_time").notNull(),
+    endTime: timestamp("end_time").notNull(),
+    description: text("description"),
+    status: couponStatusEnum("status").notNull().default("ACTIVE"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("coupons_store_id_idx").on(table.storeId),
+    index("coupons_status_idx").on(table.status),
+  ]
+);
+
+// 用户优惠券表
+export const userCoupons = pgTable(
+  "user_coupons",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    couponId: integer("coupon_id")
+      .notNull()
+      .references(() => coupons.id, { onDelete: "cascade" }),
+    orderId: integer("order_id").references(() => orders.id), // 使用时关联的订单
+    status: userCouponStatusEnum("status").notNull().default("UNUSED"),
+    claimedAt: timestamp("claimed_at").notNull().defaultNow(),
+    usedAt: timestamp("used_at"),
+    expireAt: timestamp("expire_at").notNull(), // 过期时间（可能和券模板不同）
+  },
+  (table) => [
+    index("user_coupons_user_id_idx").on(table.userId),
+    index("user_coupons_coupon_id_idx").on(table.couponId),
+    index("user_coupons_status_idx").on(table.status),
+  ]
+);
+
+// ==================== 营销活动系统 ====================
+
+// 活动表
+export const promotions = pgTable(
+  "promotions",
+  {
+    id: serial("id").primaryKey(),
+    storeId: integer("store_id").references(() => stores.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    type: promotionTypeEnum("type").notNull(),
+    // 规则示例：满减 [{"min": 50, "discount": 5}, {"min": 100, "discount": 15}]
+    // 折扣 {"discount": 0.8} 表示8折
+    rules: json("rules").$type<Record<string, unknown>>().notNull(),
+    startTime: timestamp("start_time").notNull(),
+    endTime: timestamp("end_time").notNull(),
+    description: text("description"),
+    priority: integer("priority").notNull().default(0), // 优先级，数值越大优先级越高
+    stackable: boolean("stackable").notNull().default(false), // 是否可叠加
+    status: statusEnum("status").notNull().default("ACTIVE"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("promotions_store_id_idx").on(table.storeId),
+    index("promotions_status_idx").on(table.status),
+  ]
+);
+
+// ==================== 优惠券关系定义 ====================
+
+export const couponsRelations = relations(coupons, ({ one, many }) => ({
+  store: one(stores, { fields: [coupons.storeId], references: [stores.id] }),
+  userCoupons: many(userCoupons),
+}));
+
+export const userCouponsRelations = relations(userCoupons, ({ one }) => ({
+  user: one(users, { fields: [userCoupons.userId], references: [users.id] }),
+  coupon: one(coupons, { fields: [userCoupons.couponId], references: [coupons.id] }),
+  order: one(orders, { fields: [userCoupons.orderId], references: [orders.id] }),
+}));
+
+export const promotionsRelations = relations(promotions, ({ one }) => ({
+  store: one(stores, { fields: [promotions.storeId], references: [stores.id] }),
+}));
+
+// ==================== 套餐/组合商品 ====================
+
+// 套餐表
+export const combos = pgTable(
+  "combos",
+  {
+    id: serial("id").primaryKey(),
+    storeId: integer("store_id")
+      .notNull()
+      .references(() => stores.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    description: text("description"),
+    imageUrl: varchar("image_url", { length: 255 }),
+    originalPrice: decimal("original_price", { precision: 10, scale: 2 }).notNull(), // 原价（单品总价）
+    price: decimal("price", { precision: 10, scale: 2 }).notNull(), // 套餐价
+    sales: integer("sales").notNull().default(0),
+    stock: integer("stock").notNull().default(-1), // -1为不限
+    sort: integer("sort").notNull().default(0),
+    status: productStatusEnum("status").notNull().default("AVAILABLE"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("combos_store_id_idx").on(table.storeId),
+    index("combos_status_idx").on(table.status),
+  ]
+);
+
+// 套餐商品关联表
+export const comboItems = pgTable(
+  "combo_items",
+  {
+    id: serial("id").primaryKey(),
+    comboId: integer("combo_id")
+      .notNull()
+      .references(() => combos.id, { onDelete: "cascade" }),
+    productId: integer("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    variantId: integer("variant_id").references(() => productVariants.id, { onDelete: "set null" }), // 可选指定规格
+    quantity: integer("quantity").notNull().default(1),
+    // 是否可选（如套餐中可选择A或B）
+    isOptional: boolean("is_optional").notNull().default(false),
+    optionGroup: varchar("option_group", { length: 50 }), // 可选组（同组中选一个）
+  },
+  (table) => [index("combo_items_combo_id_idx").on(table.comboId)]
+);
+
+export const combosRelations = relations(combos, ({ one, many }) => ({
+  store: one(stores, { fields: [combos.storeId], references: [stores.id] }),
+  items: many(comboItems),
+}));
+
+export const comboItemsRelations = relations(comboItems, ({ one }) => ({
+  combo: one(combos, { fields: [comboItems.comboId], references: [combos.id] }),
+  product: one(products, { fields: [comboItems.productId], references: [products.id] }),
+  variant: one(productVariants, {
+    fields: [comboItems.variantId],
+    references: [productVariants.id],
+  }),
+}));
+
+// ==================== 服务呼叫/催单 ====================
+
+export const serviceCallTypeEnum = pgEnum("service_call_type", [
+  "CALL_SERVICE", // 呼叫服务员
+  "URGE_ORDER", // 催单
+  "REQUEST_BILL", // 请求结账
+  "OTHER", // 其他
+]);
+
+export const serviceCallStatusEnum = pgEnum("service_call_status", [
+  "PENDING", // 待处理
+  "ACCEPTED", // 已接受
+  "COMPLETED", // 已完成
+  "CANCELLED", // 已取消
+]);
+
+export const serviceCalls = pgTable(
+  "service_calls",
+  {
+    id: serial("id").primaryKey(),
+    storeId: integer("store_id")
+      .notNull()
+      .references(() => stores.id),
+    tableId: integer("table_id")
+      .notNull()
+      .references(() => tables.id),
+    orderId: integer("order_id").references(() => orders.id), // 催单时关联的订单
+    type: serviceCallTypeEnum("type").notNull(),
+    status: serviceCallStatusEnum("status").notNull().default("PENDING"),
+    message: varchar("message", { length: 255 }),
+    handledBy: integer("handled_by").references(() => admins.id), // 处理人
+    handledAt: timestamp("handled_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("service_calls_store_id_idx").on(table.storeId),
+    index("service_calls_table_id_idx").on(table.tableId),
+    index("service_calls_status_idx").on(table.status),
+  ]
+);
+
+export const serviceCallsRelations = relations(serviceCalls, ({ one }) => ({
+  store: one(stores, { fields: [serviceCalls.storeId], references: [stores.id] }),
+  table: one(tables, { fields: [serviceCalls.tableId], references: [tables.id] }),
+  order: one(orders, { fields: [serviceCalls.orderId], references: [orders.id] }),
+  handler: one(admins, { fields: [serviceCalls.handledBy], references: [admins.id] }),
+}));
+
+// ==================== 操作日志 ====================
+
+export const operationLogs = pgTable(
+  "operation_logs",
+  {
+    id: serial("id").primaryKey(),
+    storeId: integer("store_id").references(() => stores.id),
+    adminId: integer("admin_id").references(() => admins.id),
+    action: varchar("action", { length: 50 }).notNull(), // 操作类型
+    targetType: varchar("target_type", { length: 50 }), // 目标类型
+    targetId: integer("target_id"), // 目标ID
+    details: json("details").$type<Record<string, unknown>>(), // 详细信息
+    ip: varchar("ip", { length: 50 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("operation_logs_store_id_idx").on(table.storeId),
+    index("operation_logs_admin_id_idx").on(table.adminId),
+    index("operation_logs_created_at_idx").on(table.createdAt),
+  ]
+);
+
+export const operationLogsRelations = relations(operationLogs, ({ one }) => ({
+  store: one(stores, { fields: [operationLogs.storeId], references: [stores.id] }),
+  admin: one(admins, { fields: [operationLogs.adminId], references: [admins.id] }),
+}));
+
+// ==================== 角色权限配置 ====================
+
+export const rolePermissions = pgTable(
+  "role_permissions",
+  {
+    id: serial("id").primaryKey(),
+    role: roleEnum("role").notNull(), // 角色
+    permissions: json("permissions").$type<string[]>().notNull().default([]), // 权限列表
+    description: text("description"), // 角色描述
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    updatedBy: integer("updated_by").references(() => admins.id), // 最后更新者
+  },
+  (table) => [uniqueIndex("role_permissions_role_idx").on(table.role)]
+);

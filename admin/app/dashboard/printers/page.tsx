@@ -31,15 +31,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Printer, Edit, Trash2, Link2, TestTube } from "lucide-react";
+import { Plus, Printer, Edit, Trash2, Link2, TestTube, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function PrintersPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bindDialogOpen, setBindDialogOpen] = useState(false);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [previewPrinter, setPreviewPrinter] = useState<any>(null);
   const [editingPrinter, setEditingPrinter] = useState<any>(null);
   const [bindingPrinter, setBindingPrinter] = useState<any>(null);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [testStatus, setTestStatus] = useState<{ id: number; status: "loading" | "success" | "error" } | null>(null);
   const [formData, setFormData] = useState({
     sn: "",
     key: "",
@@ -86,14 +90,24 @@ export default function PrintersPage() {
   });
 
   const testMutation = useMutation({
-    mutationFn: (id: number) => api.testPrinter(id),
-    onSuccess: () => {
-      alert("测试打印请求已发送");
+    mutationFn: (id: number) => {
+      setTestStatus({ id, status: "loading" });
+      return api.testPrinter(id);
     },
-    onError: (error: any) => {
-      alert(error.message);
+    onSuccess: (_, id) => {
+      setTestStatus({ id, status: "success" });
+      setTimeout(() => setTestStatus(null), 3000);
+    },
+    onError: (error: any, id) => {
+      setTestStatus({ id, status: "error" });
+      setTimeout(() => setTestStatus(null), 3000);
     },
   });
+
+  const openPreviewDialog = (printer: any) => {
+    setPreviewPrinter(printer);
+    setPreviewDialogOpen(true);
+  };
 
   const bindMutation = useMutation({
     mutationFn: ({ id, categoryIds }: { id: number; categoryIds: number[] }) =>
@@ -231,10 +245,36 @@ export default function PrintersPage() {
                         <Button
                           size="sm"
                           variant="ghost"
+                          onClick={() => openPreviewDialog(printer)}
+                          title="打印预览"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={testStatus?.id === printer.id && testStatus?.status === "success" ? "default" : "ghost"}
                           onClick={() => testMutation.mutate(printer.id)}
                           title="测试打印"
+                          disabled={testMutation.isPending && testStatus?.id === printer.id}
+                          className={
+                            testStatus?.id === printer.id
+                              ? testStatus?.status === "success"
+                                ? "bg-green-500 hover:bg-green-600"
+                                : testStatus?.status === "error"
+                                ? "bg-red-500 hover:bg-red-600"
+                                : ""
+                              : ""
+                          }
                         >
-                          <TestTube className="h-4 w-4" />
+                          {testStatus?.id === printer.id && testStatus?.status === "loading" ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          ) : testStatus?.id === printer.id && testStatus?.status === "success" ? (
+                            <CheckCircle2 className="h-4 w-4 text-white" />
+                          ) : testStatus?.id === printer.id && testStatus?.status === "error" ? (
+                            <AlertCircle className="h-4 w-4 text-white" />
+                          ) : (
+                            <TestTube className="h-4 w-4" />
+                          )}
                         </Button>
                         <Button
                           size="sm"
@@ -357,6 +397,107 @@ export default function PrintersPage() {
               取消
             </Button>
             <Button onClick={handleBind}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 打印预览弹窗 */}
+      <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              打印预览 - {previewPrinter?.name}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {/* 模拟小票预览 */}
+          <div className="bg-white border-2 border-dashed rounded-lg p-4 font-mono text-sm">
+            <div className="text-center border-b pb-2 mb-2">
+              <p className="font-bold text-lg">【{previewPrinter?.type === "KITCHEN" ? "后厨" : previewPrinter?.type === "BAR" ? "吧台" : "收银"}单】</p>
+              <p className="text-xs text-muted-foreground">门店名称</p>
+            </div>
+            
+            <div className="space-y-1 text-xs border-b pb-2 mb-2">
+              <div className="flex justify-between">
+                <span>订单号:</span>
+                <span>2024120200001</span>
+              </div>
+              <div className="flex justify-between">
+                <span>桌台:</span>
+                <span>A01</span>
+              </div>
+              <div className="flex justify-between">
+                <span>时间:</span>
+                <span>{new Date().toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="border-b pb-2 mb-2">
+              <p className="font-bold mb-1">商品明细:</p>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span>宫保鸡丁 x1</span>
+                  <span>¥38.00</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>麻婆豆腐 x1</span>
+                  <span>¥28.00</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>米饭 x2</span>
+                  <span>¥4.00</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-xs space-y-1">
+              <div className="flex justify-between font-bold">
+                <span>合计:</span>
+                <span>¥70.00</span>
+              </div>
+            </div>
+
+            <div className="text-center mt-4 pt-2 border-t">
+              <p className="text-xs text-muted-foreground">--- 感谢光临 ---</p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium">绑定的分类:</p>
+            <div className="flex flex-wrap gap-1">
+              {previewPrinter?.categories?.length > 0 ? (
+                previewPrinter.categories.map((c: any) => (
+                  <Badge key={c.category.id} variant="secondary">
+                    {c.category.name}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-sm text-muted-foreground">未绑定分类，将不会收到自动分单</span>
+              )}
+            </div>
+          </div>
+
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>分单规则说明</AlertTitle>
+            <AlertDescription className="text-xs">
+              订单支付后，系统会根据商品所属分类自动分单到对应的打印机。
+              请确保打印机已绑定正确的分类。
+            </AlertDescription>
+          </Alert>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreviewDialogOpen(false)}>
+              关闭
+            </Button>
+            <Button onClick={() => {
+              testMutation.mutate(previewPrinter?.id);
+              setPreviewDialogOpen(false);
+            }}>
+              <TestTube className="h-4 w-4 mr-2" />
+              发送测试打印
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

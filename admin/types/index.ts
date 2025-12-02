@@ -111,6 +111,7 @@ export interface Product {
 export interface ProductVariant {
   id: number;
   productId: number;
+  name?: string;
   specs: Record<string, string>;
   price: string;
   stock: number;
@@ -172,6 +173,9 @@ export interface OrderItem {
     specs: Record<string, string>;
   };
   attributes: { name: string; value: string }[] | null;
+  refundedQuantity?: number;
+  refundedAmount?: string;
+  refundReason?: string;
   createdAt: string;
 }
 
@@ -199,8 +203,25 @@ export interface LoginResponse {
   user: AdminWithStore;
 }
 
+// 权限类型
+export type Permission =
+  | "store:read" | "store:write" | "store:delete"
+  | "table:read" | "table:write" | "table:delete"
+  | "category:read" | "category:write" | "category:delete"
+  | "product:read" | "product:write" | "product:delete"
+  | "order:read" | "order:write" | "order:refund"
+  | "printer:read" | "printer:write" | "printer:delete"
+  | "member:read" | "member:write"
+  | "coupon:read" | "coupon:write" | "coupon:delete"
+  | "promotion:read" | "promotion:write" | "promotion:delete"
+  | "staff:read" | "staff:write" | "staff:delete"
+  | "settings:read" | "settings:write"
+  | "report:read"
+  | "service:read" | "service:write";
+
 export interface AdminWithStore extends Omit<Admin, "password"> {
   store: Store | null;
+  permissions: Permission[]; // 后端返回的权限列表
 }
 
 // ==================== 请求参数类型 ====================

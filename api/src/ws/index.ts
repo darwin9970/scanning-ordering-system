@@ -1,6 +1,7 @@
-import { Elysia, t } from "elysia";
+import { Elysia } from "elysia";
 
 // 存储 WebSocket 连接
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const connections = new Map<string, Set<any>>();
 
 // 获取门店房间的所有连接

@@ -2,8 +2,11 @@ import { Elysia, t } from "elysia";
 import { eq, and, like, count, desc } from "drizzle-orm";
 import { db, admins, stores } from "../db";
 import { hashPassword, success, error } from "../lib/utils";
+import { requirePermission } from "../lib/auth";
 
 export const staffRoutes = new Elysia({ prefix: "/api/staff" })
+  // 应用权限守卫：需要 staff:read 权限
+  .use(requirePermission("staff:read"))
   // 获取员工列表
   .get(
     "/",
@@ -106,11 +109,7 @@ export const staffRoutes = new Elysia({ prefix: "/api/staff" })
       const { username, password, name, role, storeId } = body;
 
       // 检查用户名是否已存在
-      const existing = await db
-        .select()
-        .from(admins)
-        .where(eq(admins.username, username))
-        .limit(1);
+      const existing = await db.select().from(admins).where(eq(admins.username, username)).limit(1);
 
       if (existing.length > 0) {
         return error("用户名已存在", 400);
@@ -205,11 +204,7 @@ export const staffRoutes = new Elysia({ prefix: "/api/staff" })
   .delete(
     "/:id",
     async ({ params }) => {
-      const [admin] = await db
-        .select()
-        .from(admins)
-        .where(eq(admins.id, params.id))
-        .limit(1);
+      const [admin] = await db.select().from(admins).where(eq(admins.id, params.id)).limit(1);
 
       if (!admin) {
         return error("员工不存在", 404);

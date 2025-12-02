@@ -5,9 +5,13 @@ import { useAuthStore } from "@/store/auth";
 import { Button } from "@/components/ui/button";
 import { RealtimeNotifications } from "@/components/realtime-notifications";
 import { LogOut, User } from "lucide-react";
-import { ROLE_MAP } from "@/lib/utils";
+import { ROLE_MAP, cn } from "@/lib/utils";
 
-export function Header() {
+interface HeaderProps {
+  collapsed?: boolean;
+}
+
+export function Header({ collapsed = false }: HeaderProps) {
   const router = useRouter();
   const { user, logout } = useAuthStore();
 
@@ -20,7 +24,10 @@ export function Header() {
   const storeId = user?.store?.id || (user?.role === "SUPER_ADMIN" ? 1 : null);
 
   return (
-    <header className="fixed left-64 right-0 top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-6">
+    <header className={cn(
+      "fixed right-0 top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-6 transition-all duration-300",
+      collapsed ? "left-16" : "left-64"
+    )}>
       <div className="flex items-center gap-4">
         <h1 className="text-lg font-semibold">后台管理系统</h1>
       </div>

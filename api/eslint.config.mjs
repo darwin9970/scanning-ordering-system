@@ -24,6 +24,12 @@ const eslintConfig = [
         module: "readonly",
         require: "readonly",
         Bun: "readonly",
+        Response: "readonly",
+        setTimeout: "readonly",
+        setInterval: "readonly",
+        clearTimeout: "readonly",
+        clearInterval: "readonly",
+        fetch: "readonly",
       },
     },
     plugins: {

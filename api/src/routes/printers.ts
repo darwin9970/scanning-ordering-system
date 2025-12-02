@@ -2,8 +2,11 @@ import { Elysia, t } from "elysia";
 import { eq, count } from "drizzle-orm";
 import { db, printers, categoryPrinters, categories } from "../db";
 import { success, error, pagination } from "../lib/utils";
+import { requirePermission } from "../lib/auth";
 
 export const printerRoutes = new Elysia({ prefix: "/api/printers" })
+  // 打印机读取需要 printer:read 权限
+  .use(requirePermission("printer:read"))
   .get(
     "/",
     async ({ query }) => {
