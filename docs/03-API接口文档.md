@@ -390,14 +390,224 @@ Headers: `Authorization: Bearer <token>`
 
 **GET** `/api/dashboard/recent-orders`
 
-## 十一、错误码说明
+## 十一、角色权限 (Roles) 🆕
+
+### 11.1 获取所有权限列表
+
+**GET** `/api/roles/permissions`
+
+### 11.2 获取所有角色配置
+
+**GET** `/api/roles`
+
+### 11.3 获取单个角色配置
+
+**GET** `/api/roles/:role`
+
+### 11.4 更新角色权限
+
+**PUT** `/api/roles/:role`
+
+请求参数:
+
+| 参数 | 类型 | 必填 | 说明 |
+|:---|:---|:---|:---|
+| permissions | string[] | 是 | 权限列表 |
+| description | string | 否 | 角色描述 |
+
+### 11.5 重置角色权限
+
+**DELETE** `/api/roles/:role`
+
+---
+
+## 十二、优惠券 (Coupons) 🆕
+
+### 12.1 获取优惠券列表
+
+**GET** `/api/coupons`
+
+查询参数:
+
+| 参数 | 类型 | 说明 |
+|:---|:---|:---|
+| storeId | number | 门店ID |
+| status | string | 状态 (ACTIVE/INACTIVE/EXPIRED) |
+| type | string | 类型 (FIXED/PERCENT/NO_THRESHOLD) |
+
+### 12.2 创建优惠券
+
+**POST** `/api/coupons`
+
+### 12.3 更新优惠券
+
+**PUT** `/api/coupons/:id`
+
+### 12.4 删除优惠券
+
+**DELETE** `/api/coupons/:id`
+
+---
+
+## 十三、营销活动 (Promotions) 🆕
+
+### 13.1 获取活动列表
+
+**GET** `/api/promotions`
+
+### 13.2 创建活动
+
+**POST** `/api/promotions`
+
+### 13.3 更新活动
+
+**PUT** `/api/promotions/:id`
+
+### 13.4 删除活动
+
+**DELETE** `/api/promotions/:id`
+
+### 13.5 计算优惠
+
+**POST** `/api/promotions/calculate`
+
+---
+
+## 十四、会员管理 (Members) 🆕
+
+### 14.1 获取会员列表
+
+**GET** `/api/members`
+
+### 14.2 获取会员详情
+
+**GET** `/api/members/:id`
+
+### 14.3 会员积分调整
+
+**POST** `/api/members/:id/points`
+
+### 14.4 获取积分记录
+
+**GET** `/api/members/:id/points/history`
+
+---
+
+## 十五、服务呼叫 (Service) 🆕
+
+### 15.1 获取呼叫列表
+
+**GET** `/api/service/calls`
+
+### 15.2 处理呼叫
+
+**PUT** `/api/service/calls/:id/handle`
+
+### 15.3 发起呼叫
+
+**POST** `/api/service/call`
+
+---
+
+## 十六、购物车 (Cart) 🆕
+
+### 16.1 获取购物车
+
+**GET** `/api/cart/:storeId/:tableId`
+
+### 16.2 添加商品
+
+**POST** `/api/cart/:storeId/:tableId/add`
+
+### 16.3 更新数量
+
+**PUT** `/api/cart/:storeId/:tableId/update`
+
+### 16.4 移除商品
+
+**DELETE** `/api/cart/:storeId/:tableId/remove`
+
+### 16.5 清空购物车
+
+**DELETE** `/api/cart/:storeId/:tableId`
+
+---
+
+## 十七、文件上传 (Upload) 🆕
+
+### 17.1 上传图片
+
+**POST** `/api/upload/image`
+
+请求格式: `multipart/form-data`
+
+| 参数 | 类型 | 说明 |
+|:---|:---|:---|
+| file | File | 图片文件 |
+
+响应示例:
+
+```json
+{
+  "code": 200,
+  "data": {
+    "url": "/uploads/xxx.jpg"
+  }
+}
+```
+
+---
+
+## 十八、错误码说明
 
 | 错误码 | 说明 |
 |:---|:---|
-| 0 | 成功 |
-| -1 | 通用错误 |
+| 200 | 成功 |
 | 400 | 请求参数错误 |
 | 401 | 未授权 / Token 无效 |
 | 403 | 权限不足 |
 | 404 | 资源不存在 |
 | 500 | 服务器内部错误 |
+
+---
+
+## 十九、权限列表
+
+以下是系统支持的所有权限：
+
+| 权限 | 说明 |
+|:---|:---|
+| store:read | 查看门店 |
+| store:write | 编辑门店 |
+| store:delete | 删除门店 |
+| table:read | 查看桌台 |
+| table:write | 编辑桌台 |
+| table:delete | 删除桌台 |
+| category:read | 查看分类 |
+| category:write | 编辑分类 |
+| category:delete | 删除分类 |
+| product:read | 查看商品 |
+| product:write | 编辑商品 |
+| product:delete | 删除商品 |
+| order:read | 查看订单 |
+| order:write | 处理订单 |
+| order:refund | 订单退款 |
+| printer:read | 查看打印机 |
+| printer:write | 编辑打印机 |
+| printer:delete | 删除打印机 |
+| member:read | 查看会员 |
+| member:write | 编辑会员 |
+| coupon:read | 查看优惠券 |
+| coupon:write | 编辑优惠券 |
+| coupon:delete | 删除优惠券 |
+| promotion:read | 查看活动 |
+| promotion:write | 编辑活动 |
+| promotion:delete | 删除活动 |
+| staff:read | 查看员工 |
+| staff:write | 编辑员工 |
+| staff:delete | 删除员工 |
+| settings:read | 查看设置 |
+| settings:write | 编辑设置 |
+| report:read | 查看报表 |
+| service:read | 查看服务呼叫 |
+| service:write | 处理服务呼叫 |
