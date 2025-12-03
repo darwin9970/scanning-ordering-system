@@ -21,6 +21,7 @@ import { comboRoutes } from "./routes/combos";
 import { serviceRoutes } from "./routes/service";
 import { uploadRoutes } from "./routes/upload";
 import { roleRoutes } from "./routes/roles";
+import { bannerRoutes } from "./routes/banners";
 import { wsRoutes } from "./ws";
 
 const app = new Elysia()
@@ -57,6 +58,7 @@ const app = new Elysia()
           { name: "Service", description: "服务呼叫接口" },
           { name: "Upload", description: "文件上传接口" },
           { name: "Roles", description: "角色权限配置接口" },
+          { name: "Banners", description: "轮播图管理接口" },
         ],
       },
     })
@@ -94,6 +96,7 @@ const app = new Elysia()
   .use(serviceRoutes)
   .use(uploadRoutes)
   .use(roleRoutes)
+  .use(bannerRoutes)
   .use(wsRoutes)
   // 静态文件服务 - 上传的图片
   .get("/uploads/*", async ({ params }) => {

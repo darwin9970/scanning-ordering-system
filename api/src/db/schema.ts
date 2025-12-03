@@ -745,3 +745,32 @@ export const rolePermissions = pgTable(
   },
   (table) => [uniqueIndex("role_permissions_role_idx").on(table.role)]
 );
+
+// ==================== Banner/轮播图管理 ====================
+
+export const bannerPositionEnum = pgEnum("banner_position", [
+  "HOME_TOP",      // 首页顶部轮播
+  "MENU_TOP",      // 菜单页顶部
+  "CATEGORY",      // 分类页
+  "PROMOTION"      // 活动专区
+]);
+
+export const banners = pgTable("banners", {
+  id: serial("id").primaryKey(),
+  storeId: integer("store_id").references(() => stores.id), // null 表示全局
+  title: varchar("title", { length: 100 }).notNull(), // 标题
+  image: text("image").notNull(), // 图片URL
+  position: bannerPositionEnum("position").notNull().default("MENU_TOP"), // 展示位置
+  linkType: varchar("link_type", { length: 20 }), // 跳转类型: product/category/promotion/url
+  linkValue: varchar("link_value", { length: 255 }), // 跳转值
+  sort: integer("sort").notNull().default(0), // 排序
+  isActive: boolean("is_active").notNull().default(true), // 是否启用
+  startTime: timestamp("start_time"), // 开始时间
+  endTime: timestamp("end_time"), // 结束时间
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const bannersRelations = relations(banners, ({ one }) => ({
+  store: one(stores, { fields: [banners.storeId], references: [stores.id] }),
+}));

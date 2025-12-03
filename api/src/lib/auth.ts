@@ -56,7 +56,12 @@ export type Permission =
   | "report:read"
   // 服务呼叫
   | "service:read"
-  | "service:write";
+  | "service:write"
+  // 轮播图
+  | "banners:read"
+  | "banners:create"
+  | "banners:update"
+  | "banners:delete";
 
 // 所有权限列表（用于前端展示和验证）
 export const ALL_PERMISSIONS: Permission[] = [
@@ -94,6 +99,10 @@ export const ALL_PERMISSIONS: Permission[] = [
   "report:read",
   "service:read",
   "service:write",
+  "banners:read",
+  "banners:create",
+  "banners:update",
+  "banners:delete",
 ];
 
 // JWT Payload 类型

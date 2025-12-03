@@ -25,6 +25,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
+  Image,
 } from "lucide-react";
 import { hasPermission } from "@/lib/permissions";
 import type { Permission } from "@/types";
@@ -83,6 +84,12 @@ const menuItems: MenuItem[] = [
     href: "/dashboard/printers",
     icon: Printer,
     permission: "printer:write",
+  },
+  {
+    title: "轮播图管理",
+    href: "/dashboard/banners",
+    icon: Image,
+    permission: "banners:read",
   },
   {
     title: "门店管理",

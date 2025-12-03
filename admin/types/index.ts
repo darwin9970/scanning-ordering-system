@@ -217,7 +217,8 @@ export type Permission =
   | "staff:read" | "staff:write" | "staff:delete"
   | "settings:read" | "settings:write"
   | "report:read"
-  | "service:read" | "service:write";
+  | "service:read" | "service:write"
+  | "banners:read" | "banners:create" | "banners:update" | "banners:delete";
 
 export interface AdminWithStore extends Omit<Admin, "password"> {
   store: Store | null;

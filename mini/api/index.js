@@ -168,6 +168,18 @@ export const getStoreInfo = (storeId) => {
   return get(`/api/stores/${storeId}`)
 }
 
+// ==================== 轮播图相关 ====================
+
+/**
+ * 获取轮播图列表
+ * @param {object} params - 查询参数
+ * @param {number} params.storeId - 门店ID
+ * @param {string} params.position - 位置: HOME_TOP, MENU_TOP, CATEGORY, PROMOTION
+ */
+export const getBanners = (params) => {
+  return get('/banners/list', params)
+}
+
 export default {
   getTableInfo,
   getCategories,
@@ -185,5 +197,6 @@ export default {
   callService,
   getAvailableCoupons,
   calculateDiscount,
-  getStoreInfo
+  getStoreInfo,
+  getBanners
 }

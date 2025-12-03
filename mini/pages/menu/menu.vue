@@ -17,7 +17,32 @@
     
     <!-- 占位 -->
     <view class="navbar-placeholder" :style="{ height: (statusBarHeight + 50) + 'px' }" />
-    
+
+    <!-- 轮播图 -->
+    <view v-if="banners.length > 0" class="banner-swiper">
+      <swiper
+        class="banner-swiper__inner"
+        :autoplay="true"
+        :interval="4000"
+        :circular="true"
+        indicator-dots
+        indicator-color="rgba(255,255,255,0.5)"
+        indicator-active-color="#FFFFFF"
+      >
+        <swiper-item
+          v-for="banner in banners"
+          :key="banner.id"
+          @tap="handleBannerClick(banner)"
+        >
+          <image
+            class="banner-swiper__image"
+            :src="banner.image"
+            mode="aspectFill"
+          />
+        </swiper-item>
+      </swiper>
+    </view>
+
     <!-- 主内容区 -->
     <view class="main-content">
       <!-- 左侧分类 -->
@@ -228,15 +253,19 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useTableStore } from '@/store/table'
 import { useCartStore } from '@/store/cart'
+import { getBanners } from '@/api'
 
 const tableStore = useTableStore()
 const cartStore = useCartStore()
 
 // 状态栏高度
 const statusBarHeight = ref(20)
+
+// 轮播图
+const banners = ref([])
 
 // 当前选中的分类
 const activeCategoryId = ref(null)
@@ -262,6 +291,57 @@ uni.getSystemInfo({
 if (tableStore.categories.length > 0) {
   activeCategoryId.value = tableStore.categories[0].id
 }
+
+// 加载轮播图
+const loadBanners = async () => {
+  try {
+    const res = await getBanners({
+      storeId: tableStore.storeId,
+      position: 'MENU_TOP'
+    })
+    if (res.code === 200) {
+      banners.value = res.data || []
+    }
+  } catch (e) {
+    console.error('加载轮播图失败:', e)
+  }
+}
+
+// 点击轮播图
+const handleBannerClick = (banner) => {
+  if (!banner.linkType || !banner.linkValue) return
+
+  switch (banner.linkType) {
+    case 'product':
+      // 跳转商品详情
+      uni.navigateTo({
+        url: `/pages/product/detail?id=${banner.linkValue}`
+      })
+      break
+    case 'category':
+      // 滚动到分类
+      activeCategoryId.value = Number(banner.linkValue)
+      scrollToProduct.value = 'products-' + banner.linkValue
+      break
+    case 'promotion':
+      // 跳转活动页
+      uni.navigateTo({
+        url: `/pages/promotion/detail?id=${banner.linkValue}`
+      })
+      break
+    case 'url':
+      // 跳转外部链接
+      uni.navigateTo({
+        url: `/pages/webview/index?url=${encodeURIComponent(banner.linkValue)}`
+      })
+      break
+  }
+}
+
+// 页面加载
+onMounted(() => {
+  loadBanners()
+})
 
 // 获取分类下的商品
 const getProductsByCategory = (categoryId) => {
@@ -439,6 +519,22 @@ const goToCheckout = () => {
 
 .navbar-placeholder {
   width: 100%;
+}
+
+// 轮播图
+.banner-swiper {
+  padding: 0 24rpx 24rpx;
+
+  &__inner {
+    height: 280rpx;
+    border-radius: $radius-lg;
+    overflow: hidden;
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 // 主内容
