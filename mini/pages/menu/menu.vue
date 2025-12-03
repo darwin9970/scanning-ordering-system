@@ -43,6 +43,22 @@
       </swiper>
     </view>
 
+    <!-- 店内公告 -->
+    <view v-if="storeAnnouncement" class="store-notice">
+      <uni-icons type="sound-filled" size="16" color="#ff9500" />
+      <text class="store-notice__text">
+        {{ storeAnnouncement }}
+      </text>
+    </view>
+
+    <!-- 营业状态 -->
+    <view v-if="!isStoreOpen" class="store-closed">
+      <uni-icons type="info-filled" size="16" color="#ff4d4f" />
+      <text class="store-closed__text">
+        当前非营业时间 ({{ businessHoursText }})
+      </text>
+    </view>
+
     <!-- 主内容区 -->
     <view class="main-content">
       <!-- 左侧分类 -->
@@ -292,6 +308,48 @@ if (tableStore.categories.length > 0) {
   activeCategoryId.value = tableStore.categories[0].id
 }
 
+// ==================== 门店配置 ====================
+
+// 门店公告
+const storeAnnouncement = computed(() => tableStore.store?.announcement || '')
+
+// 营业时间文字
+const businessHoursText = computed(() => {
+  const hours = tableStore.store?.businessHours
+  if (!hours) return '暂无营业时间'
+  return `${hours.open} - ${hours.close}`
+})
+
+// 是否营业中
+const isStoreOpen = computed(() => {
+  const store = tableStore.store
+  if (!store) return true
+  
+  // 检查门店状态
+  if (store.status !== 'ACTIVE') return false
+  
+  // 检查营业时间
+  const hours = store.businessHours
+  if (!hours) return true
+  
+  const now = new Date()
+  const currentDay = now.getDay() // 0-6, 0 是周日
+  
+  // 检查休息日
+  if (hours.restDays && hours.restDays.includes(currentDay)) {
+    return false
+  }
+  
+  // 检查营业时间
+  const currentTime = now.getHours() * 100 + now.getMinutes()
+  const [openHour, openMin] = hours.open.split(':').map(Number)
+  const [closeHour, closeMin] = hours.close.split(':').map(Number)
+  const openTime = openHour * 100 + openMin
+  const closeTime = closeHour * 100 + closeMin
+  
+  return currentTime >= openTime && currentTime <= closeTime
+})
+
 // 加载轮播图
 const loadBanners = async () => {
   try {
@@ -534,6 +592,40 @@ const goToCheckout = () => {
   &__image {
     width: 100%;
     height: 100%;
+  }
+}
+
+// 店内公告
+.store-notice {
+  margin: 0 24rpx 20rpx;
+  padding: 16rpx 24rpx;
+  background: #fff7e6;
+  border-radius: $radius-base;
+  display: flex;
+  align-items: center;
+  
+  &__text {
+    margin-left: 12rpx;
+    font-size: $font-size-sm;
+    color: #d48806;
+    flex: 1;
+  }
+}
+
+// 营业状态提示
+.store-closed {
+  margin: 0 24rpx 20rpx;
+  padding: 16rpx 24rpx;
+  background: #fff2f0;
+  border-radius: $radius-base;
+  display: flex;
+  align-items: center;
+  
+  &__text {
+    margin-left: 12rpx;
+    font-size: $font-size-sm;
+    color: #ff4d4f;
+    flex: 1;
   }
 }
 

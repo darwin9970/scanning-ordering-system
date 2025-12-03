@@ -1,5 +1,13 @@
 <template>
   <view class="page-confirm">
+    <!-- 点餐提示 -->
+    <view v-if="orderTip" class="order-tip">
+      <uni-icons type="info-filled" size="16" color="#1890ff" />
+      <text class="order-tip__text">
+        {{ orderTip }}
+      </text>
+    </view>
+
     <!-- 桌台信息 -->
     <view class="table-info">
       <uni-icons type="location" size="20" color="#FF6B35" />
@@ -11,6 +19,14 @@
           {{ tableStore.tableNo }}桌
         </text>
       </view>
+    </view>
+
+    <!-- 起订金额提示 -->
+    <view v-if="belowMinOrder" class="min-order-tip">
+      <uni-icons type="info-filled" size="16" color="#ff4d4f" />
+      <text class="min-order-tip__text">
+        还差 ¥{{ minOrderGap }} 起送
+      </text>
     </view>
     
     <!-- 商品列表 -->
@@ -106,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useTableStore } from '@/store/table'
 import { useCartStore } from '@/store/cart'
 import { useOrderStore } from '@/store/order'
@@ -121,8 +137,38 @@ const peopleCount = ref(1)
 // 订单备注
 const orderRemark = ref('')
 
+// ==================== 门店配置 ====================
+
+// 点餐提示
+const orderTip = computed(() => tableStore.store?.orderTip || '')
+
+// 起订金额
+const minOrderAmount = computed(() => {
+  const amount = tableStore.store?.minOrderAmount
+  return amount ? Number(amount) : 0
+})
+
+// 是否低于起订金额
+const belowMinOrder = computed(() => {
+  return minOrderAmount.value > 0 && cartStore.totalPrice < minOrderAmount.value
+})
+
+// 差额
+const minOrderGap = computed(() => {
+  return (minOrderAmount.value - cartStore.totalPrice).toFixed(2)
+})
+
 // 提交订单
 const handleSubmit = async () => {
+  // 检查起订金额
+  if (belowMinOrder.value) {
+    uni.showToast({
+      title: `还差 ¥${minOrderGap.value} 起送`,
+      icon: 'none'
+    })
+    return
+  }
+
   try {
     const result = await orderStore.submitOrder({
       peopleCount: peopleCount.value,
@@ -147,6 +193,41 @@ const handleSubmit = async () => {
   background: $bg-page;
   padding: 24rpx;
   padding-bottom: 160rpx;
+}
+
+// 点餐提示
+.order-tip {
+  padding: 20rpx 24rpx;
+  background: #e6f7ff;
+  border-radius: $radius-lg;
+  margin-bottom: 24rpx;
+  display: flex;
+  align-items: flex-start;
+  
+  &__text {
+    margin-left: 12rpx;
+    font-size: $font-size-sm;
+    color: #1890ff;
+    line-height: 1.5;
+    flex: 1;
+  }
+}
+
+// 起订金额提示
+.min-order-tip {
+  padding: 20rpx 24rpx;
+  background: #fff2f0;
+  border-radius: $radius-lg;
+  margin-bottom: 24rpx;
+  display: flex;
+  align-items: center;
+  
+  &__text {
+    margin-left: 12rpx;
+    font-size: $font-size-sm;
+    color: #ff4d4f;
+    flex: 1;
+  }
 }
 
 .table-info {

@@ -161,11 +161,29 @@
         <text>切换桌台</text>
       </view>
     </view>
+
+    <!-- WiFi 信息 -->
+    <view v-if="wifiInfo.name" class="wifi-card" @tap="copyWifiPassword">
+      <view class="wifi-card__icon">
+        <uni-icons type="wifi" size="24" color="#1890FF" />
+      </view>
+      <view class="wifi-card__info">
+        <text class="wifi-card__name">
+          WiFi: {{ wifiInfo.name }}
+        </text>
+        <text class="wifi-card__password">
+          密码: {{ wifiInfo.password || '无密码' }}
+        </text>
+      </view>
+      <view class="wifi-card__action">
+        <text>点击复制</text>
+      </view>
+    </view>
   </view>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useTableStore } from '@/store/table'
 
 const tableStore = useTableStore()
@@ -182,6 +200,26 @@ const memberInfo = ref(null)
 
 // 优惠券数量
 const couponCount = ref(0)
+
+// WiFi 信息
+const wifiInfo = computed(() => ({
+  name: tableStore.store?.wifiName || '',
+  password: tableStore.store?.wifiPassword || ''
+}))
+
+// 复制 WiFi 密码
+const copyWifiPassword = () => {
+  if (!wifiInfo.value.password) {
+    uni.showToast({ title: '无密码WiFi', icon: 'none' })
+    return
+  }
+  uni.setClipboardData({
+    data: wifiInfo.value.password,
+    success: () => {
+      uni.showToast({ title: '密码已复制', icon: 'success' })
+    }
+  })
+}
 
 // 格式化手机号
 const formatPhone = (phone) => {
@@ -536,6 +574,56 @@ const handleSwitchTable = () => {
     border-radius: $radius-base;
     font-size: $font-size-sm;
     color: $primary;
+  }
+}
+
+// WiFi 信息卡片
+.wifi-card {
+  display: flex;
+  align-items: center;
+  margin: 24rpx;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+  border-radius: $radius-lg;
+  
+  &__icon {
+    width: 80rpx;
+    height: 80rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+  }
+  
+  &__info {
+    flex: 1;
+    margin-left: 20rpx;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  &__name {
+    font-size: $font-size-base;
+    color: #096dd9;
+    font-weight: $font-weight-medium;
+  }
+  
+  &__password {
+    font-size: $font-size-sm;
+    color: #1890ff;
+    margin-top: 8rpx;
+  }
+  
+  &__action {
+    padding: 12rpx 20rpx;
+    background: #1890ff;
+    border-radius: $radius-base;
+    
+    text {
+      font-size: $font-size-sm;
+      color: #fff;
+    }
   }
 }
 </style>
