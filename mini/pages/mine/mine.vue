@@ -211,10 +211,16 @@ const handleLogin = () => {
   // #endif
 }
 
-// 跳转订单列表
+// 跳转订单列表 (TabBar 页面，通过全局状态传递筛选条件)
 const goToOrders = (status) => {
-  uni.navigateTo({
-    url: `/pages/order/list?status=${status}`
+  // 保存筛选状态到本地存储
+  if (status) {
+    uni.setStorageSync('orderFilterStatus', status)
+  } else {
+    uni.removeStorageSync('orderFilterStatus')
+  }
+  uni.switchTab({
+    url: '/pages/order/list'
   })
 }
 

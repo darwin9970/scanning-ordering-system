@@ -21,9 +21,9 @@ module.exports = {
   },
   rules: {
     // 缩进: 2格空格
-    'indent': ['error', 2, { SwitchCase: 1 }],
+    'indent': 'off', // 在 .vue 文件中由 vue/script-indent 处理
     'vue/html-indent': ['error', 2],
-    'vue/script-indent': ['error', 2, { baseIndent: 0 }],
+    'vue/script-indent': ['error', 2, { baseIndent: 0, switchCase: 1 }],
 
     // 引号
     'quotes': ['error', 'single'],

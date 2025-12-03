@@ -153,13 +153,14 @@ const parseQRCode = (url) => {
 // 跳转到菜单页
 const goToMenu = async (storeId, tableId) => {
   uni.showLoading({ title: '加载中...' })
-  
+
   const success = await tableStore.initTable(storeId, tableId)
-  
+
   uni.hideLoading()
-  
+
   if (success) {
-    uni.navigateTo({
+    // TabBar 页面必须用 switchTab
+    uni.switchTab({
       url: '/pages/menu/menu'
     })
   }
