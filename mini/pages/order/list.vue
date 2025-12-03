@@ -85,6 +85,9 @@
         </view>
       </view>
     </q-skeleton>
+    
+    <!-- 自定义 TabBar -->
+    <custom-tabbar :current="1" />
   </view>
 </template>
 
@@ -190,7 +193,7 @@ export default {
 .page-order-list {
   min-height: 100vh;
   background: $bg-page;
-  padding-bottom: 24rpx;
+  padding-bottom: 140rpx;
 }
 
 .status-tabs {

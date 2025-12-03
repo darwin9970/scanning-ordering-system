@@ -190,6 +190,9 @@
     <!-- 空购物车时的占位 -->
     <view v-else class="cart-bar-placeholder" />
     
+    <!-- 自定义 TabBar -->
+    <custom-tabbar :current="0" />
+    
     <!-- 商品详情弹窗 -->
     <uni-popup ref="productPopup" type="bottom">
       <view v-if="selectedProduct" class="product-popup">
@@ -850,7 +853,7 @@ const goToCheckout = () => {
 }
 
 .cart-bar-placeholder {
-  height: 40rpx;
+  height: 140rpx;
 }
 
 // 商品详情弹窗
