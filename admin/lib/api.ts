@@ -8,6 +8,7 @@ import type {
   Order,
   Printer,
   Staff,
+  Banner,
   AdminWithStore,
   LoginResponse,
   StoreListParams,
@@ -30,6 +31,8 @@ import type {
   UpdatePrinterRequest,
   CreateStaffRequest,
   UpdateStaffRequest,
+  CreateBannerRequest,
+  UpdateBannerRequest,
   DashboardOverview,
   SalesChartItem,
   TopProduct,
@@ -337,6 +340,57 @@ class ApiClient {
 
   deleteStaff(id: number): Promise<null> {
     return this.request<null>(`/api/staff/${id}`, { method: "DELETE" });
+  }
+
+  // ==================== Banners ====================
+
+  getBanners(params?: { storeId?: number; position?: string }): Promise<PaginatedData<Banner>> {
+    return this.request<PaginatedData<Banner>>(`/banners${this.buildQuery(params)}`);
+  }
+
+  getBanner(id: number): Promise<Banner> {
+    return this.request<Banner>(`/banners/${id}`);
+  }
+
+  createBanner(data: CreateBannerRequest): Promise<Banner> {
+    return this.request<Banner>("/banners", { method: "POST", body: data });
+  }
+
+  updateBanner(id: number, data: UpdateBannerRequest): Promise<Banner> {
+    return this.request<Banner>(`/banners/${id}`, { method: "PUT", body: data });
+  }
+
+  toggleBanner(id: number): Promise<Banner> {
+    return this.request<Banner>(`/banners/${id}/toggle`, { method: "PUT" });
+  }
+
+  deleteBanner(id: number): Promise<null> {
+    return this.request<null>(`/banners/${id}`, { method: "DELETE" });
+  }
+
+  // ==================== Upload ====================
+
+  async upload(file: File): Promise<{ url: string }> {
+    const token = this.getToken();
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${this.baseUrl}/upload`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (data.code !== 200) {
+      throw new Error(data.message || "上传失败");
+    }
+    return data.data;
   }
 
   // ==================== Settings ====================

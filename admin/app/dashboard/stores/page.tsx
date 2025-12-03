@@ -23,9 +23,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Store, Edit, Trash2, MapPin, Phone } from "lucide-react";
+import { Plus, Store, Edit, Trash2, MapPin, Phone, Settings } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function StoresPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStore, setEditingStore] = useState<any>(null);
@@ -170,6 +172,14 @@ export default function StoresPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => router.push(`/dashboard/stores/${store.id}`)}
+                          title="门店配置"
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
                         <Button size="sm" variant="ghost" onClick={() => openEditDialog(store)}>
                           <Edit className="h-4 w-4" />
                         </Button>

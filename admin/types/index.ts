@@ -57,10 +57,42 @@ export interface Store {
   latitude: string | null;
   longitude: string | null;
   logo: string | null;
+  coverImage: string | null;
+  description: string | null;
+  announcement: string | null;
   status: StoreStatus;
+  businessHours: { open: string; close: string; restDays?: number[] } | null;
+  minOrderAmount: string | null;
+  serviceChargeRate: string | null;
+  autoConfirmOrder: boolean;
+  autoCompleteMinutes: number;
+  wifiName: string | null;
+  wifiPassword: string | null;
+  contactName: string | null;
+  contactPhone: string | null;
+  welcomeText: string | null;
+  orderTip: string | null;
   createdAt: string;
   updatedAt: string;
   _count?: { tables: number; products: number; orders?: number };
+}
+
+export type BannerPosition = "HOME_TOP" | "MENU_TOP" | "CATEGORY" | "PROMOTION";
+
+export interface Banner {
+  id: number;
+  storeId: number | null;
+  title: string;
+  image: string;
+  position: BannerPosition;
+  linkType: string | null;
+  linkValue: string | null;
+  sort: number;
+  isActive: boolean;
+  startTime: string | null;
+  endTime: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Table {
@@ -280,7 +312,36 @@ export interface CreateStoreRequest {
 
 export interface UpdateStoreRequest extends Partial<CreateStoreRequest> {
   status?: StoreStatus;
+  coverImage?: string;
+  description?: string;
+  announcement?: string;
+  businessHours?: { open: string; close: string; restDays?: number[] };
+  minOrderAmount?: number;
+  serviceChargeRate?: number;
+  autoConfirmOrder?: boolean;
+  autoCompleteMinutes?: number;
+  wifiName?: string;
+  wifiPassword?: string;
+  contactName?: string;
+  contactPhone?: string;
+  welcomeText?: string;
+  orderTip?: string;
 }
+
+export interface CreateBannerRequest {
+  storeId?: number;
+  title: string;
+  image: string;
+  position: BannerPosition;
+  linkType?: string;
+  linkValue?: string;
+  sort?: number;
+  isActive?: boolean;
+  startTime?: string;
+  endTime?: string;
+}
+
+export interface UpdateBannerRequest extends Partial<CreateBannerRequest> {}
 
 export interface CreateTableRequest {
   storeId: number;

@@ -128,7 +128,34 @@ export const stores = pgTable("stores", {
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
   logo: varchar("logo", { length: 255 }),
+  coverImage: varchar("cover_image", { length: 255 }), // 门店封面图
+  description: text("description"), // 门店简介
+  announcement: text("announcement"), // 店内公告
   status: storeStatusEnum("status").notNull().default("ACTIVE"),
+
+  // 营业设置
+  businessHours: json("business_hours").$type<{
+    open: string; // 开始时间 "09:00"
+    close: string; // 结束时间 "22:00"
+    restDays?: number[]; // 休息日 [0, 6] 表示周日和周六休息
+  }>(),
+
+  // 订单设置
+  minOrderAmount: decimal("min_order_amount", { precision: 10, scale: 2 }).default("0"), // 起订金额
+  serviceChargeRate: decimal("service_charge_rate", { precision: 5, scale: 4 }).default("0"), // 服务费率
+  autoConfirmOrder: boolean("auto_confirm_order").default(false), // 自动确认订单
+  autoCompleteMinutes: integer("auto_complete_minutes").default(60), // 自动完成时间(分钟)
+
+  // 便利设置
+  wifiName: varchar("wifi_name", { length: 50 }),
+  wifiPassword: varchar("wifi_password", { length: 50 }),
+  contactName: varchar("contact_name", { length: 50 }), // 联系人姓名
+  contactPhone: varchar("contact_phone", { length: 20 }), // 联系人电话
+
+  // 小程序设置
+  welcomeText: varchar("welcome_text", { length: 100 }).default("欢迎光临"), // 欢迎语
+  orderTip: text("order_tip"), // 点餐提示语
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()
