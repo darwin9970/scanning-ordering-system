@@ -1,12 +1,10 @@
 import { Elysia, t } from "elysia";
 import { db, banners } from "../db";
 import { eq, and, desc, isNull, or, lte, gte } from "drizzle-orm";
-import { authPlugin, requirePermission } from "../lib/auth";
+import { requirePermission } from "../lib/auth";
 
-export const bannerRoutes = new Elysia({ prefix: "/banners" })
-  // ==================== 用户端接口 ====================
-
-  // 获取轮播图列表 (小程序用)
+// 公开接口 (小程序用)
+const publicRoutes = new Elysia()
   .get(
     "/list",
     async ({ query }) => {
@@ -24,7 +22,6 @@ export const bannerRoutes = new Elysia({ prefix: "/banners" })
       }
 
       if (storeId) {
-        // 获取门店专属 + 全局的 banner
         conditions.push(
           or(eq(banners.storeId, Number(storeId)), isNull(banners.storeId))
         );
@@ -44,24 +41,26 @@ export const bannerRoutes = new Elysia({ prefix: "/banners" })
         position: t.Optional(t.String()),
       }),
     }
-  )
+  );
 
-  // ==================== 管理端接口 ====================
-  .use(authPlugin)
-
-  // 获取 Banner 列表 (管理后台)
+// 管理端接口 (需要认证)
+const adminRoutes = new Elysia()
+  .use(requirePermission("banners:read"))
+  // 获取 Banner 列表
   .get(
     "/",
-    async ({ admin, query }) => {
-      const { page = "1", pageSize = "20", position } = query;
+    async ({ user, query }) => {
+      const { page = "1", pageSize = "20", position, storeId } = query;
       const offset = (Number(page) - 1) * Number(pageSize);
 
       const conditions = [];
 
-      // 非超级管理员只能看自己门店的
-      if (admin.role !== "SUPER_ADMIN" && admin.storeId) {
+      // 按门店筛选
+      if (storeId) {
+        conditions.push(eq(banners.storeId, Number(storeId)));
+      } else if (user && user.role !== "SUPER_ADMIN" && user.storeId) {
         conditions.push(
-          or(eq(banners.storeId, admin.storeId), isNull(banners.storeId))
+          or(eq(banners.storeId, user.storeId), isNull(banners.storeId))
         );
       }
 
@@ -80,15 +79,14 @@ export const bannerRoutes = new Elysia({ prefix: "/banners" })
       return { code: 200, data: { list, page: Number(page), pageSize: Number(pageSize) } };
     },
     {
-      beforeHandle: [requirePermission("banners:read")],
       query: t.Object({
         page: t.Optional(t.String()),
         pageSize: t.Optional(t.String()),
         position: t.Optional(t.String()),
+        storeId: t.Optional(t.String()),
       }),
     }
   )
-
   // 获取单个 Banner
   .get(
     "/:id",
@@ -106,16 +104,14 @@ export const bannerRoutes = new Elysia({ prefix: "/banners" })
       return { code: 200, data: banner[0] };
     },
     {
-      beforeHandle: [requirePermission("banners:read")],
       params: t.Object({ id: t.String() }),
     }
   )
-
   // 创建 Banner
   .post(
     "/",
-    async ({ body, admin }) => {
-      const storeId = admin.role === "SUPER_ADMIN" ? body.storeId : admin.storeId;
+    async ({ body, user }) => {
+      const storeId = user?.role === "SUPER_ADMIN" ? body.storeId : user?.storeId;
 
       const [banner] = await db
         .insert(banners)
@@ -136,7 +132,6 @@ export const bannerRoutes = new Elysia({ prefix: "/banners" })
       return { code: 200, data: banner, message: "创建成功" };
     },
     {
-      beforeHandle: [requirePermission("banners:create")],
       body: t.Object({
         storeId: t.Optional(t.Number()),
         title: t.String(),
@@ -151,7 +146,6 @@ export const bannerRoutes = new Elysia({ prefix: "/banners" })
       }),
     }
   )
-
   // 更新 Banner
   .put(
     "/:id",
@@ -183,7 +177,6 @@ export const bannerRoutes = new Elysia({ prefix: "/banners" })
       return { code: 200, data: banner, message: "更新成功" };
     },
     {
-      beforeHandle: [requirePermission("banners:update")],
       params: t.Object({ id: t.String() }),
       body: t.Object({
         title: t.Optional(t.String()),
@@ -198,7 +191,6 @@ export const bannerRoutes = new Elysia({ prefix: "/banners" })
       }),
     }
   )
-
   // 删除 Banner
   .delete(
     "/:id",
@@ -215,11 +207,9 @@ export const bannerRoutes = new Elysia({ prefix: "/banners" })
       return { code: 200, message: "删除成功" };
     },
     {
-      beforeHandle: [requirePermission("banners:delete")],
       params: t.Object({ id: t.String() }),
     }
   )
-
   // 批量更新排序
   .put(
     "/sort",
@@ -234,7 +224,6 @@ export const bannerRoutes = new Elysia({ prefix: "/banners" })
       return { code: 200, message: "排序更新成功" };
     },
     {
-      beforeHandle: [requirePermission("banners:update")],
       body: t.Object({
         items: t.Array(
           t.Object({
@@ -245,7 +234,6 @@ export const bannerRoutes = new Elysia({ prefix: "/banners" })
       }),
     }
   )
-
   // 切换启用状态
   .put(
     "/:id/toggle",
@@ -266,10 +254,17 @@ export const bannerRoutes = new Elysia({ prefix: "/banners" })
         .where(eq(banners.id, Number(params.id)))
         .returning();
 
+      if (!updated) {
+        return { code: 500, message: "更新失败" };
+      }
+
       return { code: 200, data: updated, message: updated.isActive ? "已启用" : "已禁用" };
     },
     {
-      beforeHandle: [requirePermission("banners:update")],
       params: t.Object({ id: t.String() }),
     }
   );
+
+export const bannerRoutes = new Elysia({ prefix: "/banners" })
+  .use(publicRoutes)
+  .use(adminRoutes);
