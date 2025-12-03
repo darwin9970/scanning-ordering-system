@@ -1,7 +1,7 @@
 {
-    "name" : "mini",
+    "name" : "扫码点餐",
     "appid" : "",
-    "description" : "",
+    "description" : "桌台扫码点单小程序",
     "versionName" : "1.0.0",
     "versionCode" : "100",
     "transformPx" : false,

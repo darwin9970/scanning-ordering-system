@@ -1,0 +1,138 @@
+// ==================== 设计稿基准 ====================
+// 设计稿宽度: 750rpx (对应 375px 设计稿 × 2)
+
+// ==================== 主色调 ====================
+$primary: #FF6B35;           // 活力橙 - 主按钮、价格、强调
+$primary-dark: #E55A2B;      // 深橙 - 按钮按下态
+$primary-light: #FFF0EB;     // 浅橙 - 标签背景、选中态背景
+$primary-lighter: #FFF8F5;   // 更浅橙 - 页面强调背景
+
+// ==================== 中性色 ====================
+$text-primary: #1A1A1A;      // 主要文字 - 标题、价格
+$text-secondary: #666666;    // 次要文字 - 正文描述
+$text-tertiary: #999999;     // 辅助文字 - 占位符、提示
+$text-quaternary: #CCCCCC;   // 禁用文字
+
+$border-dark: #D9D9D9;       // 深边框 - 输入框
+$border-light: #E5E5E5;      // 浅边框 - 分割线
+$border-lighter: #F0F0F0;    // 更浅边框 - 卡片边框
+
+$bg-page: #F5F5F5;           // 页面背景
+$bg-card: #FFFFFF;           // 卡片背景
+$bg-grey: #FAFAFA;           // 灰色背景块
+$bg-mask: rgba(0, 0, 0, 0.5); // 遮罩层
+
+// ==================== 语义色 ====================
+$success: #52C41A;           // 成功 - 已完成
+$success-light: #F6FFED;     // 成功背景
+$warning: #FAAD14;           // 警告 - 制作中
+$warning-light: #FFFBE6;     // 警告背景
+$error: #FF4D4F;             // 错误 - 删除、退款
+$error-light: #FFF2F0;       // 错误背景
+$info: #1890FF;              // 信息 - 链接
+$info-light: #E6F7FF;        // 信息背景
+
+// ==================== 字号规范 ====================
+$font-size-xs: 20rpx;        // 辅助说明、标签角标
+$font-size-sm: 24rpx;        // 次要信息、时间、提示
+$font-size-base: 28rpx;      // 正文默认
+$font-size-md: 30rpx;        // 列表标题
+$font-size-lg: 32rpx;        // 页面标题、卡片标题
+$font-size-xl: 36rpx;        // 大标题
+$font-size-xxl: 40rpx;       // 金额数字
+$font-size-xxxl: 48rpx;      // 超大金额
+
+// ==================== 行高规范 ====================
+$line-height-tight: 1.2;     // 紧凑 - 标题
+$line-height-normal: 1.5;    // 正常 - 正文
+$line-height-loose: 1.8;     // 宽松 - 段落
+
+// ==================== 字重规范 ====================
+$font-weight-regular: 400;   // 常规 - 正文
+$font-weight-medium: 500;    // 中等 - 次要标题
+$font-weight-semibold: 600;  // 半粗 - 标题、价格
+$font-weight-bold: 700;      // 粗体 - 强调
+
+// ==================== 基础间距 ====================
+$spacing-xxs: 4rpx;          // 极小间距 - 图标与文字
+$spacing-xs: 8rpx;           // 超小间距 - 紧凑元素
+$spacing-sm: 12rpx;          // 小间距 - 标签内边距
+$spacing-base: 16rpx;        // 基础间距 - 元素间距
+$spacing-md: 20rpx;          // 中间距 - 模块内边距
+$spacing-lg: 24rpx;          // 大间距 - 卡片内边距
+$spacing-xl: 32rpx;          // 超大间距 - 页面边距
+$spacing-xxl: 40rpx;         // 模块间距
+$spacing-xxxl: 48rpx;        // 区块间距
+
+// ==================== 页面边距 ====================
+$page-padding-h: 24rpx;      // 页面左右边距
+$page-padding-top: 24rpx;    // 页面顶部边距
+$page-padding-bottom: 120rpx; // 页面底部边距（给底部栏留空）
+
+// ==================== 卡片间距 ====================
+$card-padding: 24rpx;        // 卡片内边距
+$card-margin-bottom: 20rpx;  // 卡片下间距
+$card-item-gap: 16rpx;       // 卡片内元素间距
+
+// ==================== 圆角规范 ====================
+$radius-xs: 4rpx;            // 极小圆角 - 小标签
+$radius-sm: 8rpx;            // 小圆角 - 标签、徽标
+$radius-base: 12rpx;         // 基础圆角 - 按钮
+$radius-md: 16rpx;           // 中圆角 - 小卡片
+$radius-lg: 20rpx;           // 大圆角 - 卡片
+$radius-xl: 24rpx;           // 超大圆角 - 弹窗
+$radius-full: 9999rpx;       // 全圆角 - 圆形按钮
+
+// ==================== 图片尺寸 ====================
+$image-product-large: 220rpx;  // 商品大图（列表）
+$image-product-medium: 160rpx; // 商品中图（购物车）
+$image-product-small: 120rpx;  // 商品小图（订单项）
+$image-product-thumb: 80rpx;   // 商品缩略图
+$image-avatar: 64rpx;          // 用户头像
+$image-icon: 40rpx;            // 图标大小
+
+// ==================== 按钮尺寸 ====================
+$btn-height-lg: 96rpx;       // 大按钮（主操作）
+$btn-height-md: 80rpx;       // 中按钮（次要操作）
+$btn-height-sm: 64rpx;       // 小按钮
+$btn-height-xs: 52rpx;       // 迷你按钮
+$btn-min-width: 160rpx;      // 按钮最小宽度
+
+// ==================== 输入框尺寸 ====================
+$input-height: 88rpx;        // 输入框高度
+$input-padding: 24rpx;       // 输入框内边距
+
+// ==================== 固定元素高度 ====================
+$navbar-height: 88rpx;       // 自定义导航栏高度
+$tabbar-height: 100rpx;      // 底部标签栏高度
+$cart-bar-height: 100rpx;    // 购物车栏高度
+$search-bar-height: 72rpx;   // 搜索栏高度
+$category-width: 160rpx;     // 分类栏宽度
+
+// ==================== 阴影层级 ====================
+$shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);    // 轻微阴影 - 卡片
+$shadow-base: 0 4rpx 16rpx rgba(0, 0, 0, 0.08); // 基础阴影 - 悬浮元素
+$shadow-md: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);   // 中阴影 - 弹窗
+$shadow-lg: 0 16rpx 48rpx rgba(0, 0, 0, 0.16);  // 大阴影 - 抽屉
+$shadow-top: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06); // 底部栏向上阴影
+
+// ==================== 动画时长 ====================
+$duration-fast: 150ms;       // 快速 - hover、active
+$duration-base: 250ms;       // 基础 - 过渡动画
+$duration-slow: 350ms;       // 慢速 - 页面切换
+$duration-slower: 500ms;     // 更慢 - 复杂动画
+
+// ==================== 缓动函数 ====================
+$ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+$ease-out: cubic-bezier(0, 0, 0.2, 1);
+$ease-in: cubic-bezier(0.4, 0, 1, 1);
+$ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+// ==================== z-index 层级 ====================
+$z-index-base: 1;
+$z-index-dropdown: 100;
+$z-index-sticky: 200;
+$z-index-fixed: 300;
+$z-index-modal-backdrop: 400;
+$z-index-modal: 500;
+$z-index-toast: 600;
