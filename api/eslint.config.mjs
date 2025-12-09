@@ -56,8 +56,8 @@ const eslintConfig = [
       "prefer-const": "error",
       "no-unused-vars": "off",
 
-      // Indentation (2 spaces)
-      indent: ["error", 2, { SwitchCase: 1 }],
+      // Indentation - let Prettier handle it
+      indent: "off",
     },
   },
   {

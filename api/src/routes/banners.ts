@@ -4,44 +4,43 @@ import { eq, and, desc, isNull, or, lte, gte } from "drizzle-orm";
 import { requirePermission } from "../lib/auth";
 
 // 公开接口 (小程序用)
-const publicRoutes = new Elysia()
-  .get(
-    "/list",
-    async ({ query }) => {
-      const { storeId, position } = query;
-      const now = new Date();
+const publicRoutes = new Elysia().get(
+  "/list",
+  async ({ query }) => {
+    const { storeId, position } = query;
+    const now = new Date();
 
-      const conditions = [
-        eq(banners.isActive, true),
-        or(isNull(banners.startTime), lte(banners.startTime, now)),
-        or(isNull(banners.endTime), gte(banners.endTime, now)),
-      ];
+    const conditions = [
+      eq(banners.isActive, true),
+      or(isNull(banners.startTime), lte(banners.startTime, now)),
+      or(isNull(banners.endTime), gte(banners.endTime, now)),
+    ];
 
-      if (position) {
-        conditions.push(eq(banners.position, position as "HOME_TOP" | "MENU_TOP" | "CATEGORY" | "PROMOTION"));
-      }
-
-      if (storeId) {
-        conditions.push(
-          or(eq(banners.storeId, Number(storeId)), isNull(banners.storeId))
-        );
-      }
-
-      const list = await db
-        .select()
-        .from(banners)
-        .where(and(...conditions))
-        .orderBy(desc(banners.sort), desc(banners.createdAt));
-
-      return { code: 200, data: list };
-    },
-    {
-      query: t.Object({
-        storeId: t.Optional(t.String()),
-        position: t.Optional(t.String()),
-      }),
+    if (position) {
+      conditions.push(
+        eq(banners.position, position as "HOME_TOP" | "MENU_TOP" | "CATEGORY" | "PROMOTION")
+      );
     }
-  );
+
+    if (storeId) {
+      conditions.push(or(eq(banners.storeId, Number(storeId)), isNull(banners.storeId)));
+    }
+
+    const list = await db
+      .select()
+      .from(banners)
+      .where(and(...conditions))
+      .orderBy(desc(banners.sort), desc(banners.createdAt));
+
+    return { code: 200, data: list };
+  },
+  {
+    query: t.Object({
+      storeId: t.Optional(t.String()),
+      position: t.Optional(t.String()),
+    }),
+  }
+);
 
 // 管理端接口 (需要认证)
 const adminRoutes = new Elysia()
@@ -59,13 +58,13 @@ const adminRoutes = new Elysia()
       if (storeId) {
         conditions.push(eq(banners.storeId, Number(storeId)));
       } else if (user && user.role !== "SUPER_ADMIN" && user.storeId) {
-        conditions.push(
-          or(eq(banners.storeId, user.storeId), isNull(banners.storeId))
-        );
+        conditions.push(or(eq(banners.storeId, user.storeId), isNull(banners.storeId)));
       }
 
       if (position) {
-        conditions.push(eq(banners.position, position as "HOME_TOP" | "MENU_TOP" | "CATEGORY" | "PROMOTION"));
+        conditions.push(
+          eq(banners.position, position as "HOME_TOP" | "MENU_TOP" | "CATEGORY" | "PROMOTION")
+        );
       }
 
       const list = await db
@@ -161,8 +160,10 @@ const adminRoutes = new Elysia()
       if (body.linkValue !== undefined) updateData.linkValue = body.linkValue;
       if (body.sort !== undefined) updateData.sort = body.sort;
       if (body.isActive !== undefined) updateData.isActive = body.isActive;
-      if (body.startTime !== undefined) updateData.startTime = body.startTime ? new Date(body.startTime) : null;
-      if (body.endTime !== undefined) updateData.endTime = body.endTime ? new Date(body.endTime) : null;
+      if (body.startTime !== undefined)
+        updateData.startTime = body.startTime ? new Date(body.startTime) : null;
+      if (body.endTime !== undefined)
+        updateData.endTime = body.endTime ? new Date(body.endTime) : null;
 
       const [banner] = await db
         .update(banners)
@@ -265,6 +266,4 @@ const adminRoutes = new Elysia()
     }
   );
 
-export const bannerRoutes = new Elysia({ prefix: "/banners" })
-  .use(publicRoutes)
-  .use(adminRoutes);
+export const bannerRoutes = new Elysia({ prefix: "/banners" }).use(publicRoutes).use(adminRoutes);
