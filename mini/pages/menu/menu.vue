@@ -18,8 +18,22 @@
     <!-- 占位 -->
     <view class="navbar-placeholder" :style="{ height: (statusBarHeight + 50) + 'px' }" />
 
-    <!-- 轮播图 -->
-    <view v-if="banners.length > 0" class="banner-swiper">
+    <!-- 动态页面组件渲染 -->
+    <page-renderer
+      v-if="pageComponents.length > 0"
+      :components="pageComponents"
+      :banners="banners"
+      :announcement="storeAnnouncement"
+      :hot-products="hotProducts"
+      :new-products="newProducts"
+      :coupons="coupons"
+      @banner-click="handleBannerClick"
+      @nav-click="handleNavClick"
+      @product-click="showProductDetail"
+    />
+
+    <!-- 默认轮播图 (无配置时显示) -->
+    <view v-else-if="banners.length > 0" class="banner-swiper">
       <swiper
         class="banner-swiper__inner"
         :autoplay="true"
@@ -43,8 +57,8 @@
       </swiper>
     </view>
 
-    <!-- 店内公告 -->
-    <view v-if="storeAnnouncement" class="store-notice">
+    <!-- 默认店内公告 (无配置时显示) -->
+    <view v-if="pageComponents.length === 0 && storeAnnouncement" class="store-notice">
       <uni-icons type="sound-filled" size="16" color="#ff9500" />
       <text class="store-notice__text">
         {{ storeAnnouncement }}
@@ -275,7 +289,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useTableStore } from '@/store/table'
 import { useCartStore } from '@/store/cart'
-import { getBanners } from '@/api'
+import { getBanners, getPageConfig, getAvailableCoupons } from '@/api'
 
 const tableStore = useTableStore()
 const cartStore = useCartStore()
@@ -283,8 +297,27 @@ const cartStore = useCartStore()
 // 状态栏高度
 const statusBarHeight = ref(20)
 
+// 页面配置
+const pageComponents = ref([])
+const useCustomLayout = ref(false)
+
 // 轮播图
 const banners = ref([])
+
+// 热销商品
+const hotProducts = computed(() => {
+  const products = Object.values(tableStore.productsByCategory).flat()
+  return products.sort((a, b) => (b.sales || 0) - (a.sales || 0))
+})
+
+// 新品（按时间排序，取最新的）
+const newProducts = computed(() => {
+  const products = Object.values(tableStore.productsByCategory).flat()
+  return products.slice(0, 8)
+})
+
+// 优惠券
+const coupons = ref([])
 
 // 当前选中的分类
 const activeCategoryId = ref(null)
@@ -399,9 +432,78 @@ const handleBannerClick = (banner) => {
   }
 }
 
+// 处理导航点击
+const handleNavClick = (item) => {
+  if (!item.link || !item.link.type) return
+  
+  switch (item.link.type) {
+    case 'category':
+      if (item.link.value) {
+        activeCategoryId.value = Number(item.link.value)
+        scrollToProduct.value = 'products-' + item.link.value
+      }
+      break
+    case 'page':
+      if (item.link.value) {
+        // TabBar 页面使用 switchTab，其他页面使用 navigateTo
+        const tabBarPages = ['/pages/menu/menu', '/pages/order/list', '/pages/mine/mine']
+        if (tabBarPages.includes(item.link.value)) {
+          uni.switchTab({ url: item.link.value })
+        } else {
+          uni.navigateTo({ url: item.link.value })
+        }
+      }
+      break
+    case 'product':
+      if (item.link.value) {
+        uni.navigateTo({
+          url: `/pages/product/detail?id=${item.link.value}`
+        })
+      }
+      break
+    case 'url':
+      if (item.link.value) {
+        uni.navigateTo({
+          url: `/pages/webview/index?url=${encodeURIComponent(item.link.value)}`
+        })
+      }
+      break
+  }
+}
+
+// 加载页面配置
+const loadPageConfig = async () => {
+  try {
+    const res = await getPageConfig({
+      storeId: tableStore.storeId,
+      pageType: 'HOME'
+    })
+    if (res.code === 200 && res.data) {
+      pageComponents.value = res.data.components || []
+      useCustomLayout.value = !res.data.isDefault
+    }
+  } catch (e) {
+    console.error('加载页面配置失败:', e)
+  }
+}
+
+// 加载优惠券
+const loadCoupons = async () => {
+  try {
+    const res = await getAvailableCoupons(tableStore.storeId)
+    if (res.code === 200) {
+      coupons.value = res.data || []
+    }
+  } catch (e) {
+    console.error('加载优惠券失败:', e)
+  }
+}
+
 // 页面加载
 onMounted(() => {
+  loadPageConfig()
   loadBanners()
+  loadCoupons()
 })
 
 // 获取分类下的商品

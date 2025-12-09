@@ -39,7 +39,7 @@ export function Header({ collapsed = false }: HeaderProps) {
           </div>
           <div className="text-sm">
             <p className="font-medium">{user?.name || "管理员"}</p>
-            <p className="text-xs text-gray-500">{ROLE_MAP[user?.role || ""] || "店员"}</p>
+            <p className="text-xs text-gray-500">{ROLE_MAP[user?.role || ""]?.label || "店员"}</p>
           </div>
         </div>
         <Button variant="ghost" size="icon" onClick={handleLogout} title="退出登录">

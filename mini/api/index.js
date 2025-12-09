@@ -180,6 +180,18 @@ export const getBanners = (params) => {
   return get('/banners/list', params)
 }
 
+// ==================== 页面配置相关 ====================
+
+/**
+ * 获取已发布的页面配置
+ * @param {object} params - 查询参数
+ * @param {number} params.storeId - 门店ID
+ * @param {string} params.pageType - 页面类型: HOME
+ */
+export const getPageConfig = (params) => {
+  return get('/api/page-configs/published', params)
+}
+
 export default {
   getTableInfo,
   getCategories,
@@ -198,5 +210,6 @@ export default {
   getAvailableCoupons,
   calculateDiscount,
   getStoreInfo,
-  getBanners
+  getBanners,
+  getPageConfig
 }

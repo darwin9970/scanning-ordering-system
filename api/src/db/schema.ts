@@ -801,3 +801,56 @@ export const banners = pgTable("banners", {
 export const bannersRelations = relations(banners, ({ one }) => ({
   store: one(stores, { fields: [banners.storeId], references: [stores.id] }),
 }));
+
+// ==================== 页面装修配置 ====================
+
+// 组件类型枚举
+export const pageComponentTypeEnum = pgEnum("page_component_type", [
+  "BANNER",       // 轮播图
+  "NAV_GRID",     // 金刚区/宫格导航
+  "PRODUCT_LIST", // 商品列表
+  "PRODUCT_GRID", // 商品网格
+  "NOTICE",       // 公告栏
+  "SPACER",       // 分隔符/留白
+  "IMAGE",        // 单图
+  "COUPON",       // 优惠券入口
+  "HOT_PRODUCTS", // 热销商品
+  "NEW_PRODUCTS", // 新品推荐
+]);
+
+// 页面配置表
+export const pageConfigs = pgTable(
+  "page_configs",
+  {
+    id: serial("id").primaryKey(),
+    storeId: integer("store_id")
+      .notNull()
+      .references(() => stores.id, { onDelete: "cascade" }),
+    pageType: varchar("page_type", { length: 50 }).notNull().default("HOME"), // HOME/MENU 等
+    components: json("components").$type<PageComponent[]>().notNull().default([]),
+    isPublished: boolean("is_published").notNull().default(false), // 是否已发布
+    publishedAt: timestamp("published_at"), // 发布时间
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("page_configs_store_id_idx").on(table.storeId),
+    uniqueIndex("page_configs_store_page_idx").on(table.storeId, table.pageType),
+  ]
+);
+
+// 页面组件类型定义
+export interface PageComponent {
+  id: string;                    // 组件唯一ID (uuid)
+  type: string;                  // 组件类型
+  title?: string;                // 组件标题
+  visible: boolean;              // 是否显示
+  props: Record<string, unknown>; // 组件配置属性
+}
+
+export const pageConfigsRelations = relations(pageConfigs, ({ one }) => ({
+  store: one(stores, { fields: [pageConfigs.storeId], references: [stores.id] }),
+}));

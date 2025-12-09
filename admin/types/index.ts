@@ -487,3 +487,52 @@ export interface UpdateStaffRequest {
   storeId?: number;
   status?: Status;
 }
+
+// ==================== 页面装修配置类型 ====================
+
+export type PageComponentType =
+  | "BANNER"
+  | "NAV_GRID"
+  | "PRODUCT_LIST"
+  | "PRODUCT_GRID"
+  | "NOTICE"
+  | "SPACER"
+  | "IMAGE"
+  | "COUPON"
+  | "HOT_PRODUCTS"
+  | "NEW_PRODUCTS";
+
+export interface PageComponent {
+  id: string;
+  type: PageComponentType;
+  title?: string;
+  visible: boolean;
+  props: Record<string, unknown>;
+}
+
+export interface PageConfig {
+  id: number | null;
+  storeId: number;
+  pageType: string;
+  components: PageComponent[];
+  isPublished: boolean;
+  publishedAt: string | null;
+  isDefault?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ComponentTypeInfo {
+  value: PageComponentType;
+  label: string;
+  icon: string;
+}
+
+export interface NavGridItem {
+  icon: string;
+  text: string;
+  link: {
+    type: "category" | "page" | "product" | "url";
+    value: string;
+  };
+}

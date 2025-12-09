@@ -221,7 +221,7 @@ export default function PrintersPage() {
                     </TableCell>
                     <TableCell className="font-mono text-sm">{printer.sn}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{PRINTER_TYPE_MAP[printer.type]}</Badge>
+                      <Badge variant="outline">{PRINTER_TYPE_MAP[printer.type]?.label || printer.type}</Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">

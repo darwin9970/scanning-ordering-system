@@ -22,6 +22,7 @@ import { serviceRoutes } from "./routes/service";
 import { uploadRoutes } from "./routes/upload";
 import { roleRoutes } from "./routes/roles";
 import { bannerRoutes } from "./routes/banners";
+import { pageConfigRoutes } from "./routes/page-configs";
 import { wsRoutes } from "./ws";
 
 const app = new Elysia()
@@ -59,6 +60,7 @@ const app = new Elysia()
           { name: "Upload", description: "文件上传接口" },
           { name: "Roles", description: "角色权限配置接口" },
           { name: "Banners", description: "轮播图管理接口" },
+          { name: "PageConfigs", description: "页面装修配置接口" },
         ],
       },
     })
@@ -97,6 +99,7 @@ const app = new Elysia()
   .use(uploadRoutes)
   .use(roleRoutes)
   .use(bannerRoutes)
+  .use(pageConfigRoutes)
   .use(wsRoutes)
   // 静态文件服务 - 上传的图片
   .get("/uploads/*", async ({ params }) => {

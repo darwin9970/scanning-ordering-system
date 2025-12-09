@@ -1,5 +1,12 @@
 import { createHash } from "crypto";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/zh-cn";
 import type { ApiResponse } from "../types";
+
+// 配置 dayjs
+dayjs.extend(relativeTime);
+dayjs.locale("zh-cn");
 
 /**
  * 生成订单号
@@ -81,3 +88,30 @@ export function success<T>(data: T, message = "success"): ApiResponse<T> {
 export function error(message: string, code = 400): ApiResponse<null> {
   return { code, message, data: null };
 }
+
+/**
+ * 日期格式化
+ */
+export function formatDate(
+  date: string | Date | null | undefined,
+  format: "date" | "datetime" | "time" = "datetime"
+): string {
+  if (!date) return "-";
+  const formatMap = {
+    date: "YYYY-MM-DD",
+    datetime: "YYYY-MM-DD HH:mm:ss",
+    time: "HH:mm:ss",
+  };
+  return dayjs(date).format(formatMap[format]);
+}
+
+/**
+ * 相对时间
+ */
+export function fromNow(date: string | Date | null | undefined): string {
+  if (!date) return "-";
+  return dayjs(date).fromNow();
+}
+
+// 导出 dayjs 实例供直接使用
+export { dayjs };

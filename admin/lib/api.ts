@@ -39,6 +39,9 @@ import type {
   CategoryStats,
   ProductStatus,
   OrderStatus,
+  PageConfig,
+  PageComponent,
+  ComponentTypeInfo,
 } from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
@@ -420,6 +423,48 @@ class ApiClient {
   resetSetting(key: string, storeId?: number): Promise<null> {
     return this.request<null>(`/api/settings/${key}${this.buildQuery({ storeId })}`, {
       method: "DELETE",
+    });
+  }
+
+  // ==================== Page Configs (页面装修) ====================
+
+  getPageConfig(params: { storeId?: number; pageType?: string }): Promise<PageConfig> {
+    return this.request<PageConfig>(`/api/page-configs${this.buildQuery(params)}`);
+  }
+
+  getComponentTypes(): Promise<ComponentTypeInfo[]> {
+    return this.request<ComponentTypeInfo[]>("/api/page-configs/component-types");
+  }
+
+  savePageConfig(data: {
+    storeId?: number;
+    pageType?: string;
+    components: PageComponent[];
+  }): Promise<PageConfig> {
+    return this.request<PageConfig>("/api/page-configs", {
+      method: "PUT",
+      body: data,
+    });
+  }
+
+  publishPageConfig(data: { storeId?: number; pageType?: string }): Promise<PageConfig> {
+    return this.request<PageConfig>("/api/page-configs/publish", {
+      method: "POST",
+      body: data,
+    });
+  }
+
+  unpublishPageConfig(data: { storeId?: number; pageType?: string }): Promise<PageConfig> {
+    return this.request<PageConfig>("/api/page-configs/unpublish", {
+      method: "POST",
+      body: data,
+    });
+  }
+
+  resetPageConfig(data: { storeId?: number; pageType?: string }): Promise<PageConfig> {
+    return this.request<PageConfig>("/api/page-configs/reset", {
+      method: "POST",
+      body: data,
     });
   }
 }

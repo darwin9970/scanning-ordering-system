@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ArrowLeft, Save, Store, Clock, Settings, Wifi, Image, Plus, Pencil, Trash2, GripVertical } from "lucide-react"
+import { ArrowLeft, Save, Store, Clock, Settings, Wifi, Image, Plus, Pencil, Trash2, GripVertical, Smartphone } from "lucide-react"
 import { api } from "@/lib/api"
 import { toast } from "sonner"
 import type { Banner, StoreStatus } from "@/types"
@@ -342,10 +342,16 @@ export default function StoreDetailPage() {
             {store.status === "ACTIVE" ? "营业中" : store.status === "CLOSED" ? "已打烊" : "已停用"}
           </Badge>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
-          <Save className="mr-2 h-4 w-4" />
-          {saving ? "保存中..." : "保存配置"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => router.push(`/dashboard/stores/${storeId}/design`)}>
+            <Smartphone className="mr-2 h-4 w-4" />
+            页面装修
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            <Save className="mr-2 h-4 w-4" />
+            {saving ? "保存中..." : "保存配置"}
+          </Button>
+        </div>
       </div>
 
       {/* 配置标签页 */}

@@ -237,7 +237,7 @@ export default function StaffPage() {
                               : "outline"
                           }
                         >
-                          {ROLE_MAP[staff.role] || staff.role}
+                          {ROLE_MAP[staff.role]?.label || staff.role}
                         </Badge>
                       </TableCell>
                       <TableCell>{staff.store?.name || "-"}</TableCell>
