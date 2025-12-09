@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 后台管理系统 (Admin)
 
-## Getting Started
+基于 Next.js 16 的餐饮后台管理系统。
 
-First, run the development server:
+## 技术栈
+
+- **框架**: Next.js 16 (App Router)
+- **UI**: TailwindCSS + shadcn/ui
+- **状态管理**: Zustand + React Query
+- **拖拽**: @dnd-kit
+- **图表**: Recharts
+- **代码质量**: ESLint + Prettier + Husky
+
+## 快速开始
 
 ```bash
+# 安装依赖
+npm install
+
+# 开发模式
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# 构建
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+访问 http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 项目结构
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+├── dashboard/
+│   ├── page.tsx              # 数据概览
+│   ├── orders/               # 订单管理
+│   ├── products/             # 商品管理
+│   ├── categories/           # 分类管理
+│   ├── tables/               # 桌台管理
+│   ├── stores/
+│   │   └── [id]/design/      # 页面装修系统 🆕
+│   │       ├── page.tsx
+│   │       ├── constants.tsx
+│   │       ├── hooks/
+│   │       │   ├── useComponents.ts
+│   │       │   └── usePageConfig.ts
+│   │       └── components/
+│   │           ├── ComponentPreview.tsx
+│   │           ├── ComponentConfig.tsx
+│   │           ├── FreeCanvas.tsx
+│   │           ├── CanvasItem.tsx
+│   │           └── DraggableComponentItem.tsx
+│   ├── members/              # 会员管理
+│   ├── coupons/              # 优惠券管理
+│   ├── roles/                # 角色权限
+│   └── settings/             # 系统设置
+├── components/
+│   └── ui/                   # shadcn/ui 组件
+├── lib/
+│   └── api.ts                # API 封装
+└── types/
+    └── index.ts              # TypeScript 类型
+```
 
-## Learn More
+## 页面装修系统
 
-To learn more about Next.js, take a look at the following resources:
+### 功能特性
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **自由画布**: 组件可拖放到任意位置
+- **拖拽调整**: 支持缩放和移动
+- **实时预览**: iPhone 15 Pro 模拟器
+- **40+ 组件**: 覆盖常见营销场景
+- **模板库**: 一键应用预设模板
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 组件分类
 
-## Deploy on Vercel
+| 分类     | 组件                               |
+| :------- | :--------------------------------- |
+| 极简组件 | 焦点入口、集章卡、搜索、门店标题等 |
+| 标准组件 | 轮播图、导航格子、公告、商品列表等 |
+| 基础元素 | 图片、文字、间距、自由容器         |
+| 专属组件 | 点单组件、用户信息、充值选项等     |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 开发脚本
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev          # 开发模式
+npm run build        # 生产构建
+npm run lint         # ESLint 检查
+npm run lint:fix     # 自动修复
+npm run typecheck    # TypeScript 检查
+npm run format       # Prettier 格式化
+```
+
+## 代码质量
+
+### 自动检查
+
+提交代码时自动运行：
+
+- ✅ ESLint 检查 + 自动修复
+- ✅ Prettier 格式化
+- ✅ TypeScript 类型检查
+
+### 编辑器配置
+
+项目包含 VSCode 配置 (`.vscode/settings.json`)：
+
+- 保存时自动格式化
+- 保存时自动修复 ESLint
+
+### 推荐扩展
+
+查看 `.vscode/extensions.json` 获取推荐扩展列表。
+
+## 环境变量
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:4000
+```
