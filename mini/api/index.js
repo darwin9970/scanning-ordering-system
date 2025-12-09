@@ -21,7 +21,7 @@ export const getTableInfo = (storeId, tableId) => {
  * @param {number} storeId - 门店ID
  */
 export const getCategories = (storeId) => {
-  return get('/api/categories', { storeId, status: 'ACTIVE' })
+  return get('/mini/categories', { storeId })
 }
 
 // ==================== 商品相关 ====================
@@ -33,7 +33,7 @@ export const getCategories = (storeId) => {
  * @param {number} params.categoryId - 分类ID (可选)
  */
 export const getProducts = (params) => {
-  return get('/api/products', { ...params, status: 'ON_SALE' })
+  return get('/mini/products', params)
 }
 
 /**
@@ -41,7 +41,7 @@ export const getProducts = (params) => {
  * @param {number} productId - 商品ID
  */
 export const getProductDetail = (productId) => {
-  return get(`/api/products/${productId}`)
+  return get(`/mini/products/${productId}`)
 }
 
 // ==================== 购物车相关 ====================
@@ -143,11 +143,11 @@ export const callService = (data) => {
 // ==================== 优惠相关 ====================
 
 /**
- * 获取可用优惠券
+ * 获取可领取的优惠券
  * @param {number} storeId - 门店ID
  */
 export const getAvailableCoupons = (storeId) => {
-  return get('/api/coupons/available', { storeId })
+  return get('/mini/coupons', { storeId })
 }
 
 /**
@@ -174,10 +174,9 @@ export const getStoreInfo = (storeId) => {
  * 获取轮播图列表
  * @param {object} params - 查询参数
  * @param {number} params.storeId - 门店ID
- * @param {string} params.position - 位置: HOME_TOP, MENU_TOP, CATEGORY, PROMOTION
  */
 export const getBanners = (params) => {
-  return get('/banners/list', params)
+  return get('/mini/banners', params)
 }
 
 // ==================== 页面配置相关 ====================

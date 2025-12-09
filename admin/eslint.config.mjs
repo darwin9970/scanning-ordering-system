@@ -1,22 +1,13 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
 import js from "@eslint/js";
 import tsPlugin from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
 import prettierPlugin from "eslint-plugin-prettier";
 import prettierConfig from "eslint-config-prettier";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import reactPlugin from "eslint-plugin-react";
+import reactHooksPlugin from "eslint-plugin-react-hooks";
 
 const eslintConfig = [
   js.configs.recommended,
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
   prettierConfig,
   {
     files: ["**/*.ts", "**/*.tsx"],
@@ -29,10 +20,39 @@ const eslintConfig = [
           jsx: true,
         },
       },
+      globals: {
+        // Browser globals
+        window: "readonly",
+        document: "readonly",
+        navigator: "readonly",
+        console: "readonly",
+        fetch: "readonly",
+        URL: "readonly",
+        Blob: "readonly",
+        FileReader: "readonly",
+        HTMLInputElement: "readonly",
+        MouseEvent: "readonly",
+        // React
+        React: "readonly",
+        JSX: "readonly",
+        // Node
+        process: "readonly",
+        module: "readonly",
+        require: "readonly",
+        __dirname: "readonly",
+        __filename: "readonly",
+      },
     },
     plugins: {
       "@typescript-eslint": tsPlugin,
       prettier: prettierPlugin,
+      react: reactPlugin,
+      "react-hooks": reactHooksPlugin,
+    },
+    settings: {
+      react: {
+        version: "detect",
+      },
     },
     rules: {
       // Prettier
@@ -59,9 +79,10 @@ const eslintConfig = [
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "prefer-const": "error",
       "no-unused-vars": "off",
+      "no-case-declarations": "off",
 
-      // Indentation (2 spaces)
-      indent: ["error", 2, { SwitchCase: 1 }],
+      // Indentation - let Prettier handle it to avoid conflicts
+      indent: "off",
       "@typescript-eslint/indent": "off",
     },
   },

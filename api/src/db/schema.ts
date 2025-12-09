@@ -804,19 +804,15 @@ export const bannersRelations = relations(banners, ({ one }) => ({
 
 // ==================== 页面装修配置 ====================
 
-// 组件类型枚举
-export const pageComponentTypeEnum = pgEnum("page_component_type", [
-  "BANNER",       // 轮播图
-  "NAV_GRID",     // 金刚区/宫格导航
-  "PRODUCT_LIST", // 商品列表
-  "PRODUCT_GRID", // 商品网格
-  "NOTICE",       // 公告栏
-  "SPACER",       // 分隔符/留白
-  "IMAGE",        // 单图
-  "COUPON",       // 优惠券入口
-  "HOT_PRODUCTS", // 热销商品
-  "NEW_PRODUCTS", // 新品推荐
-]);
+// 组件类型说明（实际类型存储在JSON中，支持动态扩展）
+// 极简组件: FOCUS_ENTRY, STAMP_CARD, COUPON_ENTRY, BALANCE_ENTRY, FLOAT_WINDOW, POINTS_ENTRY, SERVICE_ENTRY, NEARBY_STORES
+// 标准组件: BANNER, NAV_GRID, STORE_LIST, PRODUCT_LIST, PRODUCT_GRID, PROMOTION, STAMP_CARD_STD, WECHAT_OA, COMBO_PROMO, SEARCH, STORE_TITLE, CART_FLOAT, NOTICE, HOT_PRODUCTS, NEW_PRODUCTS, COUPON, SPACER
+// 自由容器: FREE_CONTAINER, FLOAT_CONTAINER
+// 基础元素: IMAGE, TEXT, USER_NICKNAME, USER_AVATAR, USER_PHONE, USER_POINTS, USER_BALANCE, COUPON_COUNT, STORE_NAME, STORE_DISTANCE, MEMBER_BADGE, MEMBER_PROGRESS
+// 专属组件: ORDER_COMPONENT, USER_INFO, FUNC_ENTRY, MEMBER_RIGHTS, MEMBER_LEVEL, RECHARGE_OPTIONS, RECHARGE_BUTTON
+
+// 页面类型说明
+// HOME, MENU, PRODUCT_DETAIL, ORDER_CENTER, PROFILE, MEMBER, BARRAGE, TABBAR, TOPIC, RECHARGE
 
 // 页面配置表
 export const pageConfigs = pgTable(
@@ -826,8 +822,9 @@ export const pageConfigs = pgTable(
     storeId: integer("store_id")
       .notNull()
       .references(() => stores.id, { onDelete: "cascade" }),
-    pageType: varchar("page_type", { length: 50 }).notNull().default("HOME"), // HOME/MENU 等
+    pageType: varchar("page_type", { length: 50 }).notNull().default("HOME"), // HOME/MENU/PROFILE/MEMBER等10种
     components: json("components").$type<PageComponent[]>().notNull().default([]),
+    settings: json("settings").$type<PageSettings>(), // 页面级设置
     isPublished: boolean("is_published").notNull().default(false), // 是否已发布
     publishedAt: timestamp("published_at"), // 发布时间
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -849,6 +846,17 @@ export interface PageComponent {
   title?: string;                // 组件标题
   visible: boolean;              // 是否显示
   props: Record<string, unknown>; // 组件配置属性
+  children?: PageComponent[];    // 子组件（自由容器用）
+}
+
+// 页面设置
+export interface PageSettings {
+  title?: string;                // 页面标题
+  navBgColor?: string;           // 导航背景色
+  navTextColor?: "white" | "black"; // 导航文字颜色
+  pageBgColor?: string;          // 页面背景色
+  hideNav?: boolean;             // 隐藏导航
+  enablePullRefresh?: boolean;   // 下拉刷新
 }
 
 export const pageConfigsRelations = relations(pageConfigs, ({ one }) => ({

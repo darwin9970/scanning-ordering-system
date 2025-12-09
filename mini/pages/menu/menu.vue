@@ -27,6 +27,7 @@
       :hot-products="hotProducts"
       :new-products="newProducts"
       :coupons="coupons"
+      :products="allProducts"
       @banner-click="handleBannerClick"
       @nav-click="handleNavClick"
       @product-click="showProductDetail"
@@ -286,7 +287,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useTableStore } from '@/store/table'
 import { useCartStore } from '@/store/cart'
 import { getBanners, getPageConfig, getAvailableCoupons } from '@/api'
@@ -310,14 +311,21 @@ const hotProducts = computed(() => {
   return products.sort((a, b) => (b.sales || 0) - (a.sales || 0))
 })
 
-// 新品（按时间排序，取最新的）
+// 新品（按上架时间排序，取最新的）
 const newProducts = computed(() => {
   const products = Object.values(tableStore.productsByCategory).flat()
-  return products.slice(0, 8)
+  return [...products]
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .slice(0, 8)
 })
 
 // 优惠券
 const coupons = ref([])
+
+// 所有商品
+const allProducts = computed(() => {
+  return Object.values(tableStore.productsByCategory).flat()
+})
 
 // 当前选中的分类
 const activeCategoryId = ref(null)
@@ -473,14 +481,21 @@ const handleNavClick = (item) => {
 
 // 加载页面配置
 const loadPageConfig = async () => {
+  if (!tableStore.storeId) {
+    console.log('storeId不存在，跳过加载页面配置')
+    return
+  }
   try {
+    console.log('加载页面配置, storeId:', tableStore.storeId)
     const res = await getPageConfig({
       storeId: tableStore.storeId,
       pageType: 'HOME'
     })
+    console.log('页面配置响应:', res)
     if (res.code === 200 && res.data) {
       pageComponents.value = res.data.components || []
       useCustomLayout.value = !res.data.isDefault
+      console.log('页面组件:', pageComponents.value)
     }
   } catch (e) {
     console.error('加载页面配置失败:', e)
@@ -499,11 +514,24 @@ const loadCoupons = async () => {
   }
 }
 
+// 监听storeId变化
+watch(() => tableStore.storeId, (newStoreId) => {
+  if (newStoreId) {
+    console.log('storeId变化，重新加载数据:', newStoreId)
+    loadPageConfig()
+    loadBanners()
+    loadCoupons()
+  }
+}, { immediate: true })
+
 // 页面加载
 onMounted(() => {
-  loadPageConfig()
-  loadBanners()
-  loadCoupons()
+  // 如果storeId已存在，立即加载
+  if (tableStore.storeId) {
+    loadPageConfig()
+    loadBanners()
+    loadCoupons()
+  }
 })
 
 // 获取分类下的商品

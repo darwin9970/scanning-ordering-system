@@ -79,10 +79,14 @@ services:
       context: ./admin
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=http://localhost:4000
-        - NEXT_PUBLIC_WS_URL=ws://localhost:4000
+        # 客户端访问需使用主机地址
+        - NEXT_PUBLIC_API_URL=http://127.0.0.1:4000
+        - NEXT_PUBLIC_WS_URL=ws://127.0.0.1:4000
     container_name: qr-order-admin
     restart: unless-stopped
+    environment:
+      # 服务端可通过Docker网络访问
+      - API_URL=http://api:4000
     ports:
       - "3000:3000"
     depends_on:

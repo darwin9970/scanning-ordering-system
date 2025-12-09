@@ -23,6 +23,7 @@ import { uploadRoutes } from "./routes/upload";
 import { roleRoutes } from "./routes/roles";
 import { bannerRoutes } from "./routes/banners";
 import { pageConfigRoutes } from "./routes/page-configs";
+import { miniRoutes } from "./routes/mini";
 import { wsRoutes } from "./ws";
 
 const app = new Elysia()
@@ -100,6 +101,7 @@ const app = new Elysia()
   .use(roleRoutes)
   .use(bannerRoutes)
   .use(pageConfigRoutes)
+  .use(miniRoutes)
   .use(wsRoutes)
   // 静态文件服务 - 上传的图片
   .get("/uploads/*", async ({ params }) => {

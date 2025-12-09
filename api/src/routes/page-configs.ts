@@ -3,18 +3,73 @@ import { db, pageConfigs, type PageComponent } from "../db";
 import { eq, and } from "drizzle-orm";
 import { requirePermission, requireAuth } from "../lib/auth";
 
-// 组件类型定义
+// 页面类型定义（10个Tab）
+const PAGE_TYPES = [
+  { value: "HOME", label: "首页" },
+  { value: "MENU", label: "点餐页" },
+  { value: "PRODUCT_DETAIL", label: "商品详情页" },
+  { value: "ORDER_CENTER", label: "订单中心" },
+  { value: "PROFILE", label: "个人中心" },
+  { value: "MEMBER", label: "会员页" },
+  { value: "BARRAGE", label: "用户下单弹幕" },
+  { value: "TABBAR", label: "底部导航设计" },
+  { value: "TOPIC", label: "专题页面" },
+  { value: "RECHARGE", label: "充值页面" },
+] as const;
+
+// 组件类型定义（完整40+组件）
 const COMPONENT_TYPES = [
-  { value: "BANNER", label: "轮播图", icon: "Image" },
-  { value: "NAV_GRID", label: "金刚区", icon: "Grid" },
-  { value: "PRODUCT_LIST", label: "商品列表", icon: "List" },
-  { value: "PRODUCT_GRID", label: "商品网格", icon: "LayoutGrid" },
-  { value: "NOTICE", label: "公告栏", icon: "Bell" },
-  { value: "SPACER", label: "分隔符", icon: "Minus" },
-  { value: "IMAGE", label: "单图广告", icon: "ImagePlus" },
-  { value: "COUPON", label: "优惠券", icon: "Ticket" },
-  { value: "HOT_PRODUCTS", label: "热销商品", icon: "Flame" },
-  { value: "NEW_PRODUCTS", label: "新品推荐", icon: "Sparkles" },
+  // 极简组件 (8个)
+  { value: "FOCUS_ENTRY", label: "焦点入口", icon: "Zap", category: "simple" },
+  { value: "STAMP_CARD", label: "集章/集点卡", icon: "Star", category: "simple" },
+  { value: "COUPON_ENTRY", label: "领取优惠券", icon: "Ticket", category: "simple" },
+  { value: "BALANCE_ENTRY", label: "储值余额", icon: "Wallet", category: "simple" },
+  { value: "FLOAT_WINDOW", label: "悬浮窗口", icon: "Square", category: "simple" },
+  { value: "POINTS_ENTRY", label: "会员积分", icon: "Award", category: "simple" },
+  { value: "SERVICE_ENTRY", label: "客服入口", icon: "MessageCircle", category: "simple" },
+  { value: "NEARBY_STORES", label: "附近门店", icon: "MapPin", category: "simple" },
+  // 标准组件 (17个)
+  { value: "BANNER", label: "轮播图", icon: "Image", category: "standard" },
+  { value: "NAV_GRID", label: "导航", icon: "LayoutGrid", category: "standard" },
+  { value: "STORE_LIST", label: "门店列表", icon: "Store", category: "standard" },
+  { value: "PRODUCT_LIST", label: "商品列表", icon: "List", category: "standard" },
+  { value: "PRODUCT_GRID", label: "商品网格", icon: "LayoutGrid", category: "standard" },
+  { value: "PROMOTION", label: "营销模块", icon: "Gift", category: "standard" },
+  { value: "STAMP_CARD_STD", label: "集点卡", icon: "Star", category: "standard" },
+  { value: "WECHAT_OA", label: "公众号组件", icon: "Hash", category: "standard" },
+  { value: "COMBO_PROMO", label: "套餐推广", icon: "Package", category: "standard" },
+  { value: "SEARCH", label: "搜索模块", icon: "Search", category: "standard" },
+  { value: "STORE_TITLE", label: "门店标题", icon: "Store", category: "standard" },
+  { value: "CART_FLOAT", label: "购物车", icon: "ShoppingCart", category: "standard" },
+  { value: "NOTICE", label: "公告栏", icon: "Bell", category: "standard" },
+  { value: "HOT_PRODUCTS", label: "热销商品", icon: "Flame", category: "standard" },
+  { value: "NEW_PRODUCTS", label: "新品推荐", icon: "Sparkles", category: "standard" },
+  { value: "COUPON", label: "优惠券", icon: "Ticket", category: "standard" },
+  { value: "SPACER", label: "分隔符", icon: "Minus", category: "standard" },
+  // 自由容器 (2个)
+  { value: "FREE_CONTAINER", label: "自由容器", icon: "Box", category: "container" },
+  { value: "FLOAT_CONTAINER", label: "悬浮容器", icon: "Layers", category: "container" },
+  // 基础元素 (12个)
+  { value: "IMAGE", label: "图片", icon: "ImagePlus", category: "element" },
+  { value: "TEXT", label: "文本", icon: "Type", category: "element" },
+  { value: "USER_NICKNAME", label: "昵称", icon: "User", category: "element" },
+  { value: "USER_AVATAR", label: "头像", icon: "Circle", category: "element" },
+  { value: "USER_PHONE", label: "手机号", icon: "Phone", category: "element" },
+  { value: "USER_POINTS", label: "积分", icon: "Award", category: "element" },
+  { value: "USER_BALANCE", label: "余额", icon: "Wallet", category: "element" },
+  { value: "COUPON_COUNT", label: "可用券数量", icon: "Ticket", category: "element" },
+  { value: "STORE_NAME", label: "门店名称", icon: "Store", category: "element" },
+  { value: "STORE_DISTANCE", label: "门店距离", icon: "MapPin", category: "element" },
+  { value: "MEMBER_BADGE", label: "会员标识", icon: "Crown", category: "element" },
+  { value: "MEMBER_PROGRESS", label: "会员进度", icon: "BarChart", category: "element" },
+  // 专属组件 (7个)
+  { value: "ORDER_COMPONENT", label: "点单组件", icon: "ShoppingCart", category: "special", availableIn: ["MENU"] },
+  { value: "USER_INFO", label: "会员信息", icon: "User", category: "special", availableIn: ["PROFILE"] },
+  { value: "FUNC_ENTRY", label: "功能入口", icon: "LayoutGrid", category: "special", availableIn: ["PROFILE"] },
+  { value: "MEMBER_RIGHTS", label: "会员权益", icon: "Award", category: "special", availableIn: ["MEMBER"] },
+  { value: "MEMBER_LEVEL", label: "会员等级", icon: "Crown", category: "special", availableIn: ["MEMBER"] },
+  { value: "RECHARGE_OPTIONS", label: "充值选项", icon: "CreditCard", category: "special", availableIn: ["RECHARGE"] },
+  { value: "RECHARGE_BUTTON", label: "充值按钮", icon: "Wallet", category: "special", availableIn: ["RECHARGE"] },
 ] as const;
 
 // 默认首页模板
@@ -412,7 +467,30 @@ const adminRoutes = new Elysia()
         pageType: t.Optional(t.String()),
       }),
     }
-  );
+  )
+
+  // 获取组件类型列表
+  .get("/component-types", async ({ query }) => {
+    const { pageType } = query;
+    
+    // 如果指定了页面类型，过滤出可用的组件
+    let types = [...COMPONENT_TYPES];
+    if (pageType) {
+      types = types.filter(t => {
+        // 如果组件没有availableIn限制，则所有页面可用
+        if (!('availableIn' in t) || !t.availableIn) return true;
+        // 否则检查是否在可用页面列表中
+        return (t.availableIn as readonly string[]).includes(pageType);
+      });
+    }
+    
+    return { code: 200, data: types };
+  })
+
+  // 获取页面类型列表
+  .get("/page-types", async () => {
+    return { code: 200, data: PAGE_TYPES };
+  });
 
 export const pageConfigRoutes = new Elysia({ prefix: "/api/page-configs" })
   .use(publicRoutes)

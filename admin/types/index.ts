@@ -237,20 +237,44 @@ export interface LoginResponse {
 
 // 权限类型
 export type Permission =
-  | "store:read" | "store:write" | "store:delete"
-  | "table:read" | "table:write" | "table:delete"
-  | "category:read" | "category:write" | "category:delete"
-  | "product:read" | "product:write" | "product:delete"
-  | "order:read" | "order:write" | "order:refund"
-  | "printer:read" | "printer:write" | "printer:delete"
-  | "member:read" | "member:write"
-  | "coupon:read" | "coupon:write" | "coupon:delete"
-  | "promotion:read" | "promotion:write" | "promotion:delete"
-  | "staff:read" | "staff:write" | "staff:delete"
-  | "settings:read" | "settings:write"
+  | "store:read"
+  | "store:write"
+  | "store:delete"
+  | "table:read"
+  | "table:write"
+  | "table:delete"
+  | "category:read"
+  | "category:write"
+  | "category:delete"
+  | "product:read"
+  | "product:write"
+  | "product:delete"
+  | "order:read"
+  | "order:write"
+  | "order:refund"
+  | "printer:read"
+  | "printer:write"
+  | "printer:delete"
+  | "member:read"
+  | "member:write"
+  | "coupon:read"
+  | "coupon:write"
+  | "coupon:delete"
+  | "promotion:read"
+  | "promotion:write"
+  | "promotion:delete"
+  | "staff:read"
+  | "staff:write"
+  | "staff:delete"
+  | "settings:read"
+  | "settings:write"
   | "report:read"
-  | "service:read" | "service:write"
-  | "banners:read" | "banners:create" | "banners:update" | "banners:delete";
+  | "service:read"
+  | "service:write"
+  | "banners:read"
+  | "banners:create"
+  | "banners:update"
+  | "banners:delete";
 
 export interface AdminWithStore extends Omit<Admin, "password"> {
   store: Store | null;
@@ -490,17 +514,96 @@ export interface UpdateStaffRequest {
 
 // ==================== 页面装修配置类型 ====================
 
+// 页面类型（10个Tab）
+export type PageType =
+  | "HOME" // 首页
+  | "MENU" // 点餐页
+  | "PRODUCT_DETAIL" // 商品详情页
+  | "ORDER_CENTER" // 订单中心
+  | "PROFILE" // 个人中心
+  | "MEMBER" // 会员页
+  | "BARRAGE" // 用户下单弹幕
+  | "TABBAR" // 底部导航设计
+  | "TOPIC" // 专题页面
+  | "RECHARGE"; // 充值页面
+
+// 组件类型（完整40+组件）
 export type PageComponentType =
-  | "BANNER"
-  | "NAV_GRID"
-  | "PRODUCT_LIST"
-  | "PRODUCT_GRID"
-  | "NOTICE"
-  | "SPACER"
-  | "IMAGE"
-  | "COUPON"
-  | "HOT_PRODUCTS"
-  | "NEW_PRODUCTS";
+  // === 极简组件 (8个) ===
+  | "FOCUS_ENTRY" // 焦点入口
+  | "STAMP_CARD" // 集章/集点卡
+  | "COUPON_ENTRY" // 领取优惠券入口
+  | "BALANCE_ENTRY" // 储值余额入口
+  | "FLOAT_WINDOW" // 悬浮窗口
+  | "POINTS_ENTRY" // 会员积分入口
+  | "SERVICE_ENTRY" // 客服入口
+  | "NEARBY_STORES" // 附近门店入口
+  // === 标准组件 (14个) ===
+  | "BANNER" // 轮播图
+  | "NAV_GRID" // 导航/金刚区
+  | "STORE_LIST" // 门店列表
+  | "PRODUCT_LIST" // 商品列表
+  | "PRODUCT_GRID" // 商品网格
+  | "PROMOTION" // 营销模块
+  | "STAMP_CARD_STD" // 集点卡(标准)
+  | "WECHAT_OA" // 公众号组件
+  | "COMBO_PROMO" // 套餐推广
+  | "SEARCH" // 搜索模块
+  | "STORE_TITLE" // 门店标题
+  | "CART_FLOAT" // 购物车悬浮按钮
+  | "NOTICE" // 公告栏
+  | "WECHAT_SHOP" // 微信小店
+  // === 自由容器 (2个) ===
+  | "FREE_CONTAINER" // 自由容器
+  | "FLOAT_CONTAINER" // 悬浮容器
+  // === 基础元素 (19个) ===
+  | "IMAGE" // 图片
+  | "TEXT" // 文本
+  | "DINING_TYPE" // 就餐方式标识
+  | "USER_NICKNAME" // 用户昵称
+  | "USER_AVATAR" // 用户头像
+  | "USER_PHONE" // 用户手机号
+  | "USER_POINTS" // 用户积分
+  | "USER_BALANCE" // 用户余额
+  | "COUPON_COUNT" // 可用券数量
+  | "GIFT_CARD_COUNT" // 礼品卡数量
+  | "STAMP_COUNT" // 已集章数
+  | "STORE_NAME" // 门店名称
+  | "STORE_DISTANCE" // 门店距离
+  | "STORE_INFO" // 门店信息
+  | "DINING_MODE" // 就餐方式选择
+  | "MEMBER_BADGE" // 会员标识
+  | "MEMBER_PROGRESS" // 会员进度
+  | "MEMBER_PROGRESS_TEXT" // 会员进度说明
+  | "MEMBER_LEVEL_DESC" // 会员等级说明
+  // === 兼容旧组件 ===
+  | "SPACER" // 分隔符
+  | "COUPON" // 优惠券(旧)
+  | "HOT_PRODUCTS" // 热销商品
+  | "NEW_PRODUCTS" // 新品推荐
+  // === 点餐页专属 ===
+  | "ORDER_COMPONENT" // 点单组件（完整点餐功能）
+  // === 会员页专属 ===
+  | "MEMBER_RIGHTS" // 会员权益
+  | "MEMBER_LEVEL" // 会员等级
+  | "MEMBER_DESC" // 会员说明
+  | "LEVEL_DESC" // 等级说明
+  | "OPEN_CONDITION" // 开通条件
+  // === 充值页专属 ===
+  | "RECHARGE_OPTIONS" // 充值选项
+  | "RECHARGE_BUTTON" // 充值按钮
+  | "RECHARGE_DESC" // 充值说明
+  // === 个人中心专属 ===
+  | "USER_INFO" // 会员信息（头像+昵称+统计）
+  | "FUNC_ENTRY"; // 功能入口
+
+// 组件分类
+export type ComponentCategory =
+  | "simple" // 极简组件
+  | "standard" // 标准组件
+  | "container" // 自由容器
+  | "element" // 基础元素
+  | "special"; // 特殊/专属组件
 
 export interface PageComponent {
   id: string;
@@ -508,31 +611,100 @@ export interface PageComponent {
   title?: string;
   visible: boolean;
   props: Record<string, unknown>;
+  children?: PageComponent[]; // 支持容器嵌套
+  // 自由布局属性
+  x?: number; // X坐标
+  y?: number; // Y坐标
+  width?: number; // 宽度
+  height?: number; // 高度
+  zIndex?: number; // 层级
+  locked?: boolean; // 是否锁定
 }
 
 export interface PageConfig {
   id: number | null;
   storeId: number;
-  pageType: string;
+  pageType: PageType;
   components: PageComponent[];
   isPublished: boolean;
   publishedAt: string | null;
   isDefault?: boolean;
+  settings?: PageSettings; // 页面级设置
   createdAt?: string;
   updatedAt?: string;
+}
+
+// 页面级设置
+export interface PageSettings {
+  title?: string; // 页面标题
+  navBgColor?: string; // 导航背景色
+  navTextColor?: "white" | "black"; // 导航文字颜色
+  pageBgColor?: string; // 页面背景色
+  hideNav?: boolean; // 隐藏导航
+  enablePullRefresh?: boolean; // 下拉刷新
 }
 
 export interface ComponentTypeInfo {
   value: PageComponentType;
   label: string;
   icon: string;
+  category: ComponentCategory;
+  availableIn?: PageType[]; // 可用于哪些页面，空表示全部可用
 }
 
 export interface NavGridItem {
   icon: string;
   text: string;
-  link: {
-    type: "category" | "page" | "product" | "url";
-    value: string;
+  link: LinkConfig;
+}
+
+// 链接配置（支持14种链接类型）
+export interface LinkConfig {
+  type:
+    | "none"
+    | "page"
+    | "popup"
+    | "service"
+    | "scan"
+    | "miniapp"
+    | "map"
+    | "article"
+    | "phone"
+    | "share"
+    | "video"
+    | "group"
+    | "search"
+    | "register";
+  value: string;
+  appId?: string; // 跳转其他小程序时使用
+}
+
+// TabBar配置
+export interface TabBarItem {
+  pagePath: string;
+  text: string;
+  iconPath: string;
+  selectedIconPath: string;
+}
+
+export interface TabBarConfig {
+  color: string; // 默认文字颜色
+  selectedColor: string; // 选中文字颜色
+  backgroundColor: string; // 背景色
+  borderStyle: "black" | "white"; // 边框样式
+  list: TabBarItem[];
+}
+
+// 子Tab配置（点餐页弹窗等）
+export interface SubTabConfig {
+  id: string;
+  name: string;
+  type: "coupon_popup" | "dining_mode" | "loading_page" | "custom";
+  components: PageComponent[];
+  settings?: {
+    showOnEntry?: boolean; // 进入页面时显示
+    triggerType?: "auto" | "button" | "scroll"; // 触发方式
+    position?: "center" | "bottom" | "top"; // 弹窗位置
+    animation?: "fade" | "slide" | "scale"; // 动画效果
   };
 }
