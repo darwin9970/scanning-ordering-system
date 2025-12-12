@@ -13,7 +13,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, TrendingUp, ShoppingBag, Download, ArrowUpRight, ArrowDownRight, Clock, Users, Percent } from "lucide-react";
+import {
+  BarChart3,
+  TrendingUp,
+  ShoppingBag,
+  Download,
+  ArrowUpRight,
+  ArrowDownRight,
+  Clock,
+  Users,
+  Percent,
+} from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -74,7 +84,7 @@ export default function ReportsPage() {
     const headers = ["日期", "营收", "订单数"];
     const rows = salesData.map((d) => [d.date, d.revenue, d.orders]);
     const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
-    
+
     const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -131,8 +141,7 @@ export default function ReportsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{formatPrice(totalRevenue)}</div>
             <div className="flex items-center text-xs text-green-600">
-              <ArrowUpRight className="h-3 w-3 mr-1" />
-              +{revenueChange}% 环比
+              <ArrowUpRight className="h-3 w-3 mr-1" />+{revenueChange}% 环比
             </div>
           </CardContent>
         </Card>
@@ -144,8 +153,7 @@ export default function ReportsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{totalOrders}</div>
             <div className="flex items-center text-xs text-green-600">
-              <ArrowUpRight className="h-3 w-3 mr-1" />
-              +{ordersChange}% 环比
+              <ArrowUpRight className="h-3 w-3 mr-1" />+{ordersChange}% 环比
             </div>
           </CardContent>
         </Card>
@@ -157,8 +165,7 @@ export default function ReportsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{formatPrice(avgOrderValue)}</div>
             <div className="flex items-center text-xs text-green-600">
-              <ArrowUpRight className="h-3 w-3 mr-1" />
-              +{avgChange}% 环比
+              <ArrowUpRight className="h-3 w-3 mr-1" />+{avgChange}% 环比
             </div>
           </CardContent>
         </Card>
@@ -202,8 +209,21 @@ export default function ReportsPage() {
                     ]}
                   />
                   <Legend />
-                  <Bar yAxisId="left" dataKey="revenue" name="营收" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                  <Line yAxisId="right" type="monotone" dataKey="orders" name="订单数" stroke="#82ca9d" strokeWidth={2} />
+                  <Bar
+                    yAxisId="left"
+                    dataKey="revenue"
+                    name="营收"
+                    fill="#8884d8"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="orders"
+                    name="订单数"
+                    stroke="#82ca9d"
+                    strokeWidth={2}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -217,11 +237,16 @@ export default function ReportsPage() {
             <CardContent>
               <div className="space-y-2">
                 {salesData.map((item) => (
-                  <div key={item.date} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div
+                    key={item.date}
+                    className="flex items-center justify-between py-2 border-b last:border-0"
+                  >
                     <span className="text-sm font-medium">{item.date}</span>
                     <div className="flex items-center gap-8">
                       <span className="text-sm">{item.orders} 单</span>
-                      <span className="text-sm font-medium w-24 text-right">{formatPrice(item.revenue)}</span>
+                      <span className="text-sm font-medium w-24 text-right">
+                        {formatPrice(item.revenue)}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -303,10 +328,10 @@ export default function ReportsPage() {
                         index === 0
                           ? "bg-yellow-500 text-white"
                           : index === 1
-                          ? "bg-gray-400 text-white"
-                          : index === 2
-                          ? "bg-amber-600 text-white"
-                          : "bg-muted text-muted-foreground"
+                            ? "bg-gray-400 text-white"
+                            : index === 2
+                              ? "bg-amber-600 text-white"
+                              : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {index + 1}

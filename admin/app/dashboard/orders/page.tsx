@@ -32,7 +32,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Eye, RefreshCw, Check, X, Plus, Minus, Receipt, Coins, Ticket, ShoppingCart, UtensilsCrossed } from "lucide-react";
+import {
+  Search,
+  Eye,
+  RefreshCw,
+  Check,
+  X,
+  Plus,
+  Minus,
+  Receipt,
+  Coins,
+  Ticket,
+  ShoppingCart,
+  UtensilsCrossed,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,7 +65,7 @@ export default function OrdersPage() {
   const [keyword, setKeyword] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  
+
   // 部分退款
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
   const [refundItems, setRefundItems] = useState<{ itemId: number; quantity: number }[]>([]);
@@ -111,11 +124,14 @@ export default function OrdersPage() {
   const updateRefundQuantity = (itemId: number, delta: number) => {
     const item = selectedOrder?.items?.find((i: any) => i.id === itemId);
     if (!item) return;
-    
+
     setRefundItems((prev) =>
       prev.map((ri) => {
         if (ri.itemId === itemId) {
-          const newQty = Math.max(0, Math.min(item.quantity - (item.refundedQuantity || 0), ri.quantity + delta));
+          const newQty = Math.max(
+            0,
+            Math.min(item.quantity - (item.refundedQuantity || 0), ri.quantity + delta)
+          );
           return { ...ri, quantity: newQty };
         }
         return ri;
@@ -268,10 +284,10 @@ export default function OrdersPage() {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="shadow-lg border-0">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <CardTitle>订单列表</CardTitle>
+            <CardTitle className="text-xl font-bold">订单列表</CardTitle>
             <div className="flex gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -282,7 +298,10 @@ export default function OrdersPage() {
                   onChange={(e) => setKeyword(e.target.value)}
                 />
               </div>
-              <Select value={status || "ALL"} onValueChange={(v) => setStatus(v === "ALL" ? "" : v as OrderStatus)}>
+              <Select
+                value={status || "ALL"}
+                onValueChange={(v) => setStatus(v === "ALL" ? "" : (v as OrderStatus))}
+              >
                 <SelectTrigger className="w-[130px]">
                   <SelectValue placeholder="全部状态" />
                 </SelectTrigger>
@@ -304,6 +323,14 @@ export default function OrdersPage() {
             <div className="flex h-32 items-center justify-center">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
             </div>
+          ) : data?.list.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-4">
+                <ShoppingCart className="h-12 w-12 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">暂无订单</h3>
+              <p className="text-muted-foreground text-sm">订单数据将在这里显示</p>
+            </div>
           ) : (
             <>
               <Table>
@@ -318,8 +345,11 @@ export default function OrdersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data?.list.map((order: any) => (
-                    <TableRow key={order.id}>
+                  {data?.list.map((order: any, index: number) => (
+                    <TableRow
+                      key={order.id}
+                      className="hover:bg-muted/50 even:bg-muted/30 transition-colors cursor-pointer"
+                    >
                       <TableCell className="font-medium">{order.orderNo}</TableCell>
                       <TableCell>{order.table?.name}</TableCell>
                       <TableCell>{formatPrice(order.payAmount)}</TableCell>
@@ -331,14 +361,22 @@ export default function OrdersPage() {
                       <TableCell>{formatDate(order.createdAt)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button size="sm" variant="ghost" onClick={() => viewDetail(order.id)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="hover:bg-blue-50 hover:text-blue-600"
+                            onClick={() => viewDetail(order.id)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
                           {order.status === "PAID" && (
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleStatusChange(order.id, "PREPARING" as OrderStatus)}
+                              className="hover:bg-green-50 hover:text-green-600"
+                              onClick={() =>
+                                handleStatusChange(order.id, "PREPARING" as OrderStatus)
+                              }
                             >
                               <Check className="h-4 w-4" />
                             </Button>
@@ -347,7 +385,10 @@ export default function OrdersPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleStatusChange(order.id, "COMPLETED" as OrderStatus)}
+                              className="hover:bg-green-50 hover:text-green-600"
+                              onClick={() =>
+                                handleStatusChange(order.id, "COMPLETED" as OrderStatus)
+                              }
                             >
                               <Check className="h-4 w-4" />
                             </Button>
@@ -420,7 +461,8 @@ export default function OrdersPage() {
               </div>
 
               {/* 优惠信息 */}
-              {((selectedOrder as any).couponDiscount > 0 || (selectedOrder as any).pointsUsed > 0) && (
+              {((selectedOrder as any).couponDiscount > 0 ||
+                (selectedOrder as any).pointsUsed > 0) && (
                 <div className="bg-orange-50 rounded-lg p-3 space-y-1">
                   <h4 className="font-medium text-sm flex items-center gap-2">
                     <Ticket className="h-4 w-4 text-orange-500" />
@@ -430,7 +472,9 @@ export default function OrdersPage() {
                     {(selectedOrder as any).couponDiscount > 0 && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">优惠券抵扣</span>
-                        <span className="text-orange-600">-{formatPrice((selectedOrder as any).couponDiscount)}</span>
+                        <span className="text-orange-600">
+                          -{formatPrice((selectedOrder as any).couponDiscount)}
+                        </span>
                       </div>
                     )}
                     {(selectedOrder as any).pointsUsed > 0 && (
@@ -438,7 +482,9 @@ export default function OrdersPage() {
                         <span className="text-muted-foreground">
                           积分抵扣（{(selectedOrder as any).pointsUsed}积分）
                         </span>
-                        <span className="text-orange-600">-{formatPrice((selectedOrder as any).pointsDeduction || 0)}</span>
+                        <span className="text-orange-600">
+                          -{formatPrice((selectedOrder as any).pointsDeduction || 0)}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -455,7 +501,9 @@ export default function OrdersPage() {
                   {selectedOrder.items?.map((item: any) => (
                     <div key={item.id} className="flex justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <span>{item.snapshot?.name} x {item.quantity}</span>
+                        <span>
+                          {item.snapshot?.name} x {item.quantity}
+                        </span>
                         {item.refundedQuantity > 0 && (
                           <Badge variant="destructive" className="text-xs">
                             已退{item.refundedQuantity}件
@@ -538,26 +586,32 @@ export default function OrdersPage() {
                 {selectedOrder.items?.map((item: any) => {
                   const refundItem = refundItems.find((ri) => ri.itemId === item.id);
                   const refundableQty = getRefundableQty(item);
-                  
+
                   if (refundableQty <= 0) {
                     return (
-                      <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
-                        <span className="text-muted-foreground line-through">{item.snapshot?.name}</span>
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-3 border rounded-lg bg-gray-50"
+                      >
+                        <span className="text-muted-foreground line-through">
+                          {item.snapshot?.name}
+                        </span>
                         <Badge variant="secondary">已全部退款</Badge>
                       </div>
                     );
                   }
 
                   return (
-                    <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <div>
                         <span className="font-medium">{item.snapshot?.name}</span>
                         <span className="text-sm text-muted-foreground ml-2">
                           {formatPrice(item.price)}/件
                         </span>
-                        <p className="text-xs text-muted-foreground">
-                          可退: {refundableQty} 件
-                        </p>
+                        <p className="text-xs text-muted-foreground">可退: {refundableQty} 件</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button
@@ -630,11 +684,9 @@ export default function OrdersPage() {
               <UtensilsCrossed className="h-5 w-5" />
               加菜 - {selectedOrder?.table?.name}
             </DialogTitle>
-            <DialogDescription>
-              订单号: {selectedOrder?.orderNo}
-            </DialogDescription>
+            <DialogDescription>订单号: {selectedOrder?.orderNo}</DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid grid-cols-2 gap-4">
             {/* 左侧：商品列表 */}
             <div className="space-y-3">
@@ -693,9 +745,7 @@ export default function OrdersPage() {
                     </div>
                   ))}
                   {productsData?.list?.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      没有找到商品
-                    </div>
+                    <div className="text-center py-8 text-muted-foreground">没有找到商品</div>
                   )}
                 </div>
               </ScrollArea>
@@ -773,10 +823,7 @@ export default function OrdersPage() {
             <Button variant="outline" onClick={() => setAddItemDialogOpen(false)}>
               取消
             </Button>
-            <Button
-              onClick={handleAddItems}
-              disabled={addItemsCart.length === 0}
-            >
+            <Button onClick={handleAddItems} disabled={addItemsCart.length === 0}>
               确认加菜
             </Button>
           </DialogFooter>

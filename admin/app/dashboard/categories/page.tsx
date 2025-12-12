@@ -56,14 +56,9 @@ function SortableRow({
   onEdit: (cat: any) => void;
   onDelete: (id: number) => void;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: category.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: category.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -153,10 +148,7 @@ export default function CategoriesPage() {
     return [...categories.list].sort((a: any, b: any) => a.sort - b.sort);
   }, [categories?.list]);
 
-  const categoryIds = useMemo(
-    () => sortedCategories.map((c: any) => c.id),
-    [sortedCategories]
-  );
+  const categoryIds = useMemo(() => sortedCategories.map((c: any) => c.id), [sortedCategories]);
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -168,7 +160,7 @@ export default function CategoriesPage() {
       if (oldIndex !== -1 && newIndex !== -1) {
         // 计算新的排序顺序
         const newOrder = arrayMove(sortedCategories, oldIndex, newIndex);
-        
+
         // 更新排序值
         setIsSorting(true);
         try {
@@ -326,10 +318,7 @@ export default function CategoriesPage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label>分类名称 *</Label>
-              <Input
-                {...form.register("name")}
-                placeholder="请输入分类名称（1-50字符）"
-              />
+              <Input {...form.register("name")} placeholder="请输入分类名称（1-50字符）" />
               {form.formState.errors.name && (
                 <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
               )}

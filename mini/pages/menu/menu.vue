@@ -18,9 +18,9 @@
     <!-- 占位 -->
     <view class="navbar-placeholder" :style="{ height: (statusBarHeight + 50) + 'px' }" />
 
-    <!-- 动态页面组件渲染 -->
+    <!-- 动态页面组件渲染（优先显示配置的布局） -->
     <page-renderer
-      v-if="pageComponents.length > 0"
+      v-if="pageComponents.length > 0 && useCustomLayout"
       :components="pageComponents"
       :banners="banners"
       :announcement="storeAnnouncement"
@@ -28,6 +28,10 @@
       :new-products="newProducts"
       :coupons="coupons"
       :products="allProducts"
+      :store-name="tableStore.store?.name || ''"
+      :store-distance="'0.5km'"
+      :cart-count="cartStore.totalCount"
+      :user-info="userInfo"
       @banner-click="handleBannerClick"
       @nav-click="handleNavClick"
       @product-click="showProductDetail"
@@ -59,7 +63,7 @@
     </view>
 
     <!-- 默认店内公告 (无配置时显示) -->
-    <view v-if="pageComponents.length === 0 && storeAnnouncement" class="store-notice">
+    <view v-if="(pageComponents.length === 0 || !useCustomLayout) && storeAnnouncement" class="store-notice">
       <uni-icons type="sound-filled" size="16" color="#ff9500" />
       <text class="store-notice__text">
         {{ storeAnnouncement }}
@@ -74,8 +78,8 @@
       </text>
     </view>
 
-    <!-- 主内容区 -->
-    <view class="main-content">
+    <!-- 主内容区（仅在非自定义布局时显示） -->
+    <view v-if="pageComponents.length === 0 || !useCustomLayout" class="main-content">
       <!-- 左侧分类 -->
       <scroll-view 
         class="category-nav" 
@@ -327,6 +331,15 @@ const allProducts = computed(() => {
   return Object.values(tableStore.productsByCategory).flat()
 })
 
+// 用户信息
+const userInfo = computed(() => ({
+  nickname: '用户',
+  avatar: '',
+  balance: '0.00',
+  points: 0,
+  couponCount: 0
+}))
+
 // 当前选中的分类
 const activeCategoryId = ref(null)
 
@@ -486,16 +499,17 @@ const loadPageConfig = async () => {
     return
   }
   try {
-    console.log('加载页面配置, storeId:', tableStore.storeId)
+    console.log('加载点餐页配置, storeId:', tableStore.storeId)
     const res = await getPageConfig({
       storeId: tableStore.storeId,
-      pageType: 'HOME'
+      pageType: 'MENU'
     })
     console.log('页面配置响应:', res)
     if (res.code === 200 && res.data) {
       pageComponents.value = res.data.components || []
-      useCustomLayout.value = !res.data.isDefault
-      console.log('页面组件:', pageComponents.value)
+      // 只有当有组件且不是默认配置时才使用自定义布局
+      useCustomLayout.value = !res.data.isDefault && pageComponents.value.length > 0
+      console.log('页面组件:', pageComponents.value, '使用自定义布局:', useCustomLayout.value)
     }
   } catch (e) {
     console.error('加载页面配置失败:', e)

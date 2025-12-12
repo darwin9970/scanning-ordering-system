@@ -31,7 +31,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Printer, Edit, Trash2, Link2, TestTube, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  Plus,
+  Printer,
+  Edit,
+  Trash2,
+  Link2,
+  TestTube,
+  FileText,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function PrintersPage() {
@@ -43,7 +53,10 @@ export default function PrintersPage() {
   const [editingPrinter, setEditingPrinter] = useState<any>(null);
   const [bindingPrinter, setBindingPrinter] = useState<any>(null);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
-  const [testStatus, setTestStatus] = useState<{ id: number; status: "loading" | "success" | "error" } | null>(null);
+  const [testStatus, setTestStatus] = useState<{
+    id: number;
+    status: "loading" | "success" | "error";
+  } | null>(null);
   const [formData, setFormData] = useState({
     sn: "",
     key: "",
@@ -221,7 +234,9 @@ export default function PrintersPage() {
                     </TableCell>
                     <TableCell className="font-mono text-sm">{printer.sn}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{PRINTER_TYPE_MAP[printer.type]?.label || printer.type}</Badge>
+                      <Badge variant="outline">
+                        {PRINTER_TYPE_MAP[printer.type]?.label || printer.type}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
@@ -252,7 +267,11 @@ export default function PrintersPage() {
                         </Button>
                         <Button
                           size="sm"
-                          variant={testStatus?.id === printer.id && testStatus?.status === "success" ? "default" : "ghost"}
+                          variant={
+                            testStatus?.id === printer.id && testStatus?.status === "success"
+                              ? "default"
+                              : "ghost"
+                          }
                           onClick={() => testMutation.mutate(printer.id)}
                           title="测试打印"
                           disabled={testMutation.isPending && testStatus?.id === printer.id}
@@ -261,8 +280,8 @@ export default function PrintersPage() {
                               ? testStatus?.status === "success"
                                 ? "bg-green-500 hover:bg-green-600"
                                 : testStatus?.status === "error"
-                                ? "bg-red-500 hover:bg-red-600"
-                                : ""
+                                  ? "bg-red-500 hover:bg-red-600"
+                                  : ""
                               : ""
                           }
                         >
@@ -410,14 +429,22 @@ export default function PrintersPage() {
               打印预览 - {previewPrinter?.name}
             </DialogTitle>
           </DialogHeader>
-          
+
           {/* 模拟小票预览 */}
           <div className="bg-white border-2 border-dashed rounded-lg p-4 font-mono text-sm">
             <div className="text-center border-b pb-2 mb-2">
-              <p className="font-bold text-lg">【{previewPrinter?.type === "KITCHEN" ? "后厨" : previewPrinter?.type === "BAR" ? "吧台" : "收银"}单】</p>
+              <p className="font-bold text-lg">
+                【
+                {previewPrinter?.type === "KITCHEN"
+                  ? "后厨"
+                  : previewPrinter?.type === "BAR"
+                    ? "吧台"
+                    : "收银"}
+                单】
+              </p>
               <p className="text-xs text-muted-foreground">门店名称</p>
             </div>
-            
+
             <div className="space-y-1 text-xs border-b pb-2 mb-2">
               <div className="flex justify-between">
                 <span>订单号:</span>
@@ -473,7 +500,9 @@ export default function PrintersPage() {
                   </Badge>
                 ))
               ) : (
-                <span className="text-sm text-muted-foreground">未绑定分类，将不会收到自动分单</span>
+                <span className="text-sm text-muted-foreground">
+                  未绑定分类，将不会收到自动分单
+                </span>
               )}
             </div>
           </div>
@@ -491,10 +520,12 @@ export default function PrintersPage() {
             <Button variant="outline" onClick={() => setPreviewDialogOpen(false)}>
               关闭
             </Button>
-            <Button onClick={() => {
-              testMutation.mutate(previewPrinter?.id);
-              setPreviewDialogOpen(false);
-            }}>
+            <Button
+              onClick={() => {
+                testMutation.mutate(previewPrinter?.id);
+                setPreviewDialogOpen(false);
+              }}
+            >
               <TestTube className="h-4 w-4 mr-2" />
               发送测试打印
             </Button>

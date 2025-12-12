@@ -108,11 +108,46 @@ const levelColors: Record<number, string> = {
 
 // 默认等级配置
 const defaultLevelConfigs: LevelConfig[] = [
-  { level: 1, name: "普通会员", minPoints: 0, discount: 1.0, pointsMultiplier: 1.0, color: "bg-gray-100 text-gray-800" },
-  { level: 2, name: "银卡会员", minPoints: 1000, discount: 0.98, pointsMultiplier: 1.2, color: "bg-slate-200 text-slate-800" },
-  { level: 3, name: "金卡会员", minPoints: 5000, discount: 0.95, pointsMultiplier: 1.5, color: "bg-yellow-100 text-yellow-800" },
-  { level: 4, name: "铂金会员", minPoints: 20000, discount: 0.92, pointsMultiplier: 2.0, color: "bg-blue-100 text-blue-800" },
-  { level: 5, name: "钻石会员", minPoints: 50000, discount: 0.88, pointsMultiplier: 3.0, color: "bg-purple-100 text-purple-800" },
+  {
+    level: 1,
+    name: "普通会员",
+    minPoints: 0,
+    discount: 1.0,
+    pointsMultiplier: 1.0,
+    color: "bg-gray-100 text-gray-800",
+  },
+  {
+    level: 2,
+    name: "银卡会员",
+    minPoints: 1000,
+    discount: 0.98,
+    pointsMultiplier: 1.2,
+    color: "bg-slate-200 text-slate-800",
+  },
+  {
+    level: 3,
+    name: "金卡会员",
+    minPoints: 5000,
+    discount: 0.95,
+    pointsMultiplier: 1.5,
+    color: "bg-yellow-100 text-yellow-800",
+  },
+  {
+    level: 4,
+    name: "铂金会员",
+    minPoints: 20000,
+    discount: 0.92,
+    pointsMultiplier: 2.0,
+    color: "bg-blue-100 text-blue-800",
+  },
+  {
+    level: 5,
+    name: "钻石会员",
+    minPoints: 50000,
+    discount: 0.88,
+    pointsMultiplier: 3.0,
+    color: "bg-purple-100 text-purple-800",
+  },
 ];
 
 export default function MembersPage() {
@@ -344,9 +379,7 @@ export default function MembersPage() {
                   <Coins className="h-4 w-4 text-orange-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {stats.totalPoints.toLocaleString()}
-                  </div>
+                  <div className="text-2xl font-bold">{stats.totalPoints.toLocaleString()}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -419,11 +452,7 @@ export default function MembersPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {member.user?.avatar ? (
-                            <img
-                              src={member.user.avatar}
-                              alt=""
-                              className="h-8 w-8 rounded-full"
-                            />
+                            <img src={member.user.avatar} alt="" className="h-8 w-8 rounded-full" />
                           ) : (
                             <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
                               <Users className="h-4 w-4 text-gray-500" />
@@ -444,13 +473,9 @@ export default function MembersPage() {
                           {member.points.toLocaleString()}
                         </span>
                       </TableCell>
-                      <TableCell>
-                        {formatPrice(member.stats?.totalAmount || 0)}
-                      </TableCell>
+                      <TableCell>{formatPrice(member.stats?.totalAmount || 0)}</TableCell>
                       <TableCell>{member.stats?.totalOrders || 0} 单</TableCell>
-                      <TableCell>
-                        {new Date(member.createdAt).toLocaleDateString()}
-                      </TableCell>
+                      <TableCell>{new Date(member.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           <Button
@@ -482,10 +507,7 @@ export default function MembersPage() {
                   ))}
                   {members.length === 0 && (
                     <TableRow>
-                      <TableCell
-                        colSpan={8}
-                        className="text-center text-muted-foreground py-8"
-                      >
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                         暂无会员数据
                       </TableCell>
                     </TableRow>
@@ -512,12 +534,7 @@ export default function MembersPage() {
                   <Label>消费获取积分</Label>
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground">每消费</span>
-                    <Input
-                      type="number"
-                      className="w-20"
-                      value={1}
-                      disabled
-                    />
+                    <Input type="number" className="w-20" value={1} disabled />
                     <span className="text-muted-foreground">元，获得</span>
                     <Input
                       type="number"
@@ -585,9 +602,7 @@ export default function MembersPage() {
                       <TableCell>
                         <Input
                           value={config.name}
-                          onChange={(e) =>
-                            updateLevelConfig(config.level, "name", e.target.value)
-                          }
+                          onChange={(e) => updateLevelConfig(config.level, "name", e.target.value)}
                           className="w-32"
                         />
                       </TableCell>
@@ -628,7 +643,11 @@ export default function MembersPage() {
                             min="1"
                             value={config.pointsMultiplier}
                             onChange={(e) =>
-                              updateLevelConfig(config.level, "pointsMultiplier", Number(e.target.value))
+                              updateLevelConfig(
+                                config.level,
+                                "pointsMultiplier",
+                                Number(e.target.value)
+                              )
                             }
                             className="w-20"
                           />
@@ -657,10 +676,7 @@ export default function MembersPage() {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-5">
                 {levelConfigs.map((config) => (
-                  <div
-                    key={config.level}
-                    className="rounded-lg border p-4 space-y-2"
-                  >
+                  <div key={config.level} className="rounded-lg border p-4 space-y-2">
                     <Badge className={config.color}>
                       <Star className="h-3 w-3 mr-1" />
                       {config.name}
@@ -668,11 +684,15 @@ export default function MembersPage() {
                     <div className="text-sm space-y-1">
                       <p>
                         <span className="text-muted-foreground">升级条件：</span>
-                        {config.minPoints === 0 ? "注册即可" : `${config.minPoints.toLocaleString()} 积分`}
+                        {config.minPoints === 0
+                          ? "注册即可"
+                          : `${config.minPoints.toLocaleString()} 积分`}
                       </p>
                       <p>
                         <span className="text-muted-foreground">消费折扣：</span>
-                        {config.discount === 1 ? "无" : `${Math.round(config.discount * 100) / 10} 折`}
+                        {config.discount === 1
+                          ? "无"
+                          : `${Math.round(config.discount * 100) / 10} 折`}
                       </p>
                       <p>
                         <span className="text-muted-foreground">积分倍率：</span>
@@ -692,15 +712,15 @@ export default function MembersPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {adjustType === "points" ? "调整积分" : "调整等级"} -{" "}
-              {selectedMember?.user?.nickname}
+              {adjustType === "points" ? "调整积分" : "调整等级"} - {selectedMember?.user?.nickname}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {adjustType === "points" ? (
               <>
                 <div className="text-sm text-muted-foreground">
-                  当前积分: <span className="font-medium text-foreground">{selectedMember?.points}</span>
+                  当前积分:{" "}
+                  <span className="font-medium text-foreground">{selectedMember?.points}</span>
                 </div>
                 <div className="grid gap-2">
                   <Label>调整数值（正数增加，负数扣除）</Label>
@@ -774,11 +794,7 @@ export default function MembersPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 {memberDetail.user?.avatar ? (
-                  <img
-                    src={memberDetail.user.avatar}
-                    alt=""
-                    className="h-16 w-16 rounded-full"
-                  />
+                  <img src={memberDetail.user.avatar} alt="" className="h-16 w-16 rounded-full" />
                 ) : (
                   <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center">
                     <Users className="h-8 w-8 text-gray-500" />
@@ -813,9 +829,7 @@ export default function MembersPage() {
                 </div>
                 <div className="rounded-lg border p-4">
                   <div className="text-sm text-muted-foreground">订单数量</div>
-                  <div className="text-2xl font-bold">
-                    {memberDetail.stats?.totalOrders || 0}
-                  </div>
+                  <div className="text-2xl font-bold">{memberDetail.stats?.totalOrders || 0}</div>
                 </div>
               </div>
 
@@ -839,17 +853,13 @@ export default function MembersPage() {
                         </div>
                         <div className="flex items-center gap-4">
                           <Badge variant="secondary">{order.status}</Badge>
-                          <span className="font-medium">
-                            {formatPrice(order.payAmount)}
-                          </span>
+                          <span className="font-medium">{formatPrice(order.payAmount)}</span>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center text-muted-foreground py-4">
-                    暂无订单记录
-                  </div>
+                  <div className="text-center text-muted-foreground py-4">暂无订单记录</div>
                 )}
               </div>
             </div>

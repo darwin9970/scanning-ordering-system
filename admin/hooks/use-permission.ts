@@ -1,11 +1,7 @@
 "use client";
 
 import { useAuthStore } from "@/store/auth";
-import {
-  hasPermission,
-  hasAnyPermission,
-  hasAllPermissions,
-} from "@/lib/permissions";
+import { hasPermission, hasAnyPermission, hasAllPermissions } from "@/lib/permissions";
 import type { Permission } from "@/types";
 
 /**

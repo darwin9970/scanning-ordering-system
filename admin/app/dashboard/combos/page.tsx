@@ -32,14 +32,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ui/image-upload";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Package,
-  ImageIcon,
-  X,
-} from "lucide-react";
+import { Plus, Pencil, Trash2, Package, ImageIcon, X } from "lucide-react";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -76,7 +69,10 @@ interface Combo {
   createdAt: string;
 }
 
-const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
+const statusLabels: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "destructive" }
+> = {
   AVAILABLE: { label: "在售", variant: "default" },
   SOLDOUT: { label: "售罄", variant: "destructive" },
   HIDDEN: { label: "隐藏", variant: "secondary" },
@@ -223,10 +219,7 @@ export default function CombosPage() {
   };
 
   const addComboItem = () => {
-    setComboItems([
-      ...comboItems,
-      { productId: 0, quantity: 1, isOptional: false },
-    ]);
+    setComboItems([...comboItems, { productId: 0, quantity: 1, isOptional: false }]);
   };
 
   const removeComboItem = (index: number) => {
@@ -236,13 +229,13 @@ export default function CombosPage() {
   const updateComboItem = (index: number, field: keyof ComboItem, value: any) => {
     const newItems = [...comboItems];
     newItems[index] = { ...newItems[index]!, [field]: value };
-    
+
     // 如果更新了 productId，同时更新 product 信息
     if (field === "productId") {
       const product = products.find((p) => p.id === value);
       newItems[index]!.product = product;
     }
-    
+
     setComboItems(newItems);
   };
 
@@ -305,7 +298,11 @@ export default function CombosPage() {
                   <TableCell>
                     {combo.imageUrl ? (
                       <img
-                        src={combo.imageUrl.startsWith("http") ? combo.imageUrl : `${API_BASE}${combo.imageUrl}`}
+                        src={
+                          combo.imageUrl.startsWith("http")
+                            ? combo.imageUrl
+                            : `${API_BASE}${combo.imageUrl}`
+                        }
                         alt={combo.name}
                         className="h-12 w-12 rounded-md object-cover"
                       />
@@ -317,9 +314,7 @@ export default function CombosPage() {
                   </TableCell>
                   <TableCell className="font-medium">{combo.name}</TableCell>
                   <TableCell>
-                    <div className="text-sm text-muted-foreground">
-                      {combo.items.length} 个商品
-                    </div>
+                    <div className="text-sm text-muted-foreground">{combo.items.length} 个商品</div>
                   </TableCell>
                   <TableCell className="text-muted-foreground line-through">
                     {formatPrice(combo.originalPrice)}
@@ -339,18 +334,10 @@ export default function CombosPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(combo)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(combo)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(combo.id)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(combo.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
@@ -431,7 +418,7 @@ export default function CombosPage() {
                   添加商品
                 </Button>
               </div>
-              
+
               {comboItems.length === 0 ? (
                 <div className="rounded-lg border border-dashed p-4 text-center text-muted-foreground">
                   请添加套餐包含的商品
@@ -439,10 +426,7 @@ export default function CombosPage() {
               ) : (
                 <div className="space-y-2">
                   {comboItems.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 rounded-lg border p-2"
-                    >
+                    <div key={index} className="flex items-center gap-2 rounded-lg border p-2">
                       <Select
                         value={item.productId ? String(item.productId) : ""}
                         onValueChange={(v) => updateComboItem(index, "productId", Number(v))}

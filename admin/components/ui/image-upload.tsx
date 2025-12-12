@@ -14,12 +14,7 @@ interface ImageUploadProps {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-export function ImageUpload({
-  value,
-  onChange,
-  disabled,
-  className,
-}: ImageUploadProps) {
+export function ImageUpload({ value, onChange, disabled, className }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -112,11 +107,7 @@ export function ImageUpload({
     }
   };
 
-  const imageUrl = value
-    ? value.startsWith("http")
-      ? value
-      : `${API_BASE}${value}`
-    : null;
+  const imageUrl = value ? (value.startsWith("http") ? value : `${API_BASE}${value}`) : null;
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -131,11 +122,7 @@ export function ImageUpload({
 
       {imageUrl ? (
         <div className="relative inline-block">
-          <img
-            src={imageUrl}
-            alt="商品图片"
-            className="h-32 w-32 rounded-lg object-cover border"
-          />
+          <img src={imageUrl} alt="商品图片" className="h-32 w-32 rounded-lg object-cover border" />
           {!disabled && (
             <Button
               type="button"
@@ -168,9 +155,7 @@ export function ImageUpload({
           ) : (
             <>
               <ImageIcon className="h-8 w-8 text-muted-foreground" />
-              <span className="mt-2 text-xs text-muted-foreground">
-                点击或拖拽上传
-              </span>
+              <span className="mt-2 text-xs text-muted-foreground">点击或拖拽上传</span>
             </>
           )}
         </div>
@@ -181,9 +166,7 @@ export function ImageUpload({
         <div
           className={cn(
             "flex items-center gap-2 text-xs px-2 py-1 rounded",
-            message.type === "success"
-              ? "bg-green-50 text-green-600"
-              : "bg-red-50 text-red-600"
+            message.type === "success" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"
           )}
         >
           {message.type === "success" ? (
@@ -195,9 +178,7 @@ export function ImageUpload({
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground">
-        支持 JPG、PNG、GIF、WEBP，最大 5MB
-      </p>
+      <p className="text-xs text-muted-foreground">支持 JPG、PNG、GIF、WEBP，最大 5MB</p>
     </div>
   );
 }

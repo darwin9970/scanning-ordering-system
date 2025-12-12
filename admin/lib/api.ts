@@ -402,7 +402,10 @@ class ApiClient {
     return this.request(`/api/settings${this.buildQuery({ storeId })}`);
   }
 
-  getSetting(key: string, storeId?: number): Promise<{ key: string; value: string; description: string }> {
+  getSetting(
+    key: string,
+    storeId?: number
+  ): Promise<{ key: string; value: string; description: string }> {
     return this.request(`/api/settings/${key}${this.buildQuery({ storeId })}`);
   }
 

@@ -24,10 +24,12 @@ export function Header({ collapsed = false }: HeaderProps) {
   const storeId = user?.store?.id || (user?.role === "SUPER_ADMIN" ? 1 : null);
 
   return (
-    <header className={cn(
-      "fixed right-0 top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-6 transition-all duration-300",
-      collapsed ? "left-16" : "left-64"
-    )}>
+    <header
+      className={cn(
+        "fixed right-0 top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-6 transition-all duration-300",
+        collapsed ? "left-16" : "left-64"
+      )}
+    >
       <div className="flex items-center gap-4">
         <h1 className="text-lg font-semibold">后台管理系统</h1>
       </div>

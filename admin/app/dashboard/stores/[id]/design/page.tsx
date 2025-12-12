@@ -80,6 +80,7 @@ import type {
 } from "@/types";
 import { useComponents } from "./hooks/useComponents";
 import { usePageConfig } from "./hooks/usePageConfig";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import {
   PAGE_TYPES,
   SUB_TABS,
@@ -91,7 +92,6 @@ import {
   getDefaultProps,
   getDefaultSize,
   CANVAS_WIDTH,
-  CANVAS_HEIGHT,
 } from "./constants";
 import {
   SortableItem,
@@ -115,6 +115,7 @@ export default function StoreDesignPage() {
     hasChanges,
     canUndo,
     canRedo,
+    hasClipboard,
     addComponent,
     deleteComponent,
     toggleVisibility,
@@ -129,6 +130,18 @@ export default function StoreDesignPage() {
     redo,
     resetChanges,
     markChanged,
+    // 新增功能
+    toggleLock,
+    copyComponent,
+    pasteComponent,
+    duplicateComponent,
+    bringForward,
+    sendBackward,
+    bringToFront,
+    sendToBack,
+    nudgeComponent,
+    resizeComponent,
+    startResize,
   } = useComponents();
 
   // 兼容性函数：用于非组件相关的修改（TabBar, 页面设置等）
@@ -278,6 +291,31 @@ export default function StoreDesignPage() {
     setInsertIndex(null);
   };
 
+  // 快捷键支持
+  useKeyboardShortcuts({
+    selectedId,
+    onDelete: () => selectedId && deleteComponent(selectedId),
+    onCopy: () => selectedId && copyComponent(selectedId),
+    onPaste: pasteComponent,
+    onDuplicate: () => selectedId && duplicateComponent(selectedId),
+    onUndo: undo,
+    onRedo: redo,
+    onSelectAll: () => {
+      // 暂不支持全选
+    },
+    onDeselect: () => setSelectedId(null),
+    onBringForward: () => selectedId && bringForward(selectedId),
+    onSendBackward: () => selectedId && sendBackward(selectedId),
+    onBringToFront: () => selectedId && bringToFront(selectedId),
+    onSendToBack: () => selectedId && sendToBack(selectedId),
+    onToggleLock: () => selectedId && toggleLock(selectedId),
+    onMoveUp: () => selectedId && nudgeComponent(selectedId, "up", 1),
+    onMoveDown: () => selectedId && nudgeComponent(selectedId, "down", 1),
+    onMoveLeft: () => selectedId && nudgeComponent(selectedId, "left", 1),
+    onMoveRight: () => selectedId && nudgeComponent(selectedId, "right", 1),
+    enabled: true,
+  });
+
   // 加载数据
   useEffect(() => {
     loadData();
@@ -290,8 +328,12 @@ export default function StoreDesignPage() {
         api.getPageConfig({ storeId, pageType: currentPage }),
       ]);
       setStore(storeData);
+      // 如果返回的是预设配置（isDefault: true），显示提示
+      if (configData.isDefault && configData.components && configData.components.length > 0) {
+        toast.info("已加载预设的精美布局，您可以在此基础上进行修改", { duration: 4000 });
+      }
       setComponents(configData.components || []);
-      setIsPublished(configData.isPublished);
+      setIsPublished(configData.isPublished || false);
       setSelectedId(null);
     } catch (error) {
       toast.error("加载失败");
@@ -1044,7 +1086,7 @@ export default function StoreDesignPage() {
                     <div className="absolute right-[-2px] top-[180px] w-[3px] h-[80px] bg-[#1a1a1a] rounded-r-sm" />
 
                     {/* 屏幕区域 */}
-                    <div className="relative w-[375px] bg-white rounded-[2.4rem] overflow-hidden">
+                    <div className="relative w-[375px] h-[750px] bg-white rounded-[2.4rem] overflow-hidden">
                       {/* 灵动岛 */}
                       <div className="absolute top-[12px] left-1/2 -translate-x-1/2 w-[126px] h-[37px] bg-black rounded-full z-20" />
 
@@ -1073,8 +1115,8 @@ export default function StoreDesignPage() {
                         </div>
                       </div>
 
-                      {/* 页面内容 */}
-                      <ScrollArea className="h-[668px]">
+                      {/* 页面内容 - 减去状态栏和底部 TabBar */}
+                      <ScrollArea className="h-[612px]">
                         {/* 子Tab特殊配置界面 */}
                         {currentSubTab === "loading" && (
                           <div className="min-h-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-primary/20 to-primary/5">
@@ -1177,17 +1219,25 @@ export default function StoreDesignPage() {
                           <FreeCanvas
                             components={components}
                             selectedId={selectedId}
-                            setSelectedId={setSelectedId}
+                            setSelectedId={(id) => {
+                              setSelectedId(id);
+                              if (id) setConfigTab("component");
+                            }}
                             deleteComponent={deleteComponent}
                             toggleVisibility={toggleVisibility}
+                            toggleLock={toggleLock}
                             isDraggingNew={dragType === "new"}
                             activeId={activeId}
-                            updateComponent={(id, updates) => {
-                              setComponents((items) =>
-                                items.map((c) => (c.id === id ? { ...c, ...updates } : c))
-                              );
-                              setHasChanges(true);
-                            }}
+                            updateComponent={updateComponent}
+                            startResize={startResize}
+                            copyComponent={copyComponent}
+                            pasteComponent={pasteComponent}
+                            duplicateComponent={duplicateComponent}
+                            bringForward={bringForward}
+                            sendBackward={sendBackward}
+                            bringToFront={bringToFront}
+                            sendToBack={sendToBack}
+                            hasClipboard={hasClipboard}
                           />
                         )}
                       </ScrollArea>

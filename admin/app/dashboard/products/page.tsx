@@ -270,10 +270,10 @@ export default function ProductsPage() {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="shadow-lg border-0">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <CardTitle>商品列表</CardTitle>
+            <CardTitle className="text-xl font-bold">商品列表</CardTitle>
             <div className="flex gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -284,7 +284,10 @@ export default function ProductsPage() {
                   onChange={(e) => setKeyword(e.target.value)}
                 />
               </div>
-              <Select value={categoryId || "ALL"} onValueChange={(v) => setCategoryId(v === "ALL" ? "" : v)}>
+              <Select
+                value={categoryId || "ALL"}
+                onValueChange={(v) => setCategoryId(v === "ALL" ? "" : v)}
+              >
                 <SelectTrigger className="w-[130px]">
                   <SelectValue placeholder="全部分类" />
                 </SelectTrigger>
@@ -305,6 +308,18 @@ export default function ProductsPage() {
             <div className="flex h-32 items-center justify-center">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
             </div>
+          ) : products?.list.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Package className="h-12 w-12 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">暂无商品</h3>
+              <p className="text-muted-foreground mb-4">点击上方按钮添加第一个商品</p>
+              <Button onClick={() => setDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                添加商品
+              </Button>
+            </div>
           ) : (
             <>
               <Table>
@@ -321,12 +336,19 @@ export default function ProductsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {products?.list.map((product) => (
-                    <TableRow key={product.id}>
+                  {products?.list.map((product, index) => (
+                    <TableRow
+                      key={product.id}
+                      className="hover:bg-muted/50 even:bg-muted/30 transition-colors cursor-pointer"
+                    >
                       <TableCell>
                         {product.imageUrl ? (
                           <img
-                            src={product.imageUrl.startsWith("http") ? product.imageUrl : `${API_BASE}${product.imageUrl}`}
+                            src={
+                              product.imageUrl.startsWith("http")
+                                ? product.imageUrl
+                                : `${API_BASE}${product.imageUrl}`
+                            }
                             alt={product.name}
                             className="h-12 w-12 rounded-md object-cover"
                           />
@@ -356,12 +378,18 @@ export default function ProductsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button size="sm" variant="ghost" onClick={() => openEditDialog(product)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="hover:bg-blue-50 hover:text-blue-600"
+                            onClick={() => openEditDialog(product)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
                             size="sm"
                             variant="ghost"
+                            className="hover:bg-red-50 hover:text-red-600"
                             onClick={() => handleDelete(product.id)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -421,10 +449,7 @@ export default function ProductsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>商品名称 *</Label>
-                    <Input
-                      {...form.register("name")}
-                      placeholder="请输入商品名称"
-                    />
+                    <Input {...form.register("name")} placeholder="请输入商品名称" />
                     {form.formState.errors.name && (
                       <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
                     )}
@@ -433,7 +458,9 @@ export default function ProductsPage() {
                     <Label>所属分类 *</Label>
                     <Select
                       value={form.watch("categoryId") ? String(form.watch("categoryId")) : ""}
-                      onValueChange={(v) => form.setValue("categoryId", Number(v), { shouldValidate: true })}
+                      onValueChange={(v) =>
+                        form.setValue("categoryId", Number(v), { shouldValidate: true })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="选择分类" />
@@ -509,7 +536,10 @@ export default function ProductsPage() {
                     ) : (
                       <div className="space-y-2">
                         {variants.map((variant, index) => (
-                          <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 p-3 border rounded-lg"
+                          >
                             <div className="flex-1">
                               <Input
                                 placeholder="规格名称（如：大份、小份）"
@@ -523,7 +553,9 @@ export default function ProductsPage() {
                                 step="0.01"
                                 placeholder="价格"
                                 value={variant.price}
-                                onChange={(e) => updateVariant(index, "price", Number(e.target.value))}
+                                onChange={(e) =>
+                                  updateVariant(index, "price", Number(e.target.value))
+                                }
                               />
                             </div>
                             <div className="w-20">
@@ -531,7 +563,9 @@ export default function ProductsPage() {
                                 type="number"
                                 placeholder="库存"
                                 value={variant.stock}
-                                onChange={(e) => updateVariant(index, "stock", Number(e.target.value))}
+                                onChange={(e) =>
+                                  updateVariant(index, "stock", Number(e.target.value))
+                                }
                               />
                             </div>
                             <Button

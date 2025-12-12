@@ -58,7 +58,10 @@ const typeLabels: Record<string, string> = {
   NO_THRESHOLD: "无门槛券",
 };
 
-const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
+const statusLabels: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "destructive" }
+> = {
   ACTIVE: { label: "进行中", variant: "default" },
   INACTIVE: { label: "已停用", variant: "secondary" },
   EXPIRED: { label: "已过期", variant: "destructive" },
@@ -254,9 +257,7 @@ export default function CouponsPage() {
                   </TableCell>
                   <TableCell>
                     {coupon.claimedCount}/{coupon.totalCount === -1 ? "∞" : coupon.totalCount}
-                    <span className="text-muted-foreground ml-1">
-                      (已用 {coupon.usedCount})
-                    </span>
+                    <span className="text-muted-foreground ml-1">(已用 {coupon.usedCount})</span>
                   </TableCell>
                   <TableCell className="text-sm">
                     <div>{new Date(coupon.startTime).toLocaleDateString()}</div>
@@ -275,18 +276,10 @@ export default function CouponsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(coupon)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(coupon)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(coupon.id)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(coupon.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>

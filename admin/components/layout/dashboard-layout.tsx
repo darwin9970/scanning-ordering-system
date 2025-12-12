@@ -62,10 +62,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-gray-50">
       <Sidebar />
       <Header collapsed={sidebarCollapsed} />
-      <main className={cn(
-        "pt-16 transition-all duration-300",
-        sidebarCollapsed ? "ml-16" : "ml-64"
-      )}>
+      <main
+        className={cn("pt-16 transition-all duration-300", sidebarCollapsed ? "ml-16" : "ml-64")}
+      >
         <div className="p-6">{children}</div>
       </main>
     </div>

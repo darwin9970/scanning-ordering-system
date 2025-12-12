@@ -6,9 +6,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
 import { TABLE_STATUS_MAP } from "@/lib/utils";
-import { tableSchema, tableBatchSchema, type TableFormData, type TableBatchFormData } from "@/lib/validations";
+import {
+  tableSchema,
+  tableBatchSchema,
+  type TableFormData,
+  type TableBatchFormData,
+} from "@/lib/validations";
 import type { Table } from "@/types";
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +37,8 @@ export default function TablesPage() {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
 
   // 小程序基础URL（实际部署时替换为真实地址）
-  const MINI_PROGRAM_URL = process.env.NEXT_PUBLIC_MINI_PROGRAM_URL || "https://your-mini-program.com";
+  const MINI_PROGRAM_URL =
+    process.env.NEXT_PUBLIC_MINI_PROGRAM_URL || "https://your-mini-program.com";
 
   const form = useForm<TableFormData>({
     resolver: zodResolver(tableSchema),
@@ -300,10 +306,7 @@ export default function TablesPage() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label>桌台号 *</Label>
-              <Input
-                {...form.register("name")}
-                placeholder="如 A01、B02（1-50字符）"
-              />
+              <Input {...form.register("name")} placeholder="如 A01、B02（1-50字符）" />
               {form.formState.errors.name && (
                 <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
               )}
@@ -341,44 +344,38 @@ export default function TablesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>前缀 *</Label>
-                <Input
-                  {...batchForm.register("prefix")}
-                  placeholder="如 A、B"
-                />
+                <Input {...batchForm.register("prefix")} placeholder="如 A、B" />
                 {batchForm.formState.errors.prefix && (
-                  <p className="text-sm text-red-500">{batchForm.formState.errors.prefix.message}</p>
+                  <p className="text-sm text-red-500">
+                    {batchForm.formState.errors.prefix.message}
+                  </p>
                 )}
               </div>
               <div className="space-y-2">
                 <Label>起始编号 *</Label>
-                <Input
-                  type="number"
-                  {...batchForm.register("startNum", { valueAsNumber: true })}
-                />
+                <Input type="number" {...batchForm.register("startNum", { valueAsNumber: true })} />
                 {batchForm.formState.errors.startNum && (
-                  <p className="text-sm text-red-500">{batchForm.formState.errors.startNum.message}</p>
+                  <p className="text-sm text-red-500">
+                    {batchForm.formState.errors.startNum.message}
+                  </p>
                 )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>创建数量 *</Label>
-                <Input
-                  type="number"
-                  {...batchForm.register("count", { valueAsNumber: true })}
-                />
+                <Input type="number" {...batchForm.register("count", { valueAsNumber: true })} />
                 {batchForm.formState.errors.count && (
                   <p className="text-sm text-red-500">{batchForm.formState.errors.count.message}</p>
                 )}
               </div>
               <div className="space-y-2">
                 <Label>容纳人数</Label>
-                <Input
-                  type="number"
-                  {...batchForm.register("capacity", { valueAsNumber: true })}
-                />
+                <Input type="number" {...batchForm.register("capacity", { valueAsNumber: true })} />
                 {batchForm.formState.errors.capacity && (
-                  <p className="text-sm text-red-500">{batchForm.formState.errors.capacity.message}</p>
+                  <p className="text-sm text-red-500">
+                    {batchForm.formState.errors.capacity.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -421,9 +418,7 @@ export default function TablesPage() {
               </div>
               <div className="text-center space-y-1">
                 <p className="font-medium text-lg">{selectedTable.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {selectedTable.capacity}人桌
-                </p>
+                <p className="text-sm text-muted-foreground">{selectedTable.capacity}人桌</p>
               </div>
               <div className="text-xs text-muted-foreground break-all px-4 text-center">
                 {getQrCodeUrl(selectedTable)}

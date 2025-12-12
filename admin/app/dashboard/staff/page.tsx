@@ -233,8 +233,8 @@ export default function StaffPage() {
                             staff.role === "SUPER_ADMIN"
                               ? "default"
                               : staff.role === "OWNER"
-                              ? "secondary"
-                              : "outline"
+                                ? "secondary"
+                                : "outline"
                           }
                         >
                           {ROLE_MAP[staff.role]?.label || staff.role}
@@ -246,9 +246,7 @@ export default function StaffPage() {
                           {staff.status === "ACTIVE" ? "启用" : "禁用"}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        {new Date(staff.createdAt).toLocaleDateString()}
-                      </TableCell>
+                      <TableCell>{new Date(staff.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button
@@ -263,11 +261,7 @@ export default function StaffPage() {
                               <UserCheck className="h-4 w-4" />
                             )}
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => openEditDialog(staff)}
-                          >
+                          <Button size="sm" variant="ghost" onClick={() => openEditDialog(staff)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           {staff.role !== "SUPER_ADMIN" && (
@@ -287,9 +281,7 @@ export default function StaffPage() {
               </Table>
 
               <div className="flex items-center justify-between pt-4">
-                <p className="text-sm text-muted-foreground">
-                  共 {staffList?.total || 0} 条记录
-                </p>
+                <p className="text-sm text-muted-foreground">共 {staffList?.total || 0} 条记录</p>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -329,9 +321,7 @@ export default function StaffPage() {
                 disabled={!!editingStaff}
               />
               {form.formState.errors.username && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.username.message}
-                </p>
+                <p className="text-sm text-red-500">{form.formState.errors.username.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -342,18 +332,14 @@ export default function StaffPage() {
                 placeholder={editingStaff ? "留空表示不修改" : "至少6位"}
               />
               {form.formState.errors.password && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.password.message}
-                </p>
+                <p className="text-sm text-red-500">{form.formState.errors.password.message}</p>
               )}
             </div>
             <div className="space-y-2">
               <Label>姓名 *</Label>
               <Input {...form.register("name")} placeholder="员工姓名" />
               {form.formState.errors.name && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.name.message}
-                </p>
+                <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -394,11 +380,7 @@ export default function StaffPage() {
               </Select>
             </div>
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDialogOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 取消
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>

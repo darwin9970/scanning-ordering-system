@@ -239,9 +239,7 @@ export default function RolesPage() {
                     <Shield className="h-5 w-5" />
                     超级管理员
                   </CardTitle>
-                  <CardDescription>
-                    超级管理员拥有系统所有权限，不可修改
-                  </CardDescription>
+                  <CardDescription>超级管理员拥有系统所有权限，不可修改</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground">

@@ -572,7 +572,16 @@ export const getDefaultProps = (type: PageComponentType): Record<string, unknown
 
 // 画布宽度（iPhone 15 Pro 屏幕宽度）
 export const CANVAS_WIDTH = 375;
-export const CANVAS_HEIGHT = 668;
+// 预览总高度（整个预览容器的高度）
+export const PREVIEW_TOTAL_HEIGHT = 750;
+// 状态栏高度
+export const STATUS_BAR_HEIGHT = 54;
+// TabBar 高度（底部导航栏）
+export const TABBAR_HEIGHT = 84;
+// 画布可用高度（预览总高度减去状态栏和 TabBar 高度，组件不能超出此区域）
+export const CANVAS_MAX_HEIGHT = PREVIEW_TOTAL_HEIGHT - STATUS_BAR_HEIGHT - TABBAR_HEIGHT; // 612
+// 画布最小高度（用于显示）
+export const CANVAS_MIN_HEIGHT = CANVAS_MAX_HEIGHT;
 
 // 组件默认尺寸
 export const getDefaultSize = (type: PageComponentType): { width: number; height: number } => {
@@ -596,19 +605,19 @@ export const getDefaultSize = (type: PageComponentType): { width: number; height
     case "SPACER":
       return { width: 375, height: 20 };
     case "FOCUS_ENTRY":
-      return { width: 180, height: 60 };
+      return { width: 375, height: 60 };
     case "STAMP_CARD":
-      return { width: 351, height: 120 };
+      return { width: 375, height: 120 };
     case "SEARCH":
-      return { width: 351, height: 40 };
+      return { width: 375, height: 40 };
     case "STORE_TITLE":
       return { width: 375, height: 60 };
     case "CART_FLOAT":
       return { width: 60, height: 60 };
     case "TEXT":
-      return { width: 200, height: 40 };
+      return { width: 375, height: 40 };
     case "FREE_CONTAINER":
-      return { width: 200, height: 200 };
+      return { width: 375, height: 200 };
     case "USER_INFO":
       return { width: 375, height: 120 };
     case "FUNC_ENTRY":

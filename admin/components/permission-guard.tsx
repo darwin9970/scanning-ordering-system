@@ -70,10 +70,7 @@ export function CanWrite({
   fallback?: React.ReactNode;
 }) {
   return (
-    <PermissionGuard
-      permissions={`${resource}:write` as Permission}
-      fallback={fallback}
-    >
+    <PermissionGuard permissions={`${resource}:write` as Permission} fallback={fallback}>
       {children}
     </PermissionGuard>
   );
@@ -92,10 +89,7 @@ export function CanDelete({
   fallback?: React.ReactNode;
 }) {
   return (
-    <PermissionGuard
-      permissions={`${resource}:delete` as Permission}
-      fallback={fallback}
-    >
+    <PermissionGuard permissions={`${resource}:delete` as Permission} fallback={fallback}>
       {children}
     </PermissionGuard>
   );

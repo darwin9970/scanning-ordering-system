@@ -776,10 +776,10 @@ export const rolePermissions = pgTable(
 // ==================== Banner/轮播图管理 ====================
 
 export const bannerPositionEnum = pgEnum("banner_position", [
-  "HOME_TOP",      // 首页顶部轮播
-  "MENU_TOP",      // 菜单页顶部
-  "CATEGORY",      // 分类页
-  "PROMOTION"      // 活动专区
+  "HOME_TOP", // 首页顶部轮播
+  "MENU_TOP", // 菜单页顶部
+  "CATEGORY", // 分类页
+  "PROMOTION", // 活动专区
 ]);
 
 export const banners = pgTable("banners", {
@@ -841,22 +841,29 @@ export const pageConfigs = pgTable(
 
 // 页面组件类型定义
 export interface PageComponent {
-  id: string;                    // 组件唯一ID (uuid)
-  type: string;                  // 组件类型
-  title?: string;                // 组件标题
-  visible: boolean;              // 是否显示
+  id: string; // 组件唯一ID (uuid)
+  type: string; // 组件类型
+  title?: string; // 组件标题
+  visible: boolean; // 是否显示
   props: Record<string, unknown>; // 组件配置属性
-  children?: PageComponent[];    // 子组件（自由容器用）
+  children?: PageComponent[]; // 子组件（自由容器用）
+  // 自由画布布局属性
+  x?: number; // X 坐标
+  y?: number; // Y 坐标
+  width?: number; // 宽度
+  height?: number; // 高度
+  zIndex?: number; // 层级（用于排序和显示顺序）
+  locked?: boolean; // 是否锁定（锁定后不能拖拽和调整大小）
 }
 
 // 页面设置
 export interface PageSettings {
-  title?: string;                // 页面标题
-  navBgColor?: string;           // 导航背景色
+  title?: string; // 页面标题
+  navBgColor?: string; // 导航背景色
   navTextColor?: "white" | "black"; // 导航文字颜色
-  pageBgColor?: string;          // 页面背景色
-  hideNav?: boolean;             // 隐藏导航
-  enablePullRefresh?: boolean;   // 下拉刷新
+  pageBgColor?: string; // 页面背景色
+  hideNav?: boolean; // 隐藏导航
+  enablePullRefresh?: boolean; // 下拉刷新
 }
 
 export const pageConfigsRelations = relations(pageConfigs, ({ one }) => ({

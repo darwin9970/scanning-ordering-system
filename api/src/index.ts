@@ -29,7 +29,13 @@ import { wsRoutes } from "./ws";
 const app = new Elysia()
   .use(
     cors({
-      origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+      origin: [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://admin:3000",
+        /^http:\/\/localhost:\d+$/,
+        /^http:\/\/127\.0\.0\.1:\d+$/,
+      ],
       credentials: true,
     })
   )

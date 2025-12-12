@@ -49,11 +49,19 @@ services:
       NODE_ENV: production
     ports:
       - "4000:4000"
+    volumes:
+      - api_uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:4000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # 打印 Worker
   worker:
@@ -79,9 +87,9 @@ services:
       context: ./admin
       dockerfile: Dockerfile
       args:
-        # 客户端访问需使用主机地址
-        - NEXT_PUBLIC_API_URL=http://127.0.0.1:4000
-        - NEXT_PUBLIC_WS_URL=ws://127.0.0.1:4000
+        # 客户端访问需使用主机地址或域名
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+        - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL:-ws://localhost:4000}
     container_name: qr-order-admin
     restart: unless-stopped
     environment:
@@ -90,7 +98,14 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Nginx 反向代理 (可选)
   nginx:
@@ -111,8 +126,13 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
+  api_uploads:
+    driver: local
 
 networks:
   default:
     name: qr-order-network
+    driver: bridge

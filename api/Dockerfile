@@ -11,9 +11,21 @@ RUN bun install --frozen-lockfile
 FROM base AS runner
 ENV NODE_ENV=production
 
+# 安装健康检查工具
+RUN apk add --no-cache wget
+
+# 创建非 root 用户
+RUN addgroup --system --gid 1001 bunjs
+RUN adduser --system --uid 1001 bunjs
+
 # 复制依赖和源码
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY --chown=bunjs:bunjs . .
+
+# 创建上传目录
+RUN mkdir -p /app/uploads && chown bunjs:bunjs /app/uploads
+
+USER bunjs
 
 # 暴露端口
 EXPOSE 4000

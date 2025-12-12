@@ -80,12 +80,12 @@ export default function PromotionsPage() {
     priority: "0",
     stackable: false,
   });
-  
+
   // 满减规则
   const [fullReduceTiers, setFullReduceTiers] = useState<FullReduceTier[]>([
     { min: 50, discount: 5 },
   ]);
-  
+
   // 折扣规则
   const [discountValue, setDiscountValue] = useState("0.8");
   const [maxDiscount, setMaxDiscount] = useState("");
@@ -243,9 +243,7 @@ export default function PromotionsPage() {
   const formatRules = (promotion: Promotion) => {
     if (promotion.type === "FULL_REDUCE") {
       const rules = promotion.rules as { tiers: FullReduceTier[] };
-      return rules.tiers
-        ?.map((t) => `满${t.min}减${t.discount}`)
-        .join(", ");
+      return rules.tiers?.map((t) => `满${t.min}减${t.discount}`).join(", ");
     } else if (promotion.type === "DISCOUNT" || promotion.type === "TIME_LIMITED") {
       const rules = promotion.rules as { discount: number; maxDiscount?: number };
       let text = `${(rules.discount * 10).toFixed(1)}折`;
@@ -305,9 +303,7 @@ export default function PromotionsPage() {
                 <TableRow key={promotion.id}>
                   <TableCell className="font-medium">{promotion.name}</TableCell>
                   <TableCell>{typeLabels[promotion.type]}</TableCell>
-                  <TableCell className="max-w-xs truncate">
-                    {formatRules(promotion)}
-                  </TableCell>
+                  <TableCell className="max-w-xs truncate">{formatRules(promotion)}</TableCell>
                   <TableCell className="text-sm">
                     <div>{new Date(promotion.startTime).toLocaleDateString()}</div>
                     <div className="text-muted-foreground">
@@ -327,11 +323,7 @@ export default function PromotionsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(promotion)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(promotion)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
@@ -412,11 +404,7 @@ export default function PromotionsPage() {
                         onChange={(e) => updateTier(index, "discount", Number(e.target.value))}
                       />
                       {fullReduceTiers.length > 1 && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeTier(index)}
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => removeTier(index)}>
                           <X className="h-4 w-4" />
                         </Button>
                       )}

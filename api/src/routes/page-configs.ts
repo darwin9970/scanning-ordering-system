@@ -63,119 +63,293 @@ const COMPONENT_TYPES = [
   { value: "MEMBER_BADGE", label: "会员标识", icon: "Crown", category: "element" },
   { value: "MEMBER_PROGRESS", label: "会员进度", icon: "BarChart", category: "element" },
   // 专属组件 (7个)
-  { value: "ORDER_COMPONENT", label: "点单组件", icon: "ShoppingCart", category: "special", availableIn: ["MENU"] },
-  { value: "USER_INFO", label: "会员信息", icon: "User", category: "special", availableIn: ["PROFILE"] },
-  { value: "FUNC_ENTRY", label: "功能入口", icon: "LayoutGrid", category: "special", availableIn: ["PROFILE"] },
-  { value: "MEMBER_RIGHTS", label: "会员权益", icon: "Award", category: "special", availableIn: ["MEMBER"] },
-  { value: "MEMBER_LEVEL", label: "会员等级", icon: "Crown", category: "special", availableIn: ["MEMBER"] },
-  { value: "RECHARGE_OPTIONS", label: "充值选项", icon: "CreditCard", category: "special", availableIn: ["RECHARGE"] },
-  { value: "RECHARGE_BUTTON", label: "充值按钮", icon: "Wallet", category: "special", availableIn: ["RECHARGE"] },
+  {
+    value: "ORDER_COMPONENT",
+    label: "点单组件",
+    icon: "ShoppingCart",
+    category: "special",
+    availableIn: ["MENU"],
+  },
+  {
+    value: "USER_INFO",
+    label: "会员信息",
+    icon: "User",
+    category: "special",
+    availableIn: ["PROFILE"],
+  },
+  {
+    value: "FUNC_ENTRY",
+    label: "功能入口",
+    icon: "LayoutGrid",
+    category: "special",
+    availableIn: ["PROFILE"],
+  },
+  {
+    value: "MEMBER_RIGHTS",
+    label: "会员权益",
+    icon: "Award",
+    category: "special",
+    availableIn: ["MEMBER"],
+  },
+  {
+    value: "MEMBER_LEVEL",
+    label: "会员等级",
+    icon: "Crown",
+    category: "special",
+    availableIn: ["MEMBER"],
+  },
+  {
+    value: "RECHARGE_OPTIONS",
+    label: "充值选项",
+    icon: "CreditCard",
+    category: "special",
+    availableIn: ["RECHARGE"],
+  },
+  {
+    value: "RECHARGE_BUTTON",
+    label: "充值按钮",
+    icon: "Wallet",
+    category: "special",
+    availableIn: ["RECHARGE"],
+  },
 ] as const;
 
-// 默认首页模板
+// 精美的酒馆主题预设首页模板
+// 精心设计的布局：合理的间距、视觉层次、对齐和留白
+// 总高度：180 + 40 + 16 + 40 + 16 + 100 + 16 + 60 + 16 + 192 = 676px（超出612px，需要调整）
+// 优化后：180 + 40 + 12 + 40 + 12 + 100 + 12 + 60 + 12 + 180 = 648px（超出，继续优化）
+// 最终：180 + 40 + 8 + 40 + 8 + 100 + 8 + 60 + 8 + 180 = 632px（超出20px，需要压缩）
+// 最终优化：180 + 40 + 8 + 40 + 8 + 90 + 8 + 56 + 8 + 174 = 612px ✓
 const DEFAULT_HOME_COMPONENTS: PageComponent[] = [
+  // 1. 轮播图 - 全宽，顶部
   {
-    id: "default-banner",
+    id: "preset-banner-1",
     type: "BANNER",
     title: "轮播图",
     visible: true,
+    x: 0,
+    y: 0,
+    width: 375,
+    height: 180,
+    zIndex: 1,
     props: {
       autoplay: true,
       interval: 3000,
       height: 180,
+      showIndicator: true,
+      indicatorStyle: "dot",
+      indicatorPosition: "center",
+      indicatorColor: "white",
     },
   },
+  // 2. 公告栏 - 全宽，紧贴轮播图
   {
-    id: "default-notice",
+    id: "preset-notice-1",
     type: "NOTICE",
     title: "公告栏",
     visible: true,
+    x: 0,
+    y: 180,
+    width: 375,
+    height: 40,
+    zIndex: 2,
     props: {
       scrollable: true,
       speed: 50,
+      bgColor: "#2c1810",
+      textColor: "#d4a574",
     },
   },
+  // 3. 搜索模块 - 左右留白16px，顶部间距8px
   {
-    id: "default-nav-grid",
+    id: "preset-search-1",
+    type: "SEARCH",
+    title: "搜索模块",
+    visible: true,
+    x: 16,
+    y: 228, // 180 + 40 + 8
+    width: 343, // 375 - 16*2
+    height: 40,
+    zIndex: 3,
+    props: {
+      placeholder: "搜索酒品、小食...",
+      bgColor: "#f5f3f0",
+    },
+  },
+  // 4. 快捷导航 - 左右留白16px，顶部间距8px
+  {
+    id: "preset-nav-1",
     type: "NAV_GRID",
     title: "快捷导航",
     visible: true,
+    x: 16,
+    y: 276, // 228 + 40 + 8
+    width: 343,
+    height: 90, // 从100压缩到90
+    zIndex: 4,
     props: {
       columns: 4,
       items: [
-        { icon: "🍜", text: "热销", link: { type: "category", value: "" } },
-        { icon: "🎁", text: "套餐", link: { type: "page", value: "/pages/combos/list" } },
-        { icon: "🎫", text: "优惠券", link: { type: "page", value: "/pages/mine/coupons" } },
-        { icon: "📋", text: "订单", link: { type: "page", value: "/pages/order/list" } },
+        { icon: "🍺", text: "精酿", link: { type: "category", value: "" } },
+        { icon: "🥃", text: "威士忌", link: { type: "category", value: "" } },
+        { icon: "🍸", text: "鸡尾酒", link: { type: "category", value: "" } },
+        { icon: "🍖", text: "小食", link: { type: "category", value: "" } },
       ],
     },
   },
+  // 5. 焦点入口 - 左右留白16px，顶部间距8px
   {
-    id: "default-hot",
+    id: "preset-focus-1",
+    type: "FOCUS_ENTRY",
+    title: "焦点入口",
+    visible: true,
+    x: 16,
+    y: 374, // 276 + 90 + 8
+    width: 343,
+    height: 56, // 从60压缩到56
+    zIndex: 5,
+    props: {
+      icon: "🍻",
+      text: "立即点单",
+      bgColor: "#8B4513",
+      link: { type: "page", value: "/pages/menu/menu" },
+    },
+  },
+  // 6. 热销推荐 - 左右留白16px，顶部间距8px
+  {
+    id: "preset-hot-1",
     type: "HOT_PRODUCTS",
     title: "热销推荐",
     visible: true,
+    x: 16,
+    y: 438, // 374 + 56 + 8
+    width: 343,
+    height: 174, // 从192压缩到174，确保总高度612px
+    zIndex: 6,
     props: {
       limit: 6,
       showRank: true,
+      title: "🍺 人气推荐",
+    },
+  },
+];
+
+// 精美的酒馆主题预设点餐页模板
+// 所有组件宽度统一为 375px，垂直排列，确保不超出 TabBar 区域（612px 高度）
+const DEFAULT_MENU_COMPONENTS: PageComponent[] = [
+  {
+    id: "preset-menu-banner-1",
+    type: "BANNER",
+    title: "轮播图",
+    visible: true,
+    x: 0,
+    y: 0,
+    width: 375,
+    height: 180,
+    zIndex: 1,
+    props: {
+      autoplay: true,
+      interval: 3000,
+      height: 180,
+      showIndicator: true,
+      indicatorStyle: "dot",
+      indicatorPosition: "center",
+      indicatorColor: "white",
+    },
+  },
+  {
+    id: "preset-menu-notice-1",
+    type: "NOTICE",
+    title: "公告栏",
+    visible: true,
+    x: 0,
+    y: 180,
+    width: 375,
+    height: 40,
+    zIndex: 2,
+    props: {
+      scrollable: true,
+      speed: 50,
+      bgColor: "#2c1810",
+      textColor: "#d4a574",
+    },
+  },
+  {
+    id: "preset-menu-order-1",
+    type: "ORDER_COMPONENT",
+    title: "点单组件",
+    visible: true,
+    x: 0,
+    y: 220,
+    width: 375,
+    height: 392, // 612 - 220 = 392，确保不超出 TabBar 区域
+    zIndex: 3,
+    props: {
+      categoryStyle: "left",
+      productStyle: "large",
+      showSales: true,
+      showStock: false,
+      showDesc: true,
+      showCart: true,
     },
   },
 ];
 
 // 公开接口 (小程序用)
-const publicRoutes = new Elysia()
-  .get(
-    "/published",
-    async ({ query }) => {
-      const { storeId } = query;
-      const pageType = query.pageType || "HOME";
+const publicRoutes = new Elysia().get(
+  "/published",
+  async ({ query }) => {
+    const { storeId } = query;
+    const pageType = query.pageType || "HOME";
 
-      if (!storeId) {
-        return { code: 400, message: "storeId 必填" };
-      }
+    if (!storeId) {
+      return { code: 400, message: "storeId 必填" };
+    }
 
-      const config = await db
-        .select()
-        .from(pageConfigs)
-        .where(
-          and(
-            eq(pageConfigs.storeId, Number(storeId)),
-            eq(pageConfigs.pageType, pageType),
-            eq(pageConfigs.isPublished, true)
-          )
+    const config = await db
+      .select()
+      .from(pageConfigs)
+      .where(
+        and(
+          eq(pageConfigs.storeId, Number(storeId)),
+          eq(pageConfigs.pageType, pageType),
+          eq(pageConfigs.isPublished, true)
         )
-        .limit(1);
+      )
+      .limit(1);
 
-      const found = config[0];
-      if (!found) {
-        // 返回默认配置
-        return {
-          code: 200,
-          data: {
-            pageType,
-            components: DEFAULT_HOME_COMPONENTS,
-            isDefault: true,
-          },
-        };
-      }
-
+    const found = config[0];
+    if (!found) {
+      // 返回预设的精美布局（根据页面类型）
+      const presetComponents =
+        pageType === "MENU" ? DEFAULT_MENU_COMPONENTS : DEFAULT_HOME_COMPONENTS;
       return {
         code: 200,
         data: {
-          pageType: found.pageType,
-          components: found.components,
-          publishedAt: found.publishedAt,
-          isDefault: false,
+          pageType,
+          components: presetComponents,
+          isDefault: true,
         },
       };
-    },
-    {
-      query: t.Object({
-        storeId: t.String(),
-        pageType: t.Optional(t.String()),
-      }),
     }
-  );
+
+    return {
+      code: 200,
+      data: {
+        pageType: found.pageType,
+        components: found.components,
+        publishedAt: found.publishedAt,
+        isDefault: false,
+      },
+    };
+  },
+  {
+    query: t.Object({
+      storeId: t.String(),
+      pageType: t.Optional(t.String()),
+    }),
+  }
+);
 
 // 管理端接口 (需要认证)
 const adminRoutes = new Elysia()
@@ -192,9 +366,14 @@ const adminRoutes = new Elysia()
       code: 200,
       data: [
         {
-          name: "默认首页",
+          name: "精美首页",
           pageType: "HOME",
           components: DEFAULT_HOME_COMPONENTS,
+        },
+        {
+          name: "精美点餐页",
+          pageType: "MENU",
+          components: DEFAULT_MENU_COMPONENTS,
         },
       ],
     };
@@ -215,23 +394,20 @@ const adminRoutes = new Elysia()
       const config = await db
         .select()
         .from(pageConfigs)
-        .where(
-          and(
-            eq(pageConfigs.storeId, targetStoreId),
-            eq(pageConfigs.pageType, pageType)
-          )
-        )
+        .where(and(eq(pageConfigs.storeId, targetStoreId), eq(pageConfigs.pageType, pageType)))
         .limit(1);
 
       if (config.length === 0) {
-        // 返回默认配置，但未保存
+        // 返回预设的精美布局（根据页面类型）
+        const presetComponents =
+          pageType === "MENU" ? DEFAULT_MENU_COMPONENTS : DEFAULT_HOME_COMPONENTS;
         return {
           code: 200,
           data: {
             id: null,
             storeId: targetStoreId,
             pageType,
-            components: DEFAULT_HOME_COMPONENTS,
+            components: presetComponents,
             isPublished: false,
             publishedAt: null,
             isDefault: true,
@@ -265,12 +441,7 @@ const adminRoutes = new Elysia()
       const existing = await db
         .select()
         .from(pageConfigs)
-        .where(
-          and(
-            eq(pageConfigs.storeId, targetStoreId),
-            eq(pageConfigs.pageType, pageType)
-          )
-        )
+        .where(and(eq(pageConfigs.storeId, targetStoreId), eq(pageConfigs.pageType, pageType)))
         .limit(1);
 
       let result;
@@ -332,12 +503,7 @@ const adminRoutes = new Elysia()
       const existing = await db
         .select()
         .from(pageConfigs)
-        .where(
-          and(
-            eq(pageConfigs.storeId, targetStoreId),
-            eq(pageConfigs.pageType, pageType)
-          )
-        )
+        .where(and(eq(pageConfigs.storeId, targetStoreId), eq(pageConfigs.pageType, pageType)))
         .limit(1);
 
       const existingConfig = existing[0];
@@ -380,12 +546,7 @@ const adminRoutes = new Elysia()
       const existing = await db
         .select()
         .from(pageConfigs)
-        .where(
-          and(
-            eq(pageConfigs.storeId, targetStoreId),
-            eq(pageConfigs.pageType, pageType)
-          )
-        )
+        .where(and(eq(pageConfigs.storeId, targetStoreId), eq(pageConfigs.pageType, pageType)))
         .limit(1);
 
       const existingConfig = existing[0];
@@ -427,27 +588,25 @@ const adminRoutes = new Elysia()
       const existing = await db
         .select()
         .from(pageConfigs)
-        .where(
-          and(
-            eq(pageConfigs.storeId, targetStoreId),
-            eq(pageConfigs.pageType, pageType)
-          )
-        )
+        .where(and(eq(pageConfigs.storeId, targetStoreId), eq(pageConfigs.pageType, pageType)))
         .limit(1);
 
       const existingConfig = existing[0];
+      const presetComponents =
+        pageType === "MENU" ? DEFAULT_MENU_COMPONENTS : DEFAULT_HOME_COMPONENTS;
+
       if (existingConfig) {
         const [result] = await db
           .update(pageConfigs)
           .set({
-            components: DEFAULT_HOME_COMPONENTS,
+            components: presetComponents,
             isPublished: false,
             updatedAt: new Date(),
           })
           .where(eq(pageConfigs.id, existingConfig.id))
           .returning();
 
-        return { code: 200, data: result, message: "已重置为默认配置" };
+        return { code: 200, data: result, message: "已重置为预设配置" };
       }
 
       return {
@@ -455,10 +614,10 @@ const adminRoutes = new Elysia()
         data: {
           storeId: targetStoreId,
           pageType,
-          components: DEFAULT_HOME_COMPONENTS,
+          components: presetComponents,
           isPublished: false,
         },
-        message: "已重置为默认配置",
+        message: "已重置为预设配置",
       };
     },
     {
@@ -472,18 +631,18 @@ const adminRoutes = new Elysia()
   // 获取组件类型列表
   .get("/component-types", async ({ query }) => {
     const { pageType } = query;
-    
+
     // 如果指定了页面类型，过滤出可用的组件
     let types = [...COMPONENT_TYPES];
     if (pageType) {
-      types = types.filter(t => {
+      types = types.filter((t) => {
         // 如果组件没有availableIn限制，则所有页面可用
-        if (!('availableIn' in t) || !t.availableIn) return true;
+        if (!("availableIn" in t) || !t.availableIn) return true;
         // 否则检查是否在可用页面列表中
         return (t.availableIn as readonly string[]).includes(pageType);
       });
     }
-    
+
     return { code: 200, data: types };
   })
 

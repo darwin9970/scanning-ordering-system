@@ -57,7 +57,10 @@ const typeConfig: Record<string, { label: string; icon: any; color: string }> = 
   REQUEST_BILL: { label: "请求结账", icon: CreditCard, color: "bg-green-100 text-green-800" },
 };
 
-const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
+const statusConfig: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "destructive" }
+> = {
   PENDING: { label: "待处理", variant: "destructive" },
   PROCESSING: { label: "处理中", variant: "secondary" },
   COMPLETED: { label: "已完成", variant: "default" },
@@ -81,9 +84,7 @@ export default function ServicePage() {
         Object.entries(params).map(([k, v]) => [k, String(v)])
       ).toString();
 
-      const res = await api.request<{ list: ServiceCall[] }>(
-        `/api/service?${queryString}`
-      );
+      const res = await api.request<{ list: ServiceCall[] }>(`/api/service?${queryString}`);
       setCalls(res.list);
     } catch (error) {
       console.error("Failed to fetch service calls:", error);
@@ -94,9 +95,7 @@ export default function ServicePage() {
 
   const fetchPendingCount = async () => {
     try {
-      const res = await api.request<{ count: number }>(
-        "/api/service/pending-count?storeId=1"
-      );
+      const res = await api.request<{ count: number }>("/api/service/pending-count?storeId=1");
       setPendingCount(res.count);
     } catch (error) {
       console.error("Failed to fetch pending count:", error);
@@ -180,7 +179,13 @@ export default function ServicePage() {
           <p className="text-muted-foreground">处理顾客的服务请求</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => { fetchCalls(); fetchPendingCount(); }}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              fetchCalls();
+              fetchPendingCount();
+            }}
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             刷新
           </Button>
@@ -198,7 +203,9 @@ export default function ServicePage() {
         <Card className={pendingCount > 0 ? "border-red-200 bg-red-50" : ""}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">待处理</CardTitle>
-            <AlertCircle className={`h-4 w-4 ${pendingCount > 0 ? "text-red-500" : "text-muted-foreground"}`} />
+            <AlertCircle
+              className={`h-4 w-4 ${pendingCount > 0 ? "text-red-500" : "text-muted-foreground"}`}
+            />
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${pendingCount > 0 ? "text-red-600" : ""}`}>
@@ -304,7 +311,10 @@ export default function ServicePage() {
                   const TypeIcon = type.icon;
 
                   return (
-                    <TableRow key={call.id} className={call.status === "PENDING" ? "bg-red-50" : ""}>
+                    <TableRow
+                      key={call.id}
+                      className={call.status === "PENDING" ? "bg-red-50" : ""}
+                    >
                       <TableCell className="font-medium">
                         {call.table?.name || `桌台 ${call.tableId}`}
                       </TableCell>
@@ -314,12 +324,8 @@ export default function ServicePage() {
                           {type.label}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        {call.order?.orderNo || "-"}
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {call.note || "-"}
-                      </TableCell>
+                      <TableCell>{call.order?.orderNo || "-"}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{call.note || "-"}</TableCell>
                       <TableCell className="text-muted-foreground">
                         {formatTime(call.createdAt)}
                       </TableCell>
@@ -340,10 +346,7 @@ export default function ServicePage() {
                             </Button>
                           )}
                           {call.status !== "COMPLETED" && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleComplete(call.id)}
-                            >
+                            <Button size="sm" onClick={() => handleComplete(call.id)}>
                               完成
                             </Button>
                           )}

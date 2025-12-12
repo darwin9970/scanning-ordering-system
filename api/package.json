@@ -13,6 +13,7 @@
     "db:migrate": "bunx drizzle-kit migrate",
     "db:studio": "bunx drizzle-kit studio",
     "db:seed": "bun run scripts/seed.ts",
+    "init:page-configs": "bun run scripts/init-page-configs.ts",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",

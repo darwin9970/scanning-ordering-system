@@ -89,26 +89,18 @@ export default function SettingsPage() {
                 <Input
                   type="number"
                   value={formData.order_timeout}
-                  onChange={(e) =>
-                    setFormData({ ...formData, order_timeout: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, order_timeout: e.target.value })}
                 />
-                <p className="text-xs text-muted-foreground">
-                  超过此时间未支付的订单将自动取消
-                </p>
+                <p className="text-xs text-muted-foreground">超过此时间未支付的订单将自动取消</p>
               </div>
               <div className="space-y-2">
                 <Label>购物车有效期（分钟）</Label>
                 <Input
                   type="number"
                   value={formData.cart_expire}
-                  onChange={(e) =>
-                    setFormData({ ...formData, cart_expire: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, cart_expire: e.target.value })}
                 />
-                <p className="text-xs text-muted-foreground">
-                  超过此时间未操作的购物车将自动清空
-                </p>
+                <p className="text-xs text-muted-foreground">超过此时间未操作的购物车将自动清空</p>
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
@@ -117,9 +109,7 @@ export default function SettingsPage() {
                 <Input
                   type="number"
                   value={formData.gps_fence}
-                  onChange={(e) =>
-                    setFormData({ ...formData, gps_fence: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, gps_fence: e.target.value })}
                 />
                 <p className="text-xs text-muted-foreground">超过此距离无法点单</p>
               </div>
@@ -128,13 +118,9 @@ export default function SettingsPage() {
                 <Input
                   type="number"
                   value={formData.stock_warning}
-                  onChange={(e) =>
-                    setFormData({ ...formData, stock_warning: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, stock_warning: e.target.value })}
                 />
-                <p className="text-xs text-muted-foreground">
-                  库存低于此值时显示预警
-                </p>
+                <p className="text-xs text-muted-foreground">库存低于此值时显示预警</p>
               </div>
             </div>
           </CardContent>
@@ -158,9 +144,7 @@ export default function SettingsPage() {
                   min="1"
                   max="5"
                   value={formData.print_copies}
-                  onChange={(e) =>
-                    setFormData({ ...formData, print_copies: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, print_copies: e.target.value })}
                 />
                 <p className="text-xs text-muted-foreground">每份小票打印的份数</p>
               </div>
@@ -181,9 +165,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>自动确认订单</Label>
-                <p className="text-xs text-muted-foreground">
-                  新订单支付后自动确认，无需人工操作
-                </p>
+                <p className="text-xs text-muted-foreground">新订单支付后自动确认，无需人工操作</p>
               </div>
               <Switch
                 checked={formData.auto_confirm === "true"}
@@ -198,9 +180,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>新订单提示音</Label>
-                <p className="text-xs text-muted-foreground">
-                  有新订单时播放提示音
-                </p>
+                <p className="text-xs text-muted-foreground">有新订单时播放提示音</p>
               </div>
               <Switch
                 checked={formData.notification_sound === "true"}
