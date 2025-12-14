@@ -88,15 +88,29 @@
       />
     </view>
     
+    <!-- 积分抵扣 -->
+    <points-deduction
+      v-if="memberInfo && memberInfo.points >= 100"
+      :available-points="memberInfo.points"
+      :order-amount="cartStore.totalPrice"
+      :enabled="usePoints"
+      @update:enabled="usePoints = $event"
+      @change="handlePointsChange"
+    />
+    
     <!-- 金额明细 -->
     <view class="price-detail">
       <view class="price-detail__row">
         <text>商品金额</text>
         <text>¥{{ cartStore.formattedTotalPrice }}</text>
       </view>
+      <view v-if="pointsDiscount > 0" class="price-detail__row price-detail__row--discount">
+        <text>积分抵扣</text>
+        <text class="discount-text">-¥{{ pointsDiscount.toFixed(2) }}</text>
+      </view>
       <view class="price-detail__row price-detail__row--total">
         <text>合计</text>
-        <q-price :value="cartStore.totalPrice" size="large" />
+        <q-price :value="finalAmount" size="large" />
       </view>
     </view>
     
@@ -106,7 +120,7 @@
         <text class="submit-bar__label">
           待支付
         </text>
-        <q-price :value="cartStore.totalPrice" size="large" />
+        <q-price :value="finalAmount" size="large" />
       </view>
       <q-button 
         type="primary" 
@@ -122,10 +136,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useTableStore } from '@/store/table'
 import { useCartStore } from '@/store/cart'
 import { useOrderStore } from '@/store/order'
+import { getMemberProfile } from '@/api'
+import PointsDeduction from '@/components/points-deduction/points-deduction.vue'
 
 const tableStore = useTableStore()
 const cartStore = useCartStore()
@@ -136,6 +152,36 @@ const peopleCount = ref(1)
 
 // 订单备注
 const orderRemark = ref('')
+
+// 会员信息
+const memberInfo = ref(null)
+
+// 是否使用积分
+const usePoints = ref(false)
+
+// 积分抵扣金额
+const pointsDiscount = computed(() => {
+  if (!usePoints.value || !memberInfo.value || memberInfo.value.points < 100) {
+    return 0
+  }
+  
+  const availablePoints = memberInfo.value.points
+  const orderAmount = cartStore.totalPrice
+  const maxDiscountAmount = orderAmount * 0.5 // 最多抵扣50%
+  const pointsDiscount = availablePoints / 100 // 100积分=1元
+  
+  return Math.min(maxDiscountAmount, pointsDiscount)
+})
+
+// 最终金额
+const finalAmount = computed(() => {
+  return Math.max(0, cartStore.totalPrice - pointsDiscount.value)
+})
+
+// 积分开关变化
+const handlePointsChange = (enabled) => {
+  usePoints.value = enabled
+}
 
 // ==================== 门店配置 ====================
 
@@ -172,7 +218,9 @@ const handleSubmit = async () => {
   try {
     const result = await orderStore.submitOrder({
       peopleCount: peopleCount.value,
-      remark: orderRemark.value
+      remark: orderRemark.value,
+      usePoints: usePoints.value,
+      pointsUsed: usePoints.value ? Math.floor(pointsDiscount.value * 100) : 0
     })
     
     if (result) {
@@ -185,6 +233,30 @@ const handleSubmit = async () => {
     console.error('提交订单失败:', error)
   }
 }
+
+// 加载会员信息
+const loadMemberInfo = async () => {
+  try {
+    const token = uni.getStorageSync('token')
+    const storeId = uni.getStorageSync('storeId')
+    
+    if (!token || !storeId) {
+      return
+    }
+    
+    const res = await getMemberProfile(storeId)
+    if (res && res.data) {
+      memberInfo.value = res.data
+    }
+  } catch (error) {
+    console.error('加载会员信息失败:', error)
+  }
+}
+
+// 页面加载时获取会员信息
+onMounted(() => {
+  loadMemberInfo()
+})
 </script>
 
 <style lang="scss" scoped>

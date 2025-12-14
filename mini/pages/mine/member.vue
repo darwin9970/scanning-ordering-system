@@ -31,7 +31,7 @@
           />
         </view>
         <text class="member-card__progress-text">
-          再消费 {{ memberInfo.nextLevelAmount }}元升级{{ memberInfo.nextLevelName }}
+          {{ progressText }}
         </text>
       </view>
     </view>
@@ -123,10 +123,13 @@ import { ref, computed } from 'vue'
 const memberInfo = ref({
   memberNo: '10001234',
   levelName: '黄金会员',
+  level: 2,
   points: 1280,
   totalSpent: 2580,
   nextLevelName: '钻石会员',
-  nextLevelAmount: 420
+  nextLevelAmount: 420,
+  currentLevelMin: 2000, // 当前等级最低消费
+  nextLevelMin: 3000 // 下一等级最低消费
 })
 
 // 优惠券数量
@@ -135,8 +138,27 @@ const couponCount = ref(3)
 // 进度百分比
 const progressPercent = computed(() => {
   const current = memberInfo.value.totalSpent
-  const next = current + memberInfo.value.nextLevelAmount
-  return Math.min(100, (current / next) * 100)
+  const currentMin = memberInfo.value.currentLevelMin || 0
+  const nextMin = memberInfo.value.nextLevelMin || currentMin + 1000
+  
+  if (current >= nextMin) return 100
+  if (current <= currentMin) return 0
+  
+  const range = nextMin - currentMin
+  const progress = current - currentMin
+  return Math.min(100, Math.max(0, (progress / range) * 100))
+})
+
+// 进度文字
+const progressText = computed(() => {
+  const current = memberInfo.value.totalSpent
+  const nextMin = memberInfo.value.nextLevelMin || current + 1000
+  const remaining = nextMin - current
+  
+  if (remaining <= 0) {
+    return `已达到${memberInfo.value.nextLevelName}等级`
+  }
+  return `再消费 ¥${remaining} 升级${memberInfo.value.nextLevelName}`
 })
 
 // 会员权益列表
@@ -186,9 +208,8 @@ const goToCoupons = () => {
 
 // 积分明细
 const goToPointsHistory = () => {
-  uni.showToast({
-    title: '功能开发中',
-    icon: 'none'
+  uni.navigateTo({
+    url: '/pages/mine/points-history'
   })
 }
 

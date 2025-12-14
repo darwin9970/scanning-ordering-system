@@ -1,0 +1,217 @@
+/**
+ * 页面过渡动画样式
+ */
+
+// 页面进入动画
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// 页面退出动画
+@keyframes slide-out-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-out-left {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes zoom-out {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+// 页面过渡类
+.page-enter {
+  animation: slide-in-right $duration-base $ease-out;
+}
+
+.page-enter-active {
+  transition: all $duration-base $ease-out;
+}
+
+.page-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.page-enter-to {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.page-leave-active {
+  transition: all $duration-base $ease-out;
+}
+
+.page-leave-from {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.page-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+// 淡入淡出
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity $duration-base $ease-out;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+// 缩放
+.scale-enter-active,
+.scale-leave-active {
+  transition: all $duration-base $ease-out;
+}
+
+.scale-enter-from,
+.scale-leave-to {
+  transform: scale(0.9);
+  opacity: 0;
+}
+
+// 列表项动画
+.list-item {
+  transition: all $duration-fast $ease-out;
+  
+  &-enter-active {
+    transition: all $duration-base $ease-out;
+  }
+  
+  &-enter-from {
+    transform: translateY(20rpx);
+    opacity: 0;
+  }
+  
+  &-enter-to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  &-leave-active {
+    transition: all $duration-fast $ease-out;
+  }
+  
+  &-leave-from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  
+  &-leave-to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+// 卡片动画
+.card-enter-active {
+  transition: all $duration-base $ease-out;
+}
+
+.card-enter-from {
+  transform: translateY(30rpx);
+  opacity: 0;
+}
+
+.card-enter-to {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+// 模态框动画
+.modal-enter-active,
+.modal-leave-active {
+  transition: all $duration-base $ease-out;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+// 底部弹出动画
+.bottom-popup-enter-active,
+.bottom-popup-leave-active {
+  transition: all $duration-base $ease-out;
+}
+
+.bottom-popup-enter-from,
+.bottom-popup-leave-to {
+  transform: translateY(100%);
+}
+

@@ -46,6 +46,7 @@ import {
   Gift,
   Save,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface User {
   id: number;
@@ -289,10 +290,10 @@ export default function MembersPage() {
         { key: "points_per_yuan", value: pointsPerYuan.toString() },
         { key: "points_to_yuan", value: pointsToYuan.toString() },
       ]);
-      alert("保存成功");
+      toast.success("保存成功");
     } catch (error) {
       console.error("Failed to save config:", error);
-      alert("保存失败");
+      toast.error("保存失败");
     } finally {
       setSavingConfig(false);
     }

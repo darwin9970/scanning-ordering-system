@@ -118,6 +118,33 @@ export const members = pgTable(
   (table) => [uniqueIndex("members_user_id_idx").on(table.userId)]
 );
 
+// 门店会员子账户（每店独立的积分/等级）
+export const storeMembers = pgTable(
+  "store_members",
+  {
+    id: serial("id").primaryKey(),
+    storeId: integer("store_id")
+      .notNull()
+      .references(() => stores.id, { onDelete: "cascade" }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    level: integer("level").notNull().default(1),
+    points: integer("points").notNull().default(0),
+    balance: decimal("balance", { precision: 10, scale: 2 }).default("0"), // 储值余额，后续可用
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("store_members_store_user_idx").on(table.storeId, table.userId),
+    index("store_members_store_id_idx").on(table.storeId),
+    index("store_members_user_id_idx").on(table.userId),
+  ]
+);
+
 // ==================== 门店与桌台 ====================
 
 export const stores = pgTable("stores", {
@@ -385,6 +412,29 @@ export const orderItems = pgTable(
   (table) => [index("order_items_order_id_idx").on(table.orderId)]
 );
 
+// 积分流水（按门店隔离）
+export const pointLogs = pgTable(
+  "point_logs",
+  {
+    id: serial("id").primaryKey(),
+    storeId: integer("store_id")
+      .notNull()
+      .references(() => stores.id, { onDelete: "cascade" }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    orderId: integer("order_id").references(() => orders.id, { onDelete: "set null" }),
+    change: integer("change").notNull(), // 正数获取，负数扣减
+    reason: varchar("reason", { length: 100 }).notNull(),
+    meta: json("meta").$type<Record<string, unknown>>(), // 额外信息
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("point_logs_store_user_idx").on(table.storeId, table.userId),
+    index("point_logs_order_id_idx").on(table.orderId),
+  ]
+);
+
 export const printJobs = pgTable(
   "print_jobs",
   {
@@ -419,11 +469,17 @@ export const adminsRelations = relations(admins, ({ one }) => ({
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   member: one(members, { fields: [users.id], references: [members.userId] }),
+  storeMembers: many(storeMembers),
   orders: many(orders),
 }));
 
 export const membersRelations = relations(members, ({ one }) => ({
   user: one(users, { fields: [members.userId], references: [users.id] }),
+}));
+
+export const storeMembersRelations = relations(storeMembers, ({ one }) => ({
+  store: one(stores, { fields: [storeMembers.storeId], references: [stores.id] }),
+  user: one(users, { fields: [storeMembers.userId], references: [users.id] }),
 }));
 
 export const storesRelations = relations(stores, ({ many }) => ({
@@ -432,6 +488,7 @@ export const storesRelations = relations(stores, ({ many }) => ({
   categories: many(categories),
   products: many(products),
   printers: many(printers),
+  storeMembers: many(storeMembers),
   orders: many(orders),
 }));
 
@@ -478,6 +535,7 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
   user: one(users, { fields: [orders.userId], references: [users.id] }),
   items: many(orderItems),
   printJobs: many(printJobs),
+  pointLogs: many(pointLogs),
 }));
 
 export const orderItemsRelations = relations(orderItems, ({ one }) => ({
@@ -491,6 +549,12 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
 export const printJobsRelations = relations(printJobs, ({ one }) => ({
   order: one(orders, { fields: [printJobs.orderId], references: [orders.id] }),
   printer: one(printers, { fields: [printJobs.printerId], references: [printers.id] }),
+}));
+
+export const pointLogsRelations = relations(pointLogs, ({ one }) => ({
+  store: one(stores, { fields: [pointLogs.storeId], references: [stores.id] }),
+  user: one(users, { fields: [pointLogs.userId], references: [users.id] }),
+  order: one(orders, { fields: [pointLogs.orderId], references: [orders.id] }),
 }));
 
 // ==================== 系统设置 ====================
@@ -547,6 +611,7 @@ export const userCoupons = pgTable(
   "user_coupons",
   {
     id: serial("id").primaryKey(),
+    storeId: integer("store_id").references(() => stores.id, { onDelete: "cascade" }),
     userId: integer("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -560,6 +625,7 @@ export const userCoupons = pgTable(
     expireAt: timestamp("expire_at").notNull(), // 过期时间（可能和券模板不同）
   },
   (table) => [
+    index("user_coupons_store_id_idx").on(table.storeId),
     index("user_coupons_user_id_idx").on(table.userId),
     index("user_coupons_coupon_id_idx").on(table.couponId),
     index("user_coupons_status_idx").on(table.status),

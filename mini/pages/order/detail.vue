@@ -123,8 +123,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useOrderStore } from '@/store/order'
+import { startOrderStatusPolling } from '@/utils/notifications'
 
 const orderStore = useOrderStore()
 
@@ -133,6 +134,9 @@ const orderId = ref(null)
 
 // 订单数据
 const order = computed(() => orderStore.currentOrder)
+
+// 订单状态轮询停止函数
+let stopPolling = null
 
 // 是否显示操作按钮
 const showActions = computed(() => {
@@ -157,6 +161,23 @@ onMounted(() => {
   
   if (orderId.value) {
     orderStore.fetchOrderDetail(orderId.value)
+    
+    // 如果订单未完成，开始轮询状态
+    const currentOrder = orderStore.currentOrder
+    if (currentOrder && !['COMPLETED', 'CANCELLED'].includes(currentOrder.status)) {
+      stopPolling = startOrderStatusPolling(orderId.value, (updatedOrder) => {
+        // 订单状态更新时刷新订单详情
+        orderStore.fetchOrderDetail(orderId.value)
+      })
+    }
+  }
+})
+
+// 页面卸载时停止轮询
+onUnmounted(() => {
+  if (stopPolling) {
+    stopPolling()
+    stopPolling = null
   }
 })
 

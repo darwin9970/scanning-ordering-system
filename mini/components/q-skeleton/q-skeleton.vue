@@ -1,104 +1,207 @@
 <template>
-  <view v-if="loading" class="q-skeleton">
-    <slot name="template">
-      <!-- 默认骨架屏 -->
-      <view v-for="i in rows" :key="i" class="q-skeleton__row">
-        <view v-if="avatar && i === 1" class="q-skeleton__avatar" />
-        <view class="q-skeleton__content">
-          <view 
-            v-for="j in 3" 
-            :key="j" 
-            class="q-skeleton__item"
-            :style="{ width: getWidth(j) }"
-          />
-        </view>
+  <view class="q-skeleton" :class="[`q-skeleton--${type}`, { 'q-skeleton--animated': animated }]">
+    <view 
+      v-if="type === 'list'"
+      class="q-skeleton__list"
+    >
+      <view 
+        v-for="i in rows" 
+        :key="i"
+        class="q-skeleton__row"
+      >
+        <view 
+          v-for="j in cols" 
+          :key="j"
+          class="q-skeleton__item"
+          :style="{ width: itemWidth }"
+        />
       </view>
-    </slot>
+    </view>
+    
+    <view 
+      v-else-if="type === 'card'"
+      class="q-skeleton__card"
+    >
+      <view class="q-skeleton__card-image" />
+      <view class="q-skeleton__card-content">
+        <view class="q-skeleton__card-line q-skeleton__card-line--title" />
+        <view class="q-skeleton__card-line q-skeleton__card-line--text" />
+        <view class="q-skeleton__card-line q-skeleton__card-line--text" />
+      </view>
+    </view>
+    
+    <view 
+      v-else-if="type === 'avatar'"
+      class="q-skeleton__avatar"
+      :style="{ width: size, height: size, borderRadius: round ? '50%' : $radius-base }"
+    />
+    
+    <view 
+      v-else-if="type === 'text'"
+      class="q-skeleton__text"
+      :style="{ width: width, height: height }"
+    />
+    
+    <view 
+      v-else
+      class="q-skeleton__default"
+      :style="{ width: width, height: height }"
+    />
   </view>
-  <slot v-else />
 </template>
 
 <script setup>
 defineProps({
-  // 是否加载中
-  loading: {
+  // 类型: list, card, avatar, text, default
+  type: {
+    type: String,
+    default: 'default'
+  },
+  // 是否显示动画
+  animated: {
     type: Boolean,
     default: true
   },
-  // 行数
+  // 列表行数
   rows: {
     type: Number,
     default: 3
   },
-  // 是否显示头像
-  avatar: {
+  // 列表列数
+  cols: {
+    type: Number,
+    default: 2
+  },
+  // 列表项宽度
+  itemWidth: {
+    type: String,
+    default: '48%'
+  },
+  // 宽度
+  width: {
+    type: String,
+    default: '100%'
+  },
+  // 高度
+  height: {
+    type: String,
+    default: '40rpx'
+  },
+  // 头像大小
+  size: {
+    type: String,
+    default: '80rpx'
+  },
+  // 头像是否圆形
+  round: {
     type: Boolean,
-    default: false
+    default: true
   }
 })
-
-// 获取随机宽度
-const getWidth = (index) => {
-  const widths = ['100%', '80%', '60%']
-  return widths[(index - 1) % 3]
-}
 </script>
 
 <style lang="scss" scoped>
 .q-skeleton {
+  &--animated {
+    .q-skeleton__item,
+    .q-skeleton__card-image,
+    .q-skeleton__card-line,
+    .q-skeleton__avatar,
+    .q-skeleton__text,
+    .q-skeleton__default {
+      background: linear-gradient(
+        90deg,
+        $bg-grey 25%,
+        lighten($bg-grey, 8%) 50%,
+        $bg-grey 75%
+      );
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s ease-in-out infinite;
+    }
+  }
+  
+  &__list {
+    padding: 24rpx;
+  }
+  
   &__row {
     display: flex;
-    padding: $spacing-lg;
+    justify-content: space-between;
+    margin-bottom: 24rpx;
+  }
+  
+  &__item {
+    height: 200rpx;
+    background: $bg-grey;
+    border-radius: $radius-md;
+  }
+  
+  &__card {
+    display: flex;
+    padding: 24rpx;
     background: $bg-card;
-    margin-bottom: $spacing-md;
     border-radius: $radius-lg;
+    margin-bottom: 20rpx;
+  }
+  
+  &__card-image {
+    width: 160rpx;
+    height: 160rpx;
+    background: $bg-grey;
+    border-radius: $radius-md;
+    flex-shrink: 0;
+    margin-right: 20rpx;
+  }
+  
+  &__card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  &__card-line {
+    height: 32rpx;
+    background: $bg-grey;
+    border-radius: $radius-sm;
+    margin-bottom: 16rpx;
     
-    &:last-child {
-      margin-bottom: 0;
+    &--title {
+      width: 60%;
+      height: 40rpx;
+    }
+    
+    &--text {
+      width: 100%;
+      height: 28rpx;
+      
+      &:last-child {
+        width: 80%;
+      }
     }
   }
   
   &__avatar {
-    width: 80rpx;
-    height: 80rpx;
-    border-radius: 50%;
-    background: $border-lighter;
-    margin-right: $spacing-base;
-    flex-shrink: 0;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    background: $bg-grey;
   }
   
-  &__content {
-    flex: 1;
+  &__text {
+    background: $bg-grey;
+    border-radius: $radius-sm;
   }
   
-  &__item {
-    height: 32rpx;
-    background: $border-lighter;
-    border-radius: $radius-xs;
-    margin-bottom: $spacing-sm;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
-    
-    &:last-child {
-      margin-bottom: 0;
-    }
-    
-    &:nth-child(2) {
-      animation-delay: 0.1s;
-    }
-    
-    &:nth-child(3) {
-      animation-delay: 0.2s;
-    }
+  &__default {
+    background: $bg-grey;
+    border-radius: $radius-sm;
   }
 }
 
-@keyframes skeleton-pulse {
-  0%, 100% {
-    opacity: 1;
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
   }
-  50% {
-    opacity: 0.4;
+  100% {
+    background-position: -200% 0;
   }
 }
 </style>

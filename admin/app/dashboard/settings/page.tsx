@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Settings, Bell, Printer, Check, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
@@ -45,7 +46,7 @@ export default function SettingsPage() {
     mutationFn: (items: { key: string; value: string }[]) => api.updateSettings(items),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
-      alert("设置保存成功");
+      toast.success("设置保存成功");
     },
   });
 

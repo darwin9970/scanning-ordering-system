@@ -69,6 +69,14 @@ const emit = defineEmits(['click'])
 
 const handleClick = () => {
   if (props.disabled || props.loading) return
+  
+  // 触觉反馈
+  // #ifdef MP-WEIXIN
+  uni.vibrateShort({
+    type: 'light'
+  })
+  // #endif
+  
   emit('click')
 }
 </script>
@@ -82,9 +90,30 @@ const handleClick = () => {
   font-weight: $font-weight-medium;
   transition: all $duration-fast $ease-out;
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
   
   &::after {
     display: none;
+  }
+  
+  // 点击动画
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+  }
+  
+  &:active::before {
+    width: 300rpx;
+    height: 300rpx;
   }
   
   // 类型
@@ -93,24 +122,36 @@ const handleClick = () => {
     color: #FFFFFF;
     &:active {
       background: $primary-dark;
+      transform: scale(0.98);
     }
   }
   
   &--secondary {
     background: $primary-light;
     color: $primary;
+    &:active {
+      background: darken($primary-light, 5%);
+      transform: scale(0.98);
+    }
   }
   
   &--ghost {
     background: transparent;
     border: 2rpx solid $primary;
     color: $primary;
+    &:active {
+      background: $primary-light;
+      transform: scale(0.98);
+    }
   }
   
   &--text {
     background: transparent;
     color: $primary;
     padding: 0 !important;
+    &:active {
+      opacity: 0.7;
+    }
   }
   
   // 尺寸

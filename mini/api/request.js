@@ -2,6 +2,7 @@
  * 封装 uni.request 请求
  */
 import config from './config'
+import { handleHttpError, showError } from '@/utils/error-handler'
 
 // 请求拦截器
 const requestInterceptor = (options) => {
@@ -35,22 +36,17 @@ const responseInterceptor = (response) => {
     if (data.code === 200 || data.code === 0) {
       return data.data
     } else {
-      // 业务错误
-      const error = new Error(data.message || '请求失败')
+      // 业务错误 - 使用统一的错误处理
+      const errorMsg = data.message || '操作失败，请稍后重试'
+      showError(errorMsg)
+      const error = new Error(errorMsg)
       error.code = data.code
       throw error
     }
-  } else if (statusCode === 401) {
-    // 未授权，清除 token 并跳转登录
-    uni.removeStorageSync('token')
-    uni.showToast({
-      title: '登录已过期',
-      icon: 'none'
-    })
-    throw new Error('未授权')
   } else {
-    // 其他 HTTP 错误
-    const error = new Error(data.message || `请求失败: ${statusCode}`)
+    // HTTP 错误 - 使用统一的错误处理
+    handleHttpError(statusCode)
+    const error = new Error(data?.message || `请求失败: ${statusCode}`)
     error.statusCode = statusCode
     throw error
   }
@@ -75,11 +71,20 @@ const request = (options) => {
       },
       fail: (error) => {
         console.error('请求失败:', error)
-        uni.showToast({
-          title: '网络请求失败',
-          icon: 'none'
+        
+        // 使用统一的网络错误处理
+        import('@/utils/error-handler').then(({ showNetworkError }) => {
+          showNetworkError('网络请求', () => {
+            // 重试请求
+            request(options).then(resolve).catch(reject)
+          }, true)
         })
-        reject(new Error('网络请求失败'))
+        
+        // 同时 reject，让调用方可以 catch
+        const errorMsg = error.errMsg?.includes('timeout') 
+          ? '请求超时，请检查网络' 
+          : '网络连接失败，请检查网络设置'
+        reject(new Error(errorMsg))
       }
     })
   })

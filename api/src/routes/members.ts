@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { eq, and, desc, count, sql, like, gte, lte } from "drizzle-orm";
-import { db, members, users, orders } from "../db";
+import { db, members, users, orders, storeMembers } from "../db";
 import { success, error, pagination } from "../lib/utils";
 import { requirePermission } from "../lib/auth";
 
@@ -8,6 +8,22 @@ import { requirePermission } from "../lib/auth";
 const POINTS_PER_YUAN = 1;
 // 积分抵扣：100积分抵扣1元
 const POINTS_TO_YUAN = 100;
+
+async function ensureStoreMember(storeId: number, userId: number) {
+  const [existing] = await db
+    .select()
+    .from(storeMembers)
+    .where(and(eq(storeMembers.storeId, storeId), eq(storeMembers.userId, userId)))
+    .limit(1);
+
+  if (existing) return existing;
+
+  const [created] = await db
+    .insert(storeMembers)
+    .values({ storeId, userId, level: 1, points: 0 })
+    .returning();
+  return created;
+}
 
 export const memberRoutes = new Elysia({ prefix: "/api/members" })
   // 会员读取需要 member:read 权限
@@ -203,7 +219,8 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
   // 通过用户ID获取会员信息
   .get(
     "/user/:userId",
-    async ({ params }) => {
+    async ({ params, query }) => {
+      const storeId = query.storeId;
       const [member] = await db
         .select({
           member: members,
@@ -234,13 +251,20 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
         });
       }
 
+      let storeMember;
+      if (storeId) {
+        storeMember = await ensureStoreMember(storeId, params.userId);
+      }
+
       return success({
         ...member.member,
         user: member.user,
+        storeMember: storeMember ?? null,
       });
     },
     {
       params: t.Object({ userId: t.Number() }),
+      query: t.Object({ storeId: t.Optional(t.Number()) }),
       detail: { tags: ["Members"], summary: "通过用户ID获取会员信息" },
     }
   )

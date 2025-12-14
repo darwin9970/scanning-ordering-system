@@ -25,12 +25,16 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Store, Edit, Trash2, MapPin, Phone, Settings } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { toast } from "sonner";
 
 export default function StoresPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStore, setEditingStore] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingStoreId, setDeletingStoreId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -96,8 +100,14 @@ export default function StoresPage() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("确定要删除这个门店吗？相关数据也会被删除。")) {
-      deleteMutation.mutate(id);
+    setDeletingStoreId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingStoreId !== null) {
+      deleteMutation.mutate(deletingStoreId);
+      setDeletingStoreId(null);
     }
   };
 
@@ -238,6 +248,16 @@ export default function StoresPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="确认删除门店"
+        description="删除后无法恢复，相关数据也会被删除。确定要继续吗？"
+        confirmText="删除"
+        cancelText="取消"
+      />
     </div>
   );
 }

@@ -1,9 +1,74 @@
 import { Elysia, t } from "elysia";
-import { eq, and, desc, gte, count, sum } from "drizzle-orm";
-import { db, orders, orderItems, tables, products, productVariants, categories } from "../db";
+import { eq, and, desc, gte, count, sum, sql } from "drizzle-orm";
+import {
+  db,
+  orders,
+  orderItems,
+  tables,
+  products,
+  productVariants,
+  categories,
+  storeMembers,
+  pointLogs,
+  operationLogs,
+} from "../db";
 import { success, error, pagination, generateOrderNo } from "../lib/utils";
 import { broadcastToStore, broadcastToTable, WS_EVENTS } from "../ws";
-import { requirePermission } from "../lib/auth";
+import { requirePermission, hasPermission } from "../lib/auth";
+import redis from "../lib/redis";
+
+const POINTS_PER_YUAN = 1; // 每元积1分
+const POINTS_TO_YUAN = 100; // 100 分抵 1 元
+const MAX_REDEEM_PERCENT = 0.5; // 最高抵扣 50%
+const IDEM_PREFIX = "idem:refund:";
+const RATE_PREFIX = "rate:refund:";
+const RATE_LIMIT = { short: { limit: 5, ttl: 60 }, long: { limit: 20, ttl: 600 } };
+
+function getClientIp(headers: Record<string, string | undefined>) {
+  return (
+    headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    headers["x-real-ip"] ||
+    headers["cf-connecting-ip"] ||
+    "unknown"
+  );
+}
+
+async function checkRateLimit(key: string, limit: number, ttl: number) {
+  if (!redis) return true;
+  const count = await redis.incr(key);
+  if (count === 1) await redis.expire(key, ttl);
+  return count <= limit;
+}
+
+async function ensureIdempotent(refundKey: string) {
+  if (!redis) return { ok: true };
+  const exists = await redis.get(refundKey);
+  if (exists) return { ok: false, message: "重复提交，请勿重复操作" };
+  await redis.set(refundKey, "processing", "EX", 1800, "NX");
+  return { ok: true };
+}
+
+async function finalizeIdempotent(refundKey: string | null) {
+  if (redis && refundKey) {
+    await redis.set(refundKey, "done", "EX", 1800);
+  }
+}
+
+async function ensureStoreMember(storeId: number, userId: number) {
+  const [existing] = await db
+    .select()
+    .from(storeMembers)
+    .where(and(eq(storeMembers.storeId, storeId), eq(storeMembers.userId, userId)))
+    .limit(1);
+
+  if (existing) return existing;
+
+  const [created] = await db
+    .insert(storeMembers)
+    .values({ storeId, userId, level: 1, points: 0 })
+    .returning();
+  return created;
+}
 
 export const orderRoutes = new Elysia({ prefix: "/api/orders" })
   // 订单读取需要 order:read 权限
@@ -84,7 +149,13 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
   .post(
     "/",
     async ({ body }) => {
-      const { storeId, tableId, userId, items, remark } = body;
+      const { storeId, tableId, userId, items, remark, usePoints } = body;
+
+      // 校验桌台归属
+      const [table] = await db.select().from(tables).where(eq(tables.id, tableId)).limit(1);
+      if (!table || table.storeId !== storeId) {
+        return error("桌台与门店不匹配", 400);
+      }
 
       let totalAmount = 0;
       const orderItemsData = [];
@@ -99,6 +170,10 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
           .limit(1);
 
         if (!variant) continue;
+
+        if (variant.products?.storeId !== storeId) {
+          return error("商品不属于该门店", 400);
+        }
 
         const price = Number(variant.product_variants.price);
         totalAmount += price * item.quantity;
@@ -116,6 +191,20 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
         });
       }
 
+      // 处理积分抵扣
+      let pointsUsed = 0;
+      let pointsDiscount = 0;
+      if (usePoints && userId) {
+        const storeMember = await ensureStoreMember(storeId, userId);
+        const availablePoints = storeMember?.points ?? 0;
+        const maxDiscountAmount = totalAmount * MAX_REDEEM_PERCENT;
+        const maxPointsAllow = Math.floor(maxDiscountAmount * POINTS_TO_YUAN);
+        pointsUsed = Math.min(usePoints, availablePoints, maxPointsAllow);
+        pointsDiscount = pointsUsed / POINTS_TO_YUAN;
+      }
+
+      const payAmount = Math.max(totalAmount - pointsDiscount, 0);
+
       const [order] = await db
         .insert(orders)
         .values({
@@ -124,8 +213,10 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
           tableId,
           userId,
           totalAmount: totalAmount.toString(),
-          payAmount: totalAmount.toString(),
+          payAmount: payAmount.toString(),
           remark,
+          pointsUsed,
+          pointsDiscount: pointsDiscount.toString(),
         })
         .returning();
 
@@ -136,6 +227,23 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
             ...item,
           }))
         );
+      }
+
+      // 扣减积分并记录流水（抵扣）
+      if (pointsUsed > 0 && userId) {
+        await db
+          .update(storeMembers)
+          .set({ points: sql`${storeMembers.points} - ${pointsUsed}` })
+          .where(and(eq(storeMembers.storeId, storeId), eq(storeMembers.userId, userId)));
+
+        await db.insert(pointLogs).values({
+          storeId,
+          userId,
+          orderId: order!.id,
+          change: -pointsUsed,
+          reason: "REDEEM_ORDER",
+          meta: { orderNo: order!.orderNo },
+        });
       }
 
       // 广播新订单通知
@@ -159,6 +267,7 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
           })
         ),
         remark: t.Optional(t.String()),
+        usePoints: t.Optional(t.Number()),
       }),
       detail: { tags: ["Orders"], summary: "创建订单" },
     }
@@ -197,6 +306,40 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
           order,
           newStatus: body.status,
         });
+
+        // 订单支付成功发放积分（幂等：若已有流水则跳过）
+        if (body.status === "PAID" && order.userId) {
+          const [existingLog] = await db
+            .select()
+            .from(pointLogs)
+            .where(and(eq(pointLogs.orderId, order.id), eq(pointLogs.reason, "EARN_ORDER")))
+            .limit(1);
+
+          if (!existingLog) {
+            const earnPoints = Math.floor(Number(order.payAmount) * POINTS_PER_YUAN);
+            if (earnPoints > 0) {
+              await ensureStoreMember(order.storeId, order.userId);
+              await db
+                .update(storeMembers)
+                .set({ points: sql`${storeMembers.points} + ${earnPoints}` })
+                .where(
+                  and(
+                    eq(storeMembers.storeId, order.storeId),
+                    eq(storeMembers.userId, order.userId)
+                  )
+                );
+
+              await db.insert(pointLogs).values({
+                storeId: order.storeId,
+                userId: order.userId,
+                orderId: order.id,
+                change: earnPoints,
+                reason: "EARN_ORDER",
+                meta: { orderNo: order.orderNo },
+              });
+            }
+          }
+        }
       }
 
       return success(order, "状态更新成功");
@@ -209,16 +352,61 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
   )
   .post(
     "/:id/refund",
-    async ({ params, body }) => {
+    async ({ params, body, user, headers }) => {
+      if (!user || !hasPermission(user.role, "order:refund")) {
+        return error("权限不足，需 order:refund", 403);
+      }
+
+      const ip = getClientIp(headers as Record<string, string | undefined>);
+      const rateKeyShort = `${RATE_PREFIX}short:${user.id || ip}`;
+      const rateKeyLong = `${RATE_PREFIX}long:${user.id || ip}`;
+      const allowedShort = await checkRateLimit(
+        rateKeyShort,
+        RATE_LIMIT.short.limit,
+        RATE_LIMIT.short.ttl
+      );
+      const allowedLong = await checkRateLimit(
+        rateKeyLong,
+        RATE_LIMIT.long.limit,
+        RATE_LIMIT.long.ttl
+      );
+      if (!allowedShort || !allowedLong) {
+        return error("操作过于频繁，请稍后重试", 429);
+      }
+
+      const idemHeader = headers["idempotency-key"] as string | undefined;
+      const idemKey = idemHeader ? `${IDEM_PREFIX}${params.id}:${idemHeader}` : undefined;
+      if (idemKey) {
+        const idem = await ensureIdempotent(idemKey);
+        if (!idem.ok) return error(idem.message || "重复请求", 409);
+      }
+
+      const [existing] = await db.select().from(orders).where(eq(orders.id, params.id)).limit(1);
+      if (!existing) return error("订单不存在", 404);
+      if (existing.status === "REFUNDED") return success(existing, "订单已退款");
+      if (existing.status === "CANCELLED") return error("已取消的订单无法退款", 400);
+
       const [order] = await db
         .update(orders)
-        .set({ status: "REFUNDED" })
+        .set({ status: "REFUNDED", updatedAt: new Date() })
         .where(eq(orders.id, params.id))
         .returning();
 
-      // 广播退款通知
       if (order) {
         broadcastToStore(order.storeId, WS_EVENTS.ORDER_REFUNDED, { order });
+
+        await db.insert(operationLogs).values({
+          adminId: user.id,
+          action: "refund_full",
+          targetType: "order",
+          targetId: params.id,
+          storeId: order.storeId,
+          details: { reason: body.reason },
+        });
+      }
+
+      if (idemKey) {
+        await finalizeIdempotent(idemKey);
       }
 
       return success(order, "退款成功");
@@ -232,8 +420,41 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
   // 部分退款（单品退款）
   .post(
     "/:id/partial-refund",
-    async ({ params, body }) => {
+    async ({ params, body, user, headers }) => {
+      if (!user || !hasPermission(user.role, "order:refund")) {
+        return error("权限不足，需 order:refund", 403);
+      }
       const { itemId, quantity, reason } = body;
+
+      const ip = getClientIp(headers as Record<string, string | undefined>);
+      const rateKeyShort = `${RATE_PREFIX}short:${user.id || ip}`;
+      const rateKeyLong = `${RATE_PREFIX}long:${user.id || ip}`;
+      const allowedShort = await checkRateLimit(
+        rateKeyShort,
+        RATE_LIMIT.short.limit,
+        RATE_LIMIT.short.ttl
+      );
+      const allowedLong = await checkRateLimit(
+        rateKeyLong,
+        RATE_LIMIT.long.limit,
+        RATE_LIMIT.long.ttl
+      );
+      if (!allowedShort || !allowedLong) {
+        return error("操作过于频繁，请稍后重试", 429);
+      }
+
+      const idemHeader = headers["idempotency-key"] as string | undefined;
+      const idemKey = idemHeader ? `${IDEM_PREFIX}${params.id}:${itemId}:${idemHeader}` : undefined;
+      if (idemKey) {
+        const idem = await ensureIdempotent(idemKey);
+        if (!idem.ok) return error(idem.message || "重复请求", 409);
+      }
+
+      // 获取订单
+      const [order] = await db.select().from(orders).where(eq(orders.id, params.id)).limit(1);
+      if (!order) return error("订单不存在", 404);
+      if (order.status === "REFUNDED") return error("该订单已全额退款", 400);
+      if (order.status === "CANCELLED") return error("已取消的订单无法退款", 400);
 
       // 获取订单项
       const [item] = await db.select().from(orderItems).where(eq(orderItems.id, itemId)).limit(1);
@@ -259,16 +480,33 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
         .where(eq(orderItems.id, itemId));
 
       // 获取更新后的订单
-      const [order] = await db.select().from(orders).where(eq(orders.id, params.id)).limit(1);
+      const [updatedOrder] = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.id, params.id))
+        .limit(1);
 
       // 广播退款通知
-      if (order) {
-        broadcastToStore(order.storeId, WS_EVENTS.ORDER_REFUNDED, {
-          order,
+      if (updatedOrder) {
+        broadcastToStore(updatedOrder.storeId, WS_EVENTS.ORDER_REFUNDED, {
+          order: updatedOrder,
           itemId,
           refundAmount,
           isPartial: true,
         });
+
+        await db.insert(operationLogs).values({
+          adminId: user.id,
+          action: "refund_partial",
+          targetType: "order",
+          targetId: params.id,
+          storeId: updatedOrder.storeId,
+          details: { itemId, quantity, refundAmount, reason },
+        });
+      }
+
+      if (idemKey) {
+        await finalizeIdempotent(idemKey);
       }
 
       return success({ itemId, refundedQuantity: quantity, refundAmount }, "部分退款成功");

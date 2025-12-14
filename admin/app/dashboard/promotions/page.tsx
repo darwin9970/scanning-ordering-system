@@ -33,6 +33,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Pencil, Trash2, Zap, X } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { toast } from "sonner";
 
 interface Promotion {
   id: number;
@@ -71,6 +73,8 @@ export default function PromotionsPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingPromotionId, setDeletingPromotionId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     type: "FULL_REDUCE" as Promotion["type"],
@@ -198,14 +202,22 @@ export default function PromotionsPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("确定要删除这个活动吗？")) return;
+  const handleDelete = (id: number) => {
+    setDeletingPromotionId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deletingPromotionId === null) return;
 
     try {
-      await api.request(`/api/promotions/${id}`, { method: "DELETE" });
+      await api.request(`/api/promotions/${deletingPromotionId}`, { method: "DELETE" });
       fetchPromotions();
+      toast.success("活动删除成功");
+      setDeletingPromotionId(null);
     } catch (error) {
       console.error("Failed to delete promotion:", error);
+      toast.error(error instanceof Error ? error.message : "删除活动失败");
     }
   };
 
@@ -517,6 +529,16 @@ export default function PromotionsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="确认删除活动"
+        description="删除后无法恢复，确定要删除这个活动吗？"
+        confirmText="删除"
+        cancelText="取消"
+      />
     </div>
   );
 }

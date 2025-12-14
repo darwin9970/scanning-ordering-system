@@ -50,6 +50,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { toast } from "sonner";
 
 interface AddItemCart {
   variantId: number;
@@ -65,9 +67,11 @@ export default function OrdersPage() {
   const [keyword, setKeyword] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [fullRefundDialogOpen, setFullRefundDialogOpen] = useState(false);
+  const [refundingOrderId, setRefundingOrderId] = useState<number | null>(null);
 
   // 部分退款
-  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [partialRefundDialogOpen, setPartialRefundDialogOpen] = useState(false);
   const [refundItems, setRefundItems] = useState<{ itemId: number; quantity: number }[]>([]);
   const [refundReason, setRefundReason] = useState("");
 
@@ -92,18 +96,25 @@ export default function OrdersPage() {
       await api.updateOrderStatus(orderId, newStatus);
       refetch();
     } catch (error: unknown) {
-      alert(error instanceof Error ? error.message : "操作失败");
+      toast.error(error instanceof Error ? error.message : "操作失败");
     }
   };
 
-  const handleRefund = async (orderId: number) => {
-    if (!confirm("确定要全额退款吗？")) return;
+  const handleRefund = (orderId: number) => {
+    setRefundingOrderId(orderId);
+    setFullRefundDialogOpen(true);
+  };
+
+  const confirmRefund = async () => {
+    if (refundingOrderId === null) return;
     try {
-      await api.refundOrder(orderId, "商家操作退款");
+      await api.refundOrder(refundingOrderId, "商家操作退款");
       refetch();
       setDetailOpen(false);
+      toast.success("退款成功");
+      setRefundingOrderId(null);
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message || "退款失败");
     }
   };
 
@@ -117,7 +128,7 @@ export default function OrdersPage() {
       })) || []
     );
     setRefundReason("");
-    setRefundDialogOpen(true);
+    setPartialRefundDialogOpen(true);
   };
 
   // 更新退款数量
@@ -144,7 +155,7 @@ export default function OrdersPage() {
     if (!selectedOrder) return;
     const itemsToRefund = refundItems.filter((ri) => ri.quantity > 0);
     if (itemsToRefund.length === 0) {
-      alert("请选择要退款的商品");
+      toast.error("请选择要退款的商品");
       return;
     }
 
@@ -154,11 +165,11 @@ export default function OrdersPage() {
         body: { items: itemsToRefund, reason: refundReason },
       });
       refetch();
-      setRefundDialogOpen(false);
+      setPartialRefundDialogOpen(false);
       setDetailOpen(false);
-      alert("部分退款成功");
+      toast.success("部分退款成功");
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message || "退款失败");
     }
   };
 
@@ -255,9 +266,9 @@ export default function OrdersPage() {
       refetch();
       setAddItemDialogOpen(false);
       setDetailOpen(false);
-      alert("加菜成功");
+      toast.success("加菜成功");
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message || "退款失败");
     }
   };
 
@@ -267,7 +278,7 @@ export default function OrdersPage() {
       setSelectedOrder(order);
       setDetailOpen(true);
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message || "退款失败");
     }
   };
 
@@ -574,7 +585,7 @@ export default function OrdersPage() {
       </Dialog>
 
       {/* 部分退款弹窗 */}
-      <Dialog open={refundDialogOpen} onOpenChange={setRefundDialogOpen}>
+      <Dialog open={partialRefundDialogOpen} onOpenChange={setPartialRefundDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>部分退款</DialogTitle>
@@ -662,7 +673,7 @@ export default function OrdersPage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRefundDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setPartialRefundDialogOpen(false)}>
               取消
             </Button>
             <Button
@@ -829,6 +840,17 @@ export default function OrdersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={fullRefundDialogOpen}
+        onOpenChange={setFullRefundDialogOpen}
+        onConfirm={confirmRefund}
+        title="确认全额退款"
+        description="确定要对这个订单进行全额退款吗？退款后订单状态将变为已退款。"
+        confirmText="确认退款"
+        cancelText="取消"
+        variant="destructive"
+      />
     </div>
   );
 }

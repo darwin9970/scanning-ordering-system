@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Save, RotateCcw, Shield, Crown, User } from "lucide-react";
 import type { Permission } from "@/types";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { toast } from "sonner";
 
 // 权限分组配置
 const PERMISSION_GROUPS: Record<string, { label: string; permissions: Permission[] }> = {
@@ -122,10 +124,10 @@ export default function RolesPage() {
     onSuccess: (_, { role }) => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
       setHasChanges((prev) => ({ ...prev, [role]: false }));
-      alert("保存成功");
+      toast.success("保存成功");
     },
     onError: (err: Error) => {
-      alert(err.message || "保存失败");
+      toast.error(err.message || "保存失败");
     },
   });
 
@@ -142,7 +144,7 @@ export default function RolesPage() {
         return newState;
       });
       setHasChanges((prev) => ({ ...prev, [role]: false }));
-      alert("已恢复默认权限");
+      toast.success("已恢复默认权限");
     },
   });
 
@@ -185,10 +187,19 @@ export default function RolesPage() {
     updateMutation.mutate({ role, permissions });
   };
 
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resettingRole, setResettingRole] = useState<string | null>(null);
+
   // 重置
   const handleReset = (role: string) => {
-    if (confirm("确定要恢复默认权限吗？")) {
-      resetMutation.mutate(role);
+    setResettingRole(role);
+    setResetDialogOpen(true);
+  };
+
+  const confirmReset = () => {
+    if (resettingRole !== null) {
+      resetMutation.mutate(resettingRole);
+      setResettingRole(null);
     }
   };
 
@@ -319,6 +330,16 @@ export default function RolesPage() {
           </TabsContent>
         ))}
       </Tabs>
+
+      <ConfirmDialog
+        open={resetDialogOpen}
+        onOpenChange={setResetDialogOpen}
+        onConfirm={confirmReset}
+        title="确认恢复默认权限"
+        description="恢复后将重置为该角色的默认权限配置，确定要继续吗？"
+        confirmText="恢复"
+        cancelText="取消"
+      />
     </div>
   );
 }

@@ -33,6 +33,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { Plus, Pencil, Trash2, Package, ImageIcon, X } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { toast } from "sonner";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -84,6 +86,8 @@ export default function CombosPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCombo, setEditingCombo] = useState<Combo | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingComboId, setDeletingComboId] = useState<number | null>(null);
 
   // 表单数据
   const [formData, setFormData] = useState({
@@ -155,7 +159,7 @@ export default function CombosPage() {
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.price || comboItems.length === 0) {
-      alert("请填写完整信息并添加套餐商品");
+      toast.error("请填写完整信息并添加套餐商品");
       return;
     }
 
@@ -194,14 +198,22 @@ export default function CombosPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("确定要删除这个套餐吗？")) return;
+  const handleDelete = (id: number) => {
+    setDeletingComboId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deletingComboId === null) return;
 
     try {
-      await api.request(`/api/combos/${id}`, { method: "DELETE" });
+      await api.request(`/api/combos/${deletingComboId}`, { method: "DELETE" });
       fetchCombos();
+      toast.success("套餐删除成功");
+      setDeletingComboId(null);
     } catch (error) {
       console.error("Failed to delete combo:", error);
+      toast.error(error instanceof Error ? error.message : "删除套餐失败");
     }
   };
 
@@ -476,6 +488,16 @@ export default function CombosPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="确认删除套餐"
+        description="删除后无法恢复，确定要删除这个套餐吗？"
+        confirmText="删除"
+        cancelText="取消"
+      />
     </div>
   );
 }

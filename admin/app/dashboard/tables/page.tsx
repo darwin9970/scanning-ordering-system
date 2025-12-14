@@ -27,6 +27,9 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, QrCode, RefreshCw, Edit, Trash2, Download, Eye } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { toast } from "sonner";
 
 export default function TablesPage() {
   const queryClient = useQueryClient();
@@ -35,6 +38,10 @@ export default function TablesPage() {
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [editingTable, setEditingTable] = useState<Table | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingTableId, setDeletingTableId] = useState<number | null>(null);
+  const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false);
+  const [regeneratingTableId, setRegeneratingTableId] = useState<number | null>(null);
 
   // 小程序基础URL（实际部署时替换为真实地址）
   const MINI_PROGRAM_URL =
@@ -119,14 +126,26 @@ export default function TablesPage() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("确定要删除这个桌台吗？")) {
-      deleteMutation.mutate(id);
+    setDeletingTableId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingTableId !== null) {
+      deleteMutation.mutate(deletingTableId);
+      setDeletingTableId(null);
     }
   };
 
   const handleRegenerateQr = (id: number) => {
-    if (confirm("确定要重新生成二维码吗？原二维码将失效。")) {
-      regenerateQrMutation.mutate(id);
+    setRegeneratingTableId(id);
+    setRegenerateDialogOpen(true);
+  };
+
+  const confirmRegenerate = () => {
+    if (regeneratingTableId !== null) {
+      regenerateQrMutation.mutate(regeneratingTableId);
+      setRegeneratingTableId(null);
     }
   };
 
@@ -436,6 +455,26 @@ export default function TablesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="确认删除桌台"
+        description="删除后无法恢复，确定要删除这个桌台吗？"
+        confirmText="删除"
+        cancelText="取消"
+      />
+
+      <ConfirmDialog
+        open={regenerateDialogOpen}
+        onOpenChange={setRegenerateDialogOpen}
+        onConfirm={confirmRegenerate}
+        title="确认重新生成二维码"
+        description="重新生成后，原二维码将失效，确定要继续吗？"
+        confirmText="重新生成"
+        cancelText="取消"
+      />
     </div>
   );
 }

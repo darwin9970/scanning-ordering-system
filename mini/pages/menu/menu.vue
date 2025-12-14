@@ -124,6 +124,7 @@
             v-for="product in getProductsByCategory(category.id)" 
             :key="product.id"
             class="product-card"
+            :class="{ 'product-card--active': getProductQuantity(product.id) > 0 }"
             @tap="showProductDetail(product)"
           >
             <image 
@@ -175,6 +176,7 @@
           
           <!-- 空状态 -->
           <view v-if="getProductsByCategory(category.id).length === 0" class="product-group__empty">
+            <q-empty type="default" text="该分类暂无商品" />
             <text>暂无商品</text>
           </view>
         </view>
@@ -295,6 +297,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useTableStore } from '@/store/table'
 import { useCartStore } from '@/store/cart'
 import { getBanners, getPageConfig, getAvailableCoupons } from '@/api'
+import { showActionSuccess } from '@/utils/toast'
 
 const tableStore = useTableStore()
 const cartStore = useCartStore()
@@ -566,8 +569,28 @@ const getProductQuantity = (productId) => {
 
 // 选择分类
 const selectCategory = (categoryId) => {
+  if (activeCategoryId.value === categoryId) return
+  
   activeCategoryId.value = categoryId
+  
+  // 触觉反馈
+  // #ifdef MP-WEIXIN
+  uni.vibrateShort({
+    type: 'light'
+  })
+  // #endif
+  
+  // 平滑滚动到对应分类
   scrollToProduct.value = 'products-' + categoryId
+  
+  // 延迟滚动，确保DOM更新，使用 nextTick 更可靠
+  setTimeout(() => {
+    scrollToProduct.value = 'products-' + categoryId
+    // 再次确保滚动
+    setTimeout(() => {
+      scrollToProduct.value = 'products-' + categoryId
+    }, 50)
+  }, 100)
 }
 
 // 滚动处理
@@ -620,9 +643,17 @@ const confirmAddProduct = () => {
   
   closeProductPopup()
   
+  // 触觉反馈
+  // #ifdef MP-WEIXIN
+  uni.vibrateShort({
+    type: 'light'
+  })
+  // #endif
+  
   uni.showToast({
     title: '已加入购物车',
-    icon: 'success'
+    icon: 'success',
+    duration: 1500
   })
 }
 
@@ -634,9 +665,18 @@ const addProduct = (product) => {
   } else {
     // 无规格或单规格，直接添加
     cartStore.add(product, product.skus?.[0], [], 1, '')
+    
+    // 触觉反馈
+    // #ifdef MP-WEIXIN
+    uni.vibrateShort({
+      type: 'light'
+    })
+    // #endif
+    
     uni.showToast({
       title: '已加入购物车',
-      icon: 'success'
+      icon: 'success',
+      duration: 1500
     })
   }
 }
@@ -652,9 +692,8 @@ const updateProductQuantity = (product, quantity) => {
 
 // 跳转搜索
 const goToSearch = () => {
-  uni.showToast({
-    title: '搜索功能开发中',
-    icon: 'none'
+  uni.navigateTo({
+    url: '/pages/search/search'
   })
 }
 
@@ -845,12 +884,14 @@ const goToCheckout = () => {
     padding: 24rpx 0 16rpx;
   }
   
-  &__empty {
-    padding: 40rpx;
-    text-align: center;
-    color: $text-tertiary;
-    font-size: $font-size-sm;
-  }
+          &__empty {
+            padding: 80rpx 40rpx;
+            text-align: center;
+            
+            .q-empty {
+              margin: 0 auto;
+            }
+          }
 }
 
 // 商品卡片
@@ -860,6 +901,18 @@ const goToCheckout = () => {
   background: $bg-card;
   border-radius: $radius-lg;
   margin-bottom: 20rpx;
+  transition: all $duration-base $ease-out;
+  box-shadow: $shadow-sm;
+  
+  &:active {
+    transform: scale(0.98);
+    box-shadow: $shadow-base;
+  }
+  
+  &--active {
+    border: 2rpx solid $primary-light;
+    background: lighten($primary-lighter, 2%);
+  }
   
   &__image {
     width: 200rpx;

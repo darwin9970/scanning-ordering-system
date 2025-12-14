@@ -28,8 +28,19 @@
         <uni-icons type="right" size="18" color="#999" />
       </view>
       
-      <!-- 数据统计 -->
-      <view class="stats-card">
+      <!-- 会员卡片（如果已登录且有会员信息） -->
+      <member-card
+        v-if="memberInfo"
+        :level="memberInfo.level || 1"
+        :points="memberInfo.points || 0"
+        :coupon-count="couponCount"
+        @click="goToMember"
+        @points-click="goToMember"
+        @coupon-click="goToCoupons"
+      />
+      
+      <!-- 数据统计（未登录或未成为会员时显示） -->
+      <view v-else class="stats-card">
         <view class="stats-item" @tap="goToMember">
           <text class="stats-value">{{ memberInfo?.points || 0 }}</text>
           <text class="stats-label">积分</text>
@@ -167,8 +178,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useTableStore } from '@/store/table'
+import { getMemberProfile, login } from '@/api'
+import MemberCard from '@/components/member-card/member-card.vue'
 
 const tableStore = useTableStore()
 
@@ -318,6 +331,30 @@ const handleSwitchTable = () => {
     }
   })
 }
+
+// 加载会员信息
+const loadMemberInfo = async () => {
+  try {
+    const token = uni.getStorageSync('token')
+    const storeId = uni.getStorageSync('storeId')
+    
+    if (!token || !storeId) {
+      return
+    }
+    
+    const res = await getMemberProfile(storeId)
+    if (res && res.data) {
+      memberInfo.value = res.data
+    }
+  } catch (error) {
+    console.error('加载会员信息失败:', error)
+  }
+}
+
+// 页面加载时获取会员信息
+onMounted(() => {
+  loadMemberInfo()
+})
 </script>
 
 <style lang="scss" scoped>

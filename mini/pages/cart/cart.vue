@@ -2,7 +2,7 @@
   <view class="page-cart">
     <!-- 空购物车 -->
     <view v-if="cartStore.isEmpty" class="empty-cart">
-      <q-empty type="cart" text="购物车是空的">
+      <q-empty type="cart" text="购物车是空的" tip="快去挑选心仪的美食吧~">
         <q-button type="primary" @click="goBack">
           去点餐
         </q-button>
@@ -19,42 +19,42 @@
       
       <!-- 商品列表 -->
       <view class="cart-list">
-        <view 
-          v-for="item in cartStore.items" 
-          :key="item.itemKey"
-          class="cart-item"
-        >
-          <image 
-            class="cart-item__image" 
-            :src="item.productImage || '/static/images/default-food.png'" 
-            mode="aspectFill"
-          />
-          
-          <view class="cart-item__content">
-            <text class="cart-item__name">
-              {{ item.productName }}
-            </text>
-            <text v-if="item.skuName" class="cart-item__sku">
-              {{ item.skuName }}
-            </text>
-            <text v-if="item.remark" class="cart-item__remark">
-              备注: {{ item.remark }}
-            </text>
-            
-            <view class="cart-item__footer">
-              <q-price :value="item.price" size="medium" />
-              <q-stepper 
-                :model-value="item.quantity"
-                @change="(val) => updateQuantity(item.itemKey, val)"
+        <uni-swipe-action>
+          <uni-swipe-action-item
+            v-for="item in cartStore.items" 
+            :key="item.itemKey"
+            :right-options="swipeOptions"
+            @click="handleSwipeClick($event, item.itemKey)"
+          >
+            <view class="cart-item">
+              <image 
+                class="cart-item__image" 
+                :src="item.productImage || '/static/images/default-food.png'" 
+                mode="aspectFill"
               />
+              
+              <view class="cart-item__content">
+                <text class="cart-item__name">
+                  {{ item.productName }}
+                </text>
+                <text v-if="item.skuName" class="cart-item__sku">
+                  {{ item.skuName }}
+                </text>
+                <text v-if="item.remark" class="cart-item__remark">
+                  备注: {{ item.remark }}
+                </text>
+                
+                <view class="cart-item__footer">
+                  <q-price :value="item.price" size="medium" />
+                  <q-stepper 
+                    :model-value="item.quantity"
+                    @change="(val) => updateQuantity(item.itemKey, val)"
+                  />
+                </view>
+              </view>
             </view>
-          </view>
-          
-          <!-- 删除按钮 -->
-          <view class="cart-item__delete" @tap="removeItem(item.itemKey)">
-            <uni-icons type="trash" size="20" color="#FF4D4F" />
-          </view>
-        </view>
+          </uni-swipe-action-item>
+        </uni-swipe-action>
       </view>
       
       <!-- 清空购物车 -->
@@ -91,9 +91,20 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useCartStore } from '@/store/cart'
 
 const cartStore = useCartStore()
+
+// 滑动删除选项
+const swipeOptions = ref([
+  {
+    text: '删除',
+    style: {
+      backgroundColor: '#FF4D4F'
+    }
+  }
+])
 
 // 返回菜单
 const goBack = () => {
@@ -102,10 +113,34 @@ const goBack = () => {
 
 // 更新数量
 const updateQuantity = (itemKey, quantity) => {
+  // 触觉反馈
+  // #ifdef MP-WEIXIN
+  uni.vibrateShort({
+    type: 'light'
+  })
+  // #endif
+  
   cartStore.updateQuantity(itemKey, quantity)
 }
 
-// 删除商品
+// 滑动删除处理
+const handleSwipeClick = (e, itemKey) => {
+  if (e.index === 0) {
+    // 触觉反馈
+    // #ifdef MP-WEIXIN
+    uni.vibrateShort({
+      type: 'medium'
+    })
+    // #endif
+    
+    cartStore.remove(itemKey)
+    
+    // 使用统一的 toast 工具
+    showActionSuccess('已删除')
+  }
+}
+
+// 删除商品（保留原有方法，用于其他场景）
 const removeItem = (itemKey) => {
   uni.showModal({
     title: '提示',
@@ -113,6 +148,12 @@ const removeItem = (itemKey) => {
     success: (res) => {
       if (res.confirm) {
         cartStore.remove(itemKey)
+        
+        uni.showToast({
+          title: '已删除',
+          icon: 'success',
+          duration: 1500
+        })
       }
     }
   })

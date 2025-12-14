@@ -32,6 +32,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2, Ticket } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { toast } from "sonner";
 
 interface Coupon {
   id: number;
@@ -72,6 +74,8 @@ export default function CouponsPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingCouponId, setDeletingCouponId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     type: "FIXED" as "FIXED" | "PERCENT" | "NO_THRESHOLD",
@@ -171,14 +175,22 @@ export default function CouponsPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("确定要删除这个优惠券吗？")) return;
+  const handleDelete = (id: number) => {
+    setDeletingCouponId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deletingCouponId === null) return;
 
     try {
-      await api.request(`/api/coupons/${id}`, { method: "DELETE" });
+      await api.request(`/api/coupons/${deletingCouponId}`, { method: "DELETE" });
       fetchCoupons();
+      toast.success("优惠券删除成功");
+      setDeletingCouponId(null);
     } catch (error) {
       console.error("Failed to delete coupon:", error);
+      toast.error(error instanceof Error ? error.message : "删除优惠券失败");
     }
   };
 
@@ -431,6 +443,16 @@ export default function CouponsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="确认删除优惠券"
+        description="删除后无法恢复，确定要删除这个优惠券吗？"
+        confirmText="删除"
+        cancelText="取消"
+      />
     </div>
   );
 }

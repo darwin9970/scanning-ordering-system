@@ -210,12 +210,20 @@ export default function StoreDetailPage() {
     }
   };
 
+  const [deleteBannerDialogOpen, setDeleteBannerDialogOpen] = useState(false);
+  const [deletingBannerId, setDeletingBannerId] = useState<number | null>(null);
+
   // 删除轮播图
-  const deleteBanner = async (id: number) => {
-    if (!confirm("确定要删除这个轮播图吗？")) return;
+  const deleteBanner = (id: number) => {
+    setDeletingBannerId(id);
+    setDeleteBannerDialogOpen(true);
+  };
+
+  const confirmDeleteBanner = async () => {
+    if (deletingBannerId === null) return;
 
     try {
-      await api.deleteBanner(id);
+      await api.deleteBanner(deletingBannerId);
       toast.success("删除成功");
       loadBanners();
     } catch (error) {

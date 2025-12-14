@@ -19,7 +19,12 @@
         v-if="filteredOrders.length === 0" 
         type="order" 
         text="暂无订单"
-      />
+        tip="快去点餐吧~"
+      >
+        <view class="empty-action">
+          <button class="empty-action__btn" @tap="goToMenu">去点餐</button>
+        </view>
+      </q-empty>
       
       <!-- 订单列表 -->
       <view v-else class="order-list">

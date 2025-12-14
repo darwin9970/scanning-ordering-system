@@ -28,6 +28,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, GripVertical, Loader2 } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { toast } from "sonner";
 import {
   DndContext,
   closestCenter,
@@ -177,7 +179,7 @@ export default function CategoriesPage() {
 
           queryClient.invalidateQueries({ queryKey: ["categories"] });
         } catch (error: any) {
-          alert("排序失败: " + error.message);
+          toast.error("排序失败: " + (error.message || "未知错误"));
         } finally {
           setIsSorting(false);
         }
@@ -208,7 +210,7 @@ export default function CategoriesPage() {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
     onError: (error: any) => {
-      alert(error.message);
+      toast.error(error.message || "删除分类失败");
     },
   });
 
@@ -237,9 +239,18 @@ export default function CategoriesPage() {
     }
   };
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(null);
+
   const handleDelete = (id: number) => {
-    if (confirm("确定要删除这个分类吗？分类下有商品时无法删除。")) {
-      deleteMutation.mutate(id);
+    setDeletingCategoryId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingCategoryId !== null) {
+      deleteMutation.mutate(deletingCategoryId);
+      setDeletingCategoryId(null);
     }
   };
 
@@ -345,6 +356,16 @@ export default function CategoriesPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="确认删除分类"
+        description="删除后无法恢复。如果分类下有商品，将无法删除。确定要继续吗？"
+        confirmText="删除"
+        cancelText="取消"
+      />
     </div>
   );
 }

@@ -43,15 +43,20 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { toast } from "sonner";
 
 export default function PrintersPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bindDialogOpen, setBindDialogOpen] = useState(false);
+
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [previewPrinter, setPreviewPrinter] = useState<any>(null);
   const [editingPrinter, setEditingPrinter] = useState<any>(null);
   const [bindingPrinter, setBindingPrinter] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingPrinterId, setDeletingPrinterId] = useState<number | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [testStatus, setTestStatus] = useState<{
     id: number;
@@ -82,7 +87,7 @@ export default function PrintersPage() {
       resetForm();
     },
     onError: (error: any) => {
-      alert(error.message);
+      toast.error(error.message || "操作失败");
     },
   });
 
@@ -99,6 +104,10 @@ export default function PrintersPage() {
     mutationFn: (id: number) => api.deletePrinter(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["printers"] });
+      toast.success("打印机删除成功");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "删除打印机失败");
     },
   });
 
@@ -172,8 +181,14 @@ export default function PrintersPage() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("确定要删除这台打印机吗？")) {
-      deleteMutation.mutate(id);
+    setDeletingPrinterId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingPrinterId !== null) {
+      deleteMutation.mutate(deletingPrinterId);
+      setDeletingPrinterId(null);
     }
   };
 
@@ -532,6 +547,16 @@ export default function PrintersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="确认删除打印机"
+        description="删除后无法恢复，确定要删除这台打印机吗？"
+        confirmText="删除"
+        cancelText="取消"
+      />
     </div>
   );
 }

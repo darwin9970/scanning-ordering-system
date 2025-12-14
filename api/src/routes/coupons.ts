@@ -248,13 +248,17 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
   .post(
     "/:id/claim",
     async ({ params, body }) => {
-      const { userId } = body;
+      const { userId, storeId } = body;
       const couponId = params.id;
 
       // 获取优惠券信息
       const [coupon] = await db.select().from(coupons).where(eq(coupons.id, couponId)).limit(1);
 
       if (!coupon) return error("优惠券不存在", 404);
+
+      if (storeId && coupon.storeId && coupon.storeId !== storeId) {
+        return error("该优惠券不适用于当前门店", 400);
+      }
 
       // 检查状态
       if (coupon.status !== "ACTIVE") {
@@ -286,6 +290,7 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
       const [userCoupon] = await db
         .insert(userCoupons)
         .values({
+          storeId: coupon.storeId,
           userId,
           couponId,
           expireAt: coupon.endTime,
@@ -304,6 +309,7 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
       params: t.Object({ id: t.Number() }),
       body: t.Object({
         userId: t.Number(),
+        storeId: t.Optional(t.Number()),
       }),
       detail: { tags: ["Coupons"], summary: "领取优惠券" },
     }

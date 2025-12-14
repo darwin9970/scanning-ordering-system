@@ -151,6 +151,32 @@ export const getAvailableCoupons = (storeId) => {
 }
 
 /**
+ * 获取可领取优惠券（含已领取状态，需要登录）
+ * @param {number} storeId - 门店ID
+ */
+export const getAvailableCouponsWithStatus = (storeId) => {
+  return get('/mini/coupons/available', { storeId })
+}
+
+/**
+ * 领取优惠券（需要登录）
+ * @param {number} couponId - 优惠券ID
+ * @param {number} storeId - 门店ID
+ */
+export const claimCoupon = (couponId, storeId) => {
+  return post(`/mini/coupons/${couponId}/claim`, { storeId })
+}
+
+// ==================== 下单相关（小程序端） ====================
+/**
+ * 小程序下单（支持积分抵扣）
+ * @param {object} data - { storeId, tableId, items, remark?, usePoints? }
+ */
+export const createMiniOrder = (data) => {
+  return post('/mini/orders', data)
+}
+
+/**
  * 计算优惠
  * @param {object} data - { storeId, items, couponId }
  */
@@ -177,6 +203,33 @@ export const getStoreInfo = (storeId) => {
  */
 export const getBanners = (params) => {
   return get('/mini/banners', params)
+}
+
+// ==================== 会员与登录 ====================
+
+/**
+ * 小程序登录，换取 token
+ * @param {object} data - { code, nickname?, avatar?, phone? }
+ */
+export const login = (data) => {
+  return post('/mini/auth/login', data)
+}
+
+/**
+ * 获取当前门店会员信息（含积分）
+ * @param {number} storeId - 门店ID
+ */
+export const getMemberProfile = (storeId) => {
+  return get('/mini/members/me', { storeId })
+}
+
+/**
+ * 获取积分记录
+ * @param {object} params - 查询参数
+ * @param {number} params.storeId - 门店ID
+ */
+export const getPointsHistory = (params) => {
+  return get('/mini/members/points/history', params)
 }
 
 // ==================== 页面配置相关 ====================
@@ -210,5 +263,7 @@ export default {
   calculateDiscount,
   getStoreInfo,
   getBanners,
+  login,
+  getMemberProfile,
   getPageConfig
 }

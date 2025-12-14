@@ -40,6 +40,8 @@ import { Plus, Search, Edit, Trash2, ImageIcon, X, Package } from "lucide-react"
 import { ImageUpload } from "@/components/ui/image-upload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { toast } from "sonner";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -70,6 +72,8 @@ export default function ProductsPage() {
   const [variants, setVariants] = useState<Variant[]>([]);
   const [attributes, setAttributes] = useState<Attribute[]>([]);
   const [stock, setStock] = useState<number>(999);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingProductId, setDeletingProductId] = useState<number | null>(null);
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -104,6 +108,10 @@ export default function ProductsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setDialogOpen(false);
+      toast.success("商品创建成功");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "创建商品失败");
     },
   });
 
@@ -113,6 +121,10 @@ export default function ProductsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setDialogOpen(false);
+      toast.success("商品更新成功");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "更新商品失败");
     },
   });
 
@@ -120,6 +132,10 @@ export default function ProductsPage() {
     mutationFn: (id: number) => api.deleteProduct(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("商品删除成功");
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "删除商品失败");
     },
   });
 
@@ -247,8 +263,14 @@ export default function ProductsPage() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("确定要删除这个商品吗？")) {
-      deleteMutation.mutate(id);
+    setDeletingProductId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingProductId !== null) {
+      deleteMutation.mutate(deletingProductId);
+      setDeletingProductId(null);
     }
   };
 
@@ -679,6 +701,16 @@ export default function ProductsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="确认删除商品"
+        description="删除后无法恢复，确定要删除这个商品吗？"
+        confirmText="删除"
+        cancelText="取消"
+      />
     </div>
   );
 }

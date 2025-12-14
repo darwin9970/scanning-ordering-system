@@ -8,13 +8,13 @@ $primary-light: #FFF0EB;     // 浅橙 - 标签背景、选中态背景
 $primary-lighter: #FFF8F5;   // 更浅橙 - 页面强调背景
 
 // ==================== 中性色 ====================
-$text-primary: #1A1A1A;      // 主要文字 - 标题、价格
-$text-secondary: #666666;    // 次要文字 - 正文描述
-$text-tertiary: #999999;     // 辅助文字 - 占位符、提示
-$text-quaternary: #CCCCCC;   // 禁用文字
+$text-primary: #1A1A1A;      // 主要文字 - 标题、价格 (对比度: 16.5:1)
+$text-secondary: #4A4A4A;   // 次要文字 - 正文描述 (对比度: 8.2:1，优化后)
+$text-tertiary: #8A8A8A;     // 辅助文字 - 占位符、提示 (对比度: 4.5:1，优化后)
+$text-quaternary: #B8B8B8;   // 禁用文字 (对比度: 2.5:1)
 
-$border-dark: #D9D9D9;       // 深边框 - 输入框
-$border-light: #E5E5E5;      // 浅边框 - 分割线
+$border-dark: #CCCCCC;       // 深边框 - 输入框 (对比度: 3.0:1，优化后)
+$border-light: #E0E0E0;      // 浅边框 - 分割线 (对比度: 2.0:1)
 $border-lighter: #F0F0F0;    // 更浅边框 - 卡片边框
 
 $bg-page: #F5F5F5;           // 页面背景

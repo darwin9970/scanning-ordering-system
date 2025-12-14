@@ -36,6 +36,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Plus, Search, Edit, Trash2, UserCheck, UserX } from "lucide-react";
+import { toast } from "sonner";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 export default function StaffPage() {
   const queryClient = useQueryClient();
@@ -44,6 +46,8 @@ export default function StaffPage() {
   const [keyword, setKeyword] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingStaffId, setDeletingStaffId] = useState<number | null>(null);
 
   const form = useForm<StaffFormData>({
     resolver: zodResolver(staffSchema),
@@ -79,7 +83,7 @@ export default function StaffPage() {
       setDialogOpen(false);
     },
     onError: (error: Error) => {
-      alert(error.message);
+      toast.error(error.message || "操作失败");
     },
   });
 
@@ -96,9 +100,10 @@ export default function StaffPage() {
     mutationFn: (id: number) => api.deleteStaff(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff"] });
+      toast.success("员工删除成功");
     },
     onError: (error: Error) => {
-      alert(error.message);
+      toast.error(error.message || "删除员工失败");
     },
   });
 
@@ -151,8 +156,14 @@ export default function StaffPage() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("确定要删除这个员工吗？")) {
-      deleteMutation.mutate(id);
+    setDeletingStaffId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deletingStaffId !== null) {
+      deleteMutation.mutate(deletingStaffId);
+      setDeletingStaffId(null);
     }
   };
 
@@ -390,6 +401,16 @@ export default function StaffPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="确认删除员工"
+        description="删除后无法恢复，确定要删除这个员工吗？"
+        confirmText="删除"
+        cancelText="取消"
+      />
     </div>
   );
 }
