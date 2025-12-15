@@ -2,12 +2,55 @@ import { Elysia, t } from "elysia";
 import { eq, and, desc, count, sql, like, gte, lte } from "drizzle-orm";
 import { db, members, users, orders, storeMembers } from "../db";
 import { success, error, pagination } from "../lib/utils";
-import { requirePermission } from "../lib/auth";
+import { requirePermission, hasPermission } from "../lib/auth";
+import redis from "../lib/redis";
+import { logOperation } from "../lib/operation-log";
 
 // 积分规则：每消费1元获得1积分
 const POINTS_PER_YUAN = 1;
 // 积分抵扣：100积分抵扣1元
 const POINTS_TO_YUAN = 100;
+const MEMBER_RATE_PREFIX = "rate:member:";
+const MEMBER_IDEM_PREFIX = "idem:member:";
+const MEMBER_RATE_LIMIT = { limit: 10, ttl: 60 };
+
+type IdempotencyResult = { ok: false; message: string } | { ok: true; redisKey?: string };
+
+function getClientIp(headers: Record<string, string | undefined>) {
+  return (
+    headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    headers["x-real-ip"] ||
+    headers["cf-connecting-ip"] ||
+    "unknown"
+  );
+}
+
+async function checkRateLimit(key: string) {
+  if (!redis) return true;
+  const count = await redis.incr(key);
+  if (count === 1) await redis.expire(key, MEMBER_RATE_LIMIT.ttl);
+  return count <= MEMBER_RATE_LIMIT.limit;
+}
+
+async function ensureIdempotent(key?: string): Promise<IdempotencyResult> {
+  if (!key || !redis) return { ok: true };
+  const existing = await redis.get(key);
+  if (existing) return { ok: false, message: "重复请求，请勿重复提交" };
+  await redis.set(key, "processing", "EX", 600, "NX");
+  return { ok: true, redisKey: key };
+}
+
+async function finalizeIdempotent(redisKey?: string) {
+  if (redis && redisKey) {
+    await redis.set(redisKey, "done", "EX", 600);
+  }
+}
+
+async function releaseIdempotent(redisKey?: string) {
+  if (redis && redisKey) {
+    await redis.del(redisKey);
+  }
+}
 
 async function ensureStoreMember(storeId: number, userId: number) {
   const [existing] = await db
@@ -337,14 +380,35 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
   // 使用积分（下单时调用）
   .post(
     "/points/use",
-    async ({ body }) => {
+    async ({ body, headers, user }) => {
+      if (!user || !hasPermission(user.role, "member:write")) {
+        return error("权限不足，需要 member:write", 403);
+      }
+
+      const ip = getClientIp(headers as Record<string, string | undefined>);
+      const rateKey = `${MEMBER_RATE_PREFIX}use:${user.id || ip}`;
+      if (!(await checkRateLimit(rateKey))) {
+        return error("操作过于频繁，请稍后重试", 429);
+      }
+
+      const idempotencyKey = headers["idempotency-key"] as string | undefined;
+      const idemKey = idempotencyKey ? `${MEMBER_IDEM_PREFIX}use:${idempotencyKey}` : undefined;
+      const idemResult = await ensureIdempotent(idemKey);
+      if (!idemResult.ok) {
+        return error(idemResult.message || "重复请求", 409);
+      }
+
       const { userId, points, orderId, description } = body;
 
       const [member] = await db.select().from(members).where(eq(members.userId, userId)).limit(1);
 
-      if (!member) return error("会员不存在", 404);
+      if (!member) {
+        await releaseIdempotent(idemResult.redisKey);
+        return error("会员不存在", 404);
+      }
 
       if (member.points < points) {
+        await releaseIdempotent(idemResult.redisKey);
         return error("积分不足", 400);
       }
 
@@ -356,6 +420,17 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
         })
         .where(eq(members.userId, userId))
         .returning();
+
+      await logOperation({
+        adminId: user.id,
+        action: "points_use",
+        targetType: "member",
+        targetId: member.id,
+        storeId: null,
+        details: { userId, points, orderId, description },
+      });
+
+      await finalizeIdempotent(idemResult.redisKey);
 
       return success(
         {
@@ -380,13 +455,31 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
   // 增加积分（订单完成后调用）
   .post(
     "/points/earn",
-    async ({ body }) => {
+    async ({ body, headers, user }) => {
+      if (!user || !hasPermission(user.role, "member:write")) {
+        return error("权限不足，需要 member:write", 403);
+      }
+
+      const ip = getClientIp(headers as Record<string, string | undefined>);
+      const rateKey = `${MEMBER_RATE_PREFIX}earn:${user.id || ip}`;
+      if (!(await checkRateLimit(rateKey))) {
+        return error("操作过于频繁，请稍后重试", 429);
+      }
+
+      const idempotencyKey = headers["idempotency-key"] as string | undefined;
+      const idemKey = idempotencyKey ? `${MEMBER_IDEM_PREFIX}earn:${idempotencyKey}` : undefined;
+      const idemResult = await ensureIdempotent(idemKey);
+      if (!idemResult.ok) {
+        return error(idemResult.message || "重复请求", 409);
+      }
+
       const { userId, amount, orderId, description } = body;
 
       // 计算获得的积分
       const earnedPoints = Math.floor(amount * POINTS_PER_YUAN);
 
       if (earnedPoints <= 0) {
+        await finalizeIdempotent(idemResult.redisKey);
         return success({ earnedPoints: 0 }, "消费金额过低，未获得积分");
       }
 
@@ -413,16 +506,34 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
       }
 
       // 检查是否需要升级
-      const newLevel = calculateLevel(member!.points);
-      if (newLevel > member!.level) {
+      if (!member) {
+        await releaseIdempotent(idemResult.redisKey);
+        return error("会员数据异常", 500);
+      }
+
+      const memberRecord = member;
+
+      const newLevel = calculateLevel(memberRecord.points);
+      if (newLevel > memberRecord.level) {
         await db.update(members).set({ level: newLevel }).where(eq(members.userId, userId));
       }
 
+      await logOperation({
+        adminId: user.id,
+        action: "points_earn",
+        targetType: "member",
+        targetId: memberRecord.id,
+        storeId: null,
+        details: { userId, amount, orderId, description, earnedPoints },
+      });
+
+      await finalizeIdempotent(idemResult.redisKey);
+
       return success(
         {
-          ...member,
+          ...memberRecord,
           earnedPoints,
-          newLevel: newLevel > member!.level ? newLevel : undefined,
+          newLevel: newLevel > memberRecord.level ? newLevel : undefined,
         },
         `获得 ${earnedPoints} 积分`
       );
@@ -441,7 +552,24 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
   // 管理员调整积分
   .put(
     "/:id/points",
-    async ({ params, body }) => {
+    async ({ params, body, user, headers }) => {
+      if (!user || !hasPermission(user.role, "member:write")) {
+        return error("权限不足，需要 member:write", 403);
+      }
+
+      const ip = getClientIp(headers as Record<string, string | undefined>);
+      const rateKey = `${MEMBER_RATE_PREFIX}adjust:${user.id || ip}`;
+      if (!(await checkRateLimit(rateKey))) {
+        return error("操作过于频繁，请稍后重试", 429);
+      }
+
+      const idempotencyKey = headers["idempotency-key"] as string | undefined;
+      const idemKey = idempotencyKey ? `${MEMBER_IDEM_PREFIX}adjust:${idempotencyKey}` : undefined;
+      const idemResult = await ensureIdempotent(idemKey);
+      if (!idemResult.ok) {
+        return error(idemResult.message || "重复请求", 409);
+      }
+
       const { points, reason } = body;
 
       const [member] = await db
@@ -452,7 +580,21 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
         .where(eq(members.id, params.id))
         .returning();
 
-      if (!member) return error("会员不存在", 404);
+      if (!member) {
+        await releaseIdempotent(idemResult.redisKey);
+        return error("会员不存在", 404);
+      }
+
+      await logOperation({
+        adminId: user.id,
+        action: "points_adjust",
+        targetType: "member",
+        targetId: params.id,
+        storeId: null,
+        details: { points, reason },
+      });
+
+      await finalizeIdempotent(idemResult.redisKey);
 
       return success(member, points > 0 ? "积分增加成功" : "积分扣除成功");
     },
@@ -469,7 +611,17 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
   // 调整会员等级
   .put(
     "/:id/level",
-    async ({ params, body }) => {
+    async ({ params, body, user, headers }) => {
+      if (!user || !hasPermission(user.role, "member:write")) {
+        return error("权限不足，需要 member:write", 403);
+      }
+
+      const ip = getClientIp(headers as Record<string, string | undefined>);
+      const rateKey = `${MEMBER_RATE_PREFIX}level:${user.id || ip}`;
+      if (!(await checkRateLimit(rateKey))) {
+        return error("操作过于频繁，请稍后重试", 429);
+      }
+
       const [member] = await db
         .update(members)
         .set({ level: body.level })
@@ -477,6 +629,15 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
         .returning();
 
       if (!member) return error("会员不存在", 404);
+
+      await logOperation({
+        adminId: user.id,
+        action: "level_adjust",
+        targetType: "member",
+        targetId: params.id,
+        storeId: null,
+        details: { level: body.level },
+      });
 
       return success(member, "等级调整成功");
     },
@@ -532,13 +693,33 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
   // 为用户创建/开通会员
   .post(
     "/create",
-    async ({ body }) => {
+    async ({ body, user, headers }) => {
+      if (!user || !hasPermission(user.role, "member:write")) {
+        return error("权限不足，需要 member:write", 403);
+      }
+
+      const ip = getClientIp(headers as Record<string, string | undefined>);
+      const rateKey = `${MEMBER_RATE_PREFIX}create:${user.id || ip}`;
+      if (!(await checkRateLimit(rateKey))) {
+        return error("操作过于频繁，请稍后重试", 429);
+      }
+
+      const idempotencyKey = headers["idempotency-key"] as string | undefined;
+      const idemKey = idempotencyKey ? `${MEMBER_IDEM_PREFIX}create:${idempotencyKey}` : undefined;
+      const idemResult = await ensureIdempotent(idemKey);
+      if (!idemResult.ok) {
+        return error(idemResult.message || "重复请求", 409);
+      }
+
       const { userId, level, points } = body;
 
       // 检查用户是否存在
-      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      const [userRecord] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
-      if (!user) return error("用户不存在", 404);
+      if (!userRecord) {
+        await releaseIdempotent(idemResult.redisKey);
+        return error("用户不存在", 404);
+      }
 
       // 检查是否已有会员记录
       const [existingMember] = await db
@@ -548,6 +729,7 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
         .limit(1);
 
       if (existingMember) {
+        await releaseIdempotent(idemResult.redisKey);
         return error("该用户已是会员", 400);
       }
 
@@ -560,7 +742,25 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
         })
         .returning();
 
-      return success(member, "会员创建成功");
+      if (!member) {
+        await releaseIdempotent(idemResult.redisKey);
+        return error("会员创建失败", 500);
+      }
+
+      const memberRecord = member;
+
+      await logOperation({
+        adminId: user.id,
+        action: "member_create",
+        targetType: "member",
+        targetId: memberRecord.id,
+        storeId: null,
+        details: { userId, level: memberRecord.level, points: memberRecord.points },
+      });
+
+      await finalizeIdempotent(idemResult.redisKey);
+
+      return success(memberRecord, "会员创建成功");
     },
     {
       body: t.Object({

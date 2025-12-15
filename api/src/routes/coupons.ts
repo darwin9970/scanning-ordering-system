@@ -2,8 +2,51 @@ import { Elysia, t } from "elysia";
 import { eq, and, gte, lte, count, desc, sql } from "drizzle-orm";
 import { db, coupons, userCoupons } from "../db";
 import { success, error, pagination } from "../lib/utils";
-import { requirePermission } from "../lib/auth";
+import { requirePermission, hasPermission } from "../lib/auth";
+import redis from "../lib/redis";
 import { logOperation } from "../lib/operation-log";
+
+const COUPON_RATE_PREFIX = "rate:coupon:";
+const COUPON_IDEM_PREFIX = "idem:coupon:";
+const COUPON_RATE_LIMIT = { limit: 20, ttl: 60 }; // 每分钟 20 次
+
+type IdempotencyResult = { ok: false; message: string } | { ok: true; redisKey?: string };
+
+function getClientIp(headers: Record<string, string | undefined>) {
+  return (
+    headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    headers["x-real-ip"] ||
+    headers["cf-connecting-ip"] ||
+    "unknown"
+  );
+}
+
+async function checkRateLimit(key: string) {
+  if (!redis) return true;
+  const count = await redis.incr(key);
+  if (count === 1) await redis.expire(key, COUPON_RATE_LIMIT.ttl);
+  return count <= COUPON_RATE_LIMIT.limit;
+}
+
+async function ensureIdempotent(key?: string): Promise<IdempotencyResult> {
+  if (!key || !redis) return { ok: true };
+  const existing = await redis.get(key);
+  if (existing) return { ok: false, message: "重复请求，请勿重复提交" };
+  await redis.set(key, "processing", "EX", 600, "NX");
+  return { ok: true, redisKey: key };
+}
+
+async function finalizeIdempotent(redisKey?: string) {
+  if (redis && redisKey) {
+    await redis.set(redisKey, "done", "EX", 600);
+  }
+}
+
+async function releaseIdempotent(redisKey?: string) {
+  if (redis && redisKey) {
+    await redis.del(redisKey);
+  }
+}
 
 export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
   // 优惠券读取需要 coupon:read 权限
@@ -88,7 +131,24 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
   // 创建优惠券
   .post(
     "/",
-    async ({ body }) => {
+    async ({ body, user, headers }) => {
+      if (!user || !hasPermission(user.role, "coupon:write")) {
+        return error("权限不足，需要 coupon:write", 403);
+      }
+
+      const ip = getClientIp(headers as Record<string, string | undefined>);
+      const rateKey = `${COUPON_RATE_PREFIX}create:${user.id || ip}`;
+      if (!(await checkRateLimit(rateKey))) {
+        return error("操作过于频繁，请稍后重试", 429);
+      }
+
+      const idempotencyKey = headers["idempotency-key"] as string | undefined;
+      const idemKey = idempotencyKey ? `${COUPON_IDEM_PREFIX}create:${idempotencyKey}` : undefined;
+      const idemResult = await ensureIdempotent(idemKey);
+      if (!idemResult.ok) {
+        return error(idemResult.message || "重复请求", 409);
+      }
+
       const [coupon] = await db
         .insert(coupons)
         .values({
@@ -105,6 +165,22 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
           description: body.description,
         })
         .returning();
+
+      if (!coupon) {
+        await releaseIdempotent(idemResult.redisKey);
+        return error("优惠券创建失败", 500);
+      }
+
+      await logOperation({
+        adminId: user.id,
+        action: "coupon_create",
+        targetType: "coupon",
+        targetId: coupon.id,
+        storeId: coupon.storeId ?? null,
+        details: { name: coupon.name, type: coupon.type },
+      });
+
+      await finalizeIdempotent(idemResult.redisKey);
 
       return success(coupon, "优惠券创建成功");
     },
@@ -129,7 +205,24 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
   // 更新优惠券
   .put(
     "/:id",
-    async ({ params, body }) => {
+    async ({ params, body, user, headers }) => {
+      if (!user || !hasPermission(user.role, "coupon:write")) {
+        return error("权限不足，需要 coupon:write", 403);
+      }
+
+      const ip = getClientIp(headers as Record<string, string | undefined>);
+      const rateKey = `${COUPON_RATE_PREFIX}update:${user.id || ip}`;
+      if (!(await checkRateLimit(rateKey))) {
+        return error("操作过于频繁，请稍后重试", 429);
+      }
+
+      const idempotencyKey = headers["idempotency-key"] as string | undefined;
+      const idemKey = idempotencyKey ? `${COUPON_IDEM_PREFIX}update:${idempotencyKey}` : undefined;
+      const idemResult = await ensureIdempotent(idemKey);
+      if (!idemResult.ok) {
+        return error(idemResult.message || "重复请求", 409);
+      }
+
       const updateData: Record<string, unknown> = {};
 
       if (body.name !== undefined) updateData.name = body.name;
@@ -150,7 +243,21 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
         .where(eq(coupons.id, params.id))
         .returning();
 
-      if (!coupon) return error("优惠券不存在", 404);
+      if (!coupon) {
+        await releaseIdempotent(idemResult.redisKey);
+        return error("优惠券不存在", 404);
+      }
+
+      await logOperation({
+        adminId: user.id,
+        action: "coupon_update",
+        targetType: "coupon",
+        targetId: coupon.id,
+        storeId: coupon.storeId ?? null,
+        details: { name: coupon.name, status: coupon.status },
+      });
+
+      await finalizeIdempotent(idemResult.redisKey);
 
       return success(coupon, "优惠券更新成功");
     },
@@ -176,7 +283,24 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
   // 删除优惠券
   .delete(
     "/:id",
-    async ({ params, user }) => {
+    async ({ params, user, headers }) => {
+      if (!user || !hasPermission(user.role, "coupon:write")) {
+        return error("权限不足，需要 coupon:write", 403);
+      }
+
+      const ip = getClientIp(headers as Record<string, string | undefined>);
+      const rateKey = `${COUPON_RATE_PREFIX}delete:${user.id || ip}`;
+      if (!(await checkRateLimit(rateKey))) {
+        return error("操作过于频繁，请稍后重试", 429);
+      }
+
+      const idempotencyKey = headers["idempotency-key"] as string | undefined;
+      const idemKey = idempotencyKey ? `${COUPON_IDEM_PREFIX}delete:${idempotencyKey}` : undefined;
+      const idemResult = await ensureIdempotent(idemKey);
+      if (!idemResult.ok) {
+        return error(idemResult.message || "重复请求", 409);
+      }
+
       // 检查是否有已领取的优惠券
       const [usedCount] = await db
         .select({ count: count() })
@@ -198,6 +322,7 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
         storeId: existing?.storeId ?? null,
         details: { name: existing?.name },
       });
+      await finalizeIdempotent(idemResult.redisKey);
       return success(null, "优惠券删除成功");
     },
     {
@@ -258,32 +383,52 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
   // 领取优惠券
   .post(
     "/:id/claim",
-    async ({ params, body }) => {
+    async ({ params, body, headers }) => {
       const { userId, storeId } = body;
       const couponId = params.id;
+
+      const ip = getClientIp(headers as Record<string, string | undefined>);
+      const rateKey = `${COUPON_RATE_PREFIX}claim:${userId || ip}`;
+      if (!(await checkRateLimit(rateKey))) {
+        return error("操作过于频繁，请稍后重试", 429);
+      }
+
+      const idempotencyKey = headers["idempotency-key"] as string | undefined;
+      const idemKey = idempotencyKey ? `${COUPON_IDEM_PREFIX}claim:${idempotencyKey}` : undefined;
+      const idemResult = await ensureIdempotent(idemKey);
+      if (!idemResult.ok) {
+        return error(idemResult.message || "重复请求", 409);
+      }
 
       // 获取优惠券信息
       const [coupon] = await db.select().from(coupons).where(eq(coupons.id, couponId)).limit(1);
 
-      if (!coupon) return error("优惠券不存在", 404);
+      if (!coupon) {
+        await releaseIdempotent(idemResult.redisKey);
+        return error("优惠券不存在", 404);
+      }
 
       if (storeId && coupon.storeId && coupon.storeId !== storeId) {
+        await releaseIdempotent(idemResult.redisKey);
         return error("该优惠券不适用于当前门店", 400);
       }
 
       // 检查状态
       if (coupon.status !== "ACTIVE") {
+        await releaseIdempotent(idemResult.redisKey);
         return error("优惠券已失效", 400);
       }
 
       // 检查时间
       const now = new Date();
       if (now < coupon.startTime || now > coupon.endTime) {
+        await releaseIdempotent(idemResult.redisKey);
         return error("优惠券不在有效期内", 400);
       }
 
       // 检查库存
       if (coupon.totalCount !== -1 && coupon.claimedCount >= coupon.totalCount) {
+        await releaseIdempotent(idemResult.redisKey);
         return error("优惠券已被领完", 400);
       }
 
@@ -294,6 +439,7 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
         .where(and(eq(userCoupons.userId, userId), eq(userCoupons.couponId, couponId)));
 
       if (userClaimedCount && userClaimedCount.count >= coupon.perUserLimit) {
+        await releaseIdempotent(idemResult.redisKey);
         return error("您已达到领取上限", 400);
       }
 
@@ -314,6 +460,7 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
         .set({ claimedCount: sql`${coupons.claimedCount} + 1` })
         .where(eq(coupons.id, couponId));
 
+      await finalizeIdempotent(idemResult.redisKey);
       return success(userCoupon, "领取成功");
     },
     {
