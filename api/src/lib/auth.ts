@@ -61,7 +61,9 @@ export type Permission =
   | "banners:read"
   | "banners:create"
   | "banners:update"
-  | "banners:delete";
+  | "banners:delete"
+  // 上传
+  | "upload:write";
 
 // 所有权限列表（用于前端展示和验证）
 export const ALL_PERMISSIONS: Permission[] = [
@@ -103,6 +105,7 @@ export const ALL_PERMISSIONS: Permission[] = [
   "banners:create",
   "banners:update",
   "banners:delete",
+  "upload:write",
 ];
 
 // JWT Payload 类型
@@ -153,6 +156,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "report:read",
     "service:read",
     "service:write",
+    "upload:write",
   ],
   OWNER: [
     // 店长拥有除门店管理外的所有权限
@@ -187,6 +191,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "report:read",
     "service:read",
     "service:write",
+    "upload:write",
   ],
   STAFF: [
     // 员工只有基础操作权限
