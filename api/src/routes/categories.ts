@@ -3,6 +3,7 @@ import { eq, and, asc, count } from "drizzle-orm";
 import { db, categories, stores, products, categoryPrinters, printers } from "../db";
 import { success, error, pagination } from "../lib/utils";
 import { requirePermission } from "../lib/auth";
+import { logOperation } from "../lib/operation-log";
 
 export const categoryRoutes = new Elysia({ prefix: "/api/categories" })
   // 分类读取需要 category:read 权限
@@ -168,7 +169,7 @@ export const categoryRoutes = new Elysia({ prefix: "/api/categories" })
   )
   .delete(
     "/:id",
-    async ({ params }) => {
+    async ({ params, user }) => {
       const [productCount] = await db
         .select({ count: count() })
         .from(products)
@@ -178,7 +179,21 @@ export const categoryRoutes = new Elysia({ prefix: "/api/categories" })
         return error("该分类下有商品，无法删除", 400);
       }
 
+      const [existing] = await db
+        .select()
+        .from(categories)
+        .where(eq(categories.id, params.id))
+        .limit(1);
       await db.delete(categories).where(eq(categories.id, params.id));
+
+      await logOperation({
+        adminId: user?.id,
+        action: "delete",
+        targetType: "category",
+        targetId: params.id,
+        storeId: existing?.storeId ?? null,
+        details: { name: existing?.name },
+      });
       return success(null, "分类删除成功");
     },
     {

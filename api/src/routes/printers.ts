@@ -3,6 +3,7 @@ import { eq, count } from "drizzle-orm";
 import { db, printers, categoryPrinters, categories } from "../db";
 import { success, error, pagination } from "../lib/utils";
 import { requirePermission } from "../lib/auth";
+import { logOperation } from "../lib/operation-log";
 
 export const printerRoutes = new Elysia({ prefix: "/api/printers" })
   // 打印机读取需要 printer:read 权限
@@ -129,9 +130,23 @@ export const printerRoutes = new Elysia({ prefix: "/api/printers" })
   )
   .delete(
     "/:id",
-    async ({ params }) => {
+    async ({ params, user }) => {
+      const [existing] = await db
+        .select()
+        .from(printers)
+        .where(eq(printers.id, params.id))
+        .limit(1);
       await db.delete(categoryPrinters).where(eq(categoryPrinters.printerId, params.id));
       await db.delete(printers).where(eq(printers.id, params.id));
+
+      await logOperation({
+        adminId: user?.id,
+        action: "delete",
+        targetType: "printer",
+        targetId: params.id,
+        storeId: existing?.storeId ?? null,
+        details: { name: existing?.name, type: existing?.type },
+      });
 
       return success(null, "打印机删除成功");
     },

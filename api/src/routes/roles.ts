@@ -9,6 +9,7 @@ import {
   type Role,
   type Permission,
 } from "../lib/auth";
+import { logOperation } from "../lib/operation-log";
 
 export const roleRoutes = new Elysia({ prefix: "/api/roles" })
   // 获取所有权限列表（供前端展示）
@@ -173,7 +174,7 @@ export const roleRoutes = new Elysia({ prefix: "/api/roles" })
   // 重置角色权限为默认值
   .delete(
     "/:role",
-    async ({ params }) => {
+    async ({ params, user }) => {
       const role = params.role as Role;
 
       // 验证角色是否有效
@@ -183,6 +184,15 @@ export const roleRoutes = new Elysia({ prefix: "/api/roles" })
 
       // 删除自定义配置，恢复默认值
       await db.delete(rolePermissions).where(eq(rolePermissions.role, role));
+
+      await logOperation({
+        adminId: user?.id,
+        action: "role_reset",
+        targetType: "role",
+        targetId: role,
+        storeId: null,
+        details: { role },
+      });
 
       return success(
         {

@@ -3,6 +3,7 @@ import { eq, and, like, count, desc } from "drizzle-orm";
 import { db, admins, stores } from "../db";
 import { hashPassword, success, error } from "../lib/utils";
 import { requirePermission } from "../lib/auth";
+import { logOperation } from "../lib/operation-log";
 
 export const staffRoutes = new Elysia({ prefix: "/api/staff" })
   // 应用权限守卫：需要 staff:read 权限
@@ -203,7 +204,7 @@ export const staffRoutes = new Elysia({ prefix: "/api/staff" })
   // 删除员工
   .delete(
     "/:id",
-    async ({ params }) => {
+    async ({ params, user }) => {
       const [admin] = await db.select().from(admins).where(eq(admins.id, params.id)).limit(1);
 
       if (!admin) {
@@ -216,6 +217,15 @@ export const staffRoutes = new Elysia({ prefix: "/api/staff" })
       }
 
       await db.delete(admins).where(eq(admins.id, params.id));
+
+      await logOperation({
+        adminId: user?.id,
+        action: "delete",
+        targetType: "staff",
+        targetId: params.id,
+        storeId: admin.storeId ?? null,
+        details: { username: admin.username, role: admin.role },
+      });
 
       return success(null, "员工删除成功");
     },

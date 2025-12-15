@@ -3,6 +3,7 @@ import { eq, and, isNull } from "drizzle-orm";
 import { db, settings } from "../db";
 import { success, error } from "../lib/utils";
 import { requireManager } from "../lib/auth";
+import { logOperation } from "../lib/operation-log";
 
 // 默认设置
 const DEFAULT_SETTINGS: Record<string, { value: string; description: string }> = {
@@ -194,7 +195,7 @@ export const settingsRoutes = new Elysia({ prefix: "/api/settings" })
   // 重置设置为默认值
   .delete(
     "/:key",
-    async ({ params, query }) => {
+    async ({ params, query, user }) => {
       const { storeId } = query;
 
       const whereClause = storeId
@@ -202,6 +203,15 @@ export const settingsRoutes = new Elysia({ prefix: "/api/settings" })
         : and(eq(settings.key, params.key), isNull(settings.storeId));
 
       await db.delete(settings).where(whereClause);
+
+      await logOperation({
+        adminId: user?.id,
+        action: "settings_reset",
+        targetType: "setting",
+        targetId: params.key,
+        storeId: storeId ?? null,
+        details: {},
+      });
 
       return success(null, "设置已重置为默认值");
     },

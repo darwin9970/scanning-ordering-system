@@ -3,6 +3,7 @@ import { eq, and, like, desc, count } from "drizzle-orm";
 import { db, products, categories, productVariants, productAttributes } from "../db";
 import { success, error, pagination } from "../lib/utils";
 import { requirePermission } from "../lib/auth";
+import { logOperation } from "../lib/operation-log";
 
 export const productRoutes = new Elysia({ prefix: "/api/products" })
   // 读取商品需要 product:read 权限
@@ -202,8 +203,23 @@ export const productRoutes = new Elysia({ prefix: "/api/products" })
   )
   .delete(
     "/:id",
-    async ({ params }) => {
+    async ({ params, user }) => {
+      const [existing] = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, params.id))
+        .limit(1);
       await db.delete(products).where(eq(products.id, params.id));
+
+      await logOperation({
+        adminId: user?.id,
+        action: "delete",
+        targetType: "product",
+        targetId: params.id,
+        storeId: existing?.storeId ?? null,
+        details: { name: existing?.name },
+      });
+
       return success(null, "商品删除成功");
     },
     {

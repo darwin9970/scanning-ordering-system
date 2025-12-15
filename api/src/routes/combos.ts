@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { eq, and, desc, count } from "drizzle-orm";
 import { db, combos, comboItems, products, productVariants } from "../db";
 import { success, error, pagination } from "../lib/utils";
+import { logOperation } from "../lib/operation-log";
 
 export const comboRoutes = new Elysia({ prefix: "/api/combos" })
   // 获取套餐列表
@@ -311,8 +312,18 @@ export const comboRoutes = new Elysia({ prefix: "/api/combos" })
   .delete(
     "/:id",
     async ({ params }) => {
+      const [existing] = await db.select().from(combos).where(eq(combos.id, params.id)).limit(1);
       await db.delete(comboItems).where(eq(comboItems.comboId, params.id));
       await db.delete(combos).where(eq(combos.id, params.id));
+
+      await logOperation({
+        adminId: null,
+        action: "delete",
+        targetType: "combo",
+        targetId: params.id,
+        storeId: existing?.storeId ?? null,
+        details: { name: existing?.name },
+      });
       return success(null, "套餐删除成功");
     },
     {

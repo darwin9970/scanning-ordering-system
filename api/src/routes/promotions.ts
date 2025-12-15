@@ -3,6 +3,7 @@ import { eq, and, gte, lte, count, desc } from "drizzle-orm";
 import { db, promotions } from "../db";
 import { success, error, pagination } from "../lib/utils";
 import { requirePermission } from "../lib/auth";
+import { logOperation } from "../lib/operation-log";
 
 // 满减规则类型
 interface FullReduceRule {
@@ -192,8 +193,22 @@ export const promotionRoutes = new Elysia({ prefix: "/api/promotions" })
   // 删除活动
   .delete(
     "/:id",
-    async ({ params }) => {
+    async ({ params, user }) => {
+      const [existing] = await db
+        .select()
+        .from(promotions)
+        .where(eq(promotions.id, params.id))
+        .limit(1);
       await db.delete(promotions).where(eq(promotions.id, params.id));
+
+      await logOperation({
+        adminId: user?.id,
+        action: "delete",
+        targetType: "promotion",
+        targetId: params.id,
+        storeId: existing?.storeId ?? null,
+        details: { name: existing?.name, type: existing?.type },
+      });
       return success(null, "活动删除成功");
     },
     {

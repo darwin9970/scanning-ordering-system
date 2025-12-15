@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { db, banners } from "../db";
 import { eq, and, desc, isNull, or, lte, gte } from "drizzle-orm";
 import { requirePermission } from "../lib/auth";
+import { logOperation } from "../lib/operation-log";
 
 // 公开接口 (小程序用)
 const publicRoutes = new Elysia().get(
@@ -195,7 +196,7 @@ const adminRoutes = new Elysia()
   // 删除 Banner
   .delete(
     "/:id",
-    async ({ params }) => {
+    async ({ params, user }) => {
       const [deleted] = await db
         .delete(banners)
         .where(eq(banners.id, Number(params.id)))
@@ -204,6 +205,15 @@ const adminRoutes = new Elysia()
       if (!deleted) {
         return { code: 404, message: "Banner不存在" };
       }
+
+      await logOperation({
+        adminId: user?.id,
+        action: "delete",
+        targetType: "banner",
+        targetId: Number(params.id),
+        storeId: deleted.storeId ?? null,
+        details: { title: deleted.title, position: deleted.position },
+      });
 
       return { code: 200, message: "删除成功" };
     },

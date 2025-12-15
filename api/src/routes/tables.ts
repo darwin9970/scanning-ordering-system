@@ -3,6 +3,7 @@ import { eq, and, asc, count } from "drizzle-orm";
 import { db, tables, stores } from "../db";
 import { success, error, pagination, generateQrToken } from "../lib/utils";
 import { requirePermission } from "../lib/auth";
+import { logOperation } from "../lib/operation-log";
 
 export const tableRoutes = new Elysia({ prefix: "/api/tables" })
   // 桌台读取需要 table:read 权限
@@ -226,8 +227,18 @@ export const tableRoutes = new Elysia({ prefix: "/api/tables" })
   )
   .delete(
     "/:id",
-    async ({ params }) => {
+    async ({ params, user }) => {
+      const [existing] = await db.select().from(tables).where(eq(tables.id, params.id)).limit(1);
       await db.delete(tables).where(eq(tables.id, params.id));
+
+      await logOperation({
+        adminId: user?.id,
+        action: "delete",
+        targetType: "table",
+        targetId: params.id,
+        storeId: existing?.storeId ?? null,
+        details: { name: existing?.name },
+      });
 
       return success(null, "桌台删除成功");
     },

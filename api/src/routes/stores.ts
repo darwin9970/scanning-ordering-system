@@ -3,6 +3,7 @@ import { eq, like, or, desc, count } from "drizzle-orm";
 import { db, stores, tables, categories, printers, products, orders } from "../db";
 import { success, error, pagination } from "../lib/utils";
 import { requirePermission } from "../lib/auth";
+import { logOperation } from "../lib/operation-log";
 
 export const storeRoutes = new Elysia({ prefix: "/api/stores" })
   // 门店管理需要 store:read 权限（仅超管拥有 store:write/delete）
@@ -151,11 +152,13 @@ export const storeRoutes = new Elysia({ prefix: "/api/stores" })
         coverImage: t.Optional(t.String()),
         description: t.Optional(t.String()),
         announcement: t.Optional(t.String()),
-        businessHours: t.Optional(t.Object({
-          open: t.String(),
-          close: t.String(),
-          restDays: t.Optional(t.Array(t.Number())),
-        })),
+        businessHours: t.Optional(
+          t.Object({
+            open: t.String(),
+            close: t.String(),
+            restDays: t.Optional(t.Array(t.Number())),
+          })
+        ),
         minOrderAmount: t.Optional(t.Number()),
         serviceChargeRate: t.Optional(t.Number()),
         autoConfirmOrder: t.Optional(t.Boolean()),
@@ -188,10 +191,13 @@ export const storeRoutes = new Elysia({ prefix: "/api/stores" })
       if (body.announcement !== undefined) updateData.announcement = body.announcement;
       if (body.status !== undefined) updateData.status = body.status;
       if (body.businessHours !== undefined) updateData.businessHours = body.businessHours;
-      if (body.minOrderAmount !== undefined) updateData.minOrderAmount = body.minOrderAmount.toString();
-      if (body.serviceChargeRate !== undefined) updateData.serviceChargeRate = body.serviceChargeRate.toString();
+      if (body.minOrderAmount !== undefined)
+        updateData.minOrderAmount = body.minOrderAmount.toString();
+      if (body.serviceChargeRate !== undefined)
+        updateData.serviceChargeRate = body.serviceChargeRate.toString();
       if (body.autoConfirmOrder !== undefined) updateData.autoConfirmOrder = body.autoConfirmOrder;
-      if (body.autoCompleteMinutes !== undefined) updateData.autoCompleteMinutes = body.autoCompleteMinutes;
+      if (body.autoCompleteMinutes !== undefined)
+        updateData.autoCompleteMinutes = body.autoCompleteMinutes;
       if (body.wifiName !== undefined) updateData.wifiName = body.wifiName;
       if (body.wifiPassword !== undefined) updateData.wifiPassword = body.wifiPassword;
       if (body.contactName !== undefined) updateData.contactName = body.contactName;
@@ -222,11 +228,13 @@ export const storeRoutes = new Elysia({ prefix: "/api/stores" })
         description: t.Optional(t.String()),
         announcement: t.Optional(t.String()),
         status: t.Optional(t.String()),
-        businessHours: t.Optional(t.Object({
-          open: t.String(),
-          close: t.String(),
-          restDays: t.Optional(t.Array(t.Number())),
-        })),
+        businessHours: t.Optional(
+          t.Object({
+            open: t.String(),
+            close: t.String(),
+            restDays: t.Optional(t.Array(t.Number())),
+          })
+        ),
         minOrderAmount: t.Optional(t.Number()),
         serviceChargeRate: t.Optional(t.Number()),
         autoConfirmOrder: t.Optional(t.Boolean()),
@@ -246,8 +254,18 @@ export const storeRoutes = new Elysia({ prefix: "/api/stores" })
   )
   .delete(
     "/:id",
-    async ({ params }) => {
+    async ({ params, user }) => {
+      const [existing] = await db.select().from(stores).where(eq(stores.id, params.id)).limit(1);
       await db.delete(stores).where(eq(stores.id, params.id));
+
+      await logOperation({
+        adminId: user?.id,
+        action: "delete",
+        targetType: "store",
+        targetId: params.id,
+        storeId: params.id,
+        details: { name: existing?.name },
+      });
 
       return success(null, "门店删除成功");
     },

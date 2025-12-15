@@ -3,6 +3,7 @@ import { eq, and, gte, lte, count, desc, sql } from "drizzle-orm";
 import { db, coupons, userCoupons } from "../db";
 import { success, error, pagination } from "../lib/utils";
 import { requirePermission } from "../lib/auth";
+import { logOperation } from "../lib/operation-log";
 
 export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
   // 优惠券读取需要 coupon:read 权限
@@ -175,7 +176,7 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
   // 删除优惠券
   .delete(
     "/:id",
-    async ({ params }) => {
+    async ({ params, user }) => {
       // 检查是否有已领取的优惠券
       const [usedCount] = await db
         .select({ count: count() })
@@ -186,7 +187,17 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
         return error("该优惠券已有用户领取，无法删除", 400);
       }
 
+      const [existing] = await db.select().from(coupons).where(eq(coupons.id, params.id)).limit(1);
       await db.delete(coupons).where(eq(coupons.id, params.id));
+
+      await logOperation({
+        adminId: user?.id,
+        action: "delete",
+        targetType: "coupon",
+        targetId: params.id,
+        storeId: existing?.storeId ?? null,
+        details: { name: existing?.name },
+      });
       return success(null, "优惠券删除成功");
     },
     {
