@@ -107,7 +107,15 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
       ]);
 
       return success({
-        list: orderList.map((r) => ({ ...r.orders, table: r.tables })),
+        list: orderList.map(
+          (r: {
+            orders: typeof orders.$inferSelect;
+            tables: typeof tables.$inferSelect | null;
+          }) => ({
+            ...r.orders,
+            table: r.tables,
+          })
+        ),
         total: totalResult[0]?.count ?? 0,
         page: page || 1,
         pageSize: take,
@@ -643,7 +651,7 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
 
       // 获取加菜单的订单项
       const additionItems = await Promise.all(
-        additions.map(async (add) => {
+        additions.map(async (add: typeof orders.$inferSelect) => {
           const addItems = await db.select().from(orderItems).where(eq(orderItems.orderId, add.id));
           return { ...add, items: addItems };
         })
@@ -656,7 +664,10 @@ export const orderRoutes = new Elysia({ prefix: "/api/orders" })
         additions: additionItems,
         totalWithAdditions:
           Number(order.orders.payAmount) +
-          additions.reduce((sum, a) => sum + Number(a.payAmount), 0),
+          additions.reduce(
+            (sum: number, a: typeof orders.$inferSelect) => sum + Number(a.payAmount),
+            0
+          ),
       });
     },
     {

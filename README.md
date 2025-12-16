@@ -107,18 +107,72 @@ bun run dev
 
 ### 方式二：Docker 部署
 
+#### 快速启动（首次部署）
+
 ```bash
-# 复制环境变量
+# 1. 复制环境变量（如果不存在）
 cp .env.example .env
 
-# 启动所有服务
+# 2. 启动所有服务
 docker-compose up -d
 
+# 3. 等待服务启动（约 20-30 秒）
+# 检查服务状态
+docker-compose ps
+
+# 4. 初始化数据库（自动确认，无需交互）
+docker-compose exec -T api bunx drizzle-kit push --force
+
+# 5. （可选）初始化测试数据
+docker-compose exec -T api bun run db:seed
+
+# 6. （可选）初始化页面配置
+docker-compose exec -T api bun run init:page-configs
+```
+
+#### 重新部署（代码更新后）
+
+```bash
+# 1. 停止并删除旧容器
+docker-compose down
+
+# 2. 重新构建镜像（代码更新后需要）
+docker-compose build --no-cache api worker admin
+
+# 3. 启动所有服务
+docker-compose up -d
+
+# 4. 检查服务状态
+docker-compose ps
+
+# 5. 查看日志
+docker-compose logs -f api
+```
+
+#### 常用命令
+
+```bash
+# 查看服务状态
+docker-compose ps
+
 # 查看日志
-docker-compose logs -f
+docker-compose logs -f              # 所有服务
+docker-compose logs -f api          # API 服务
+docker-compose logs -f admin        # Admin 服务
+
+# 重启服务
+docker-compose restart api
+docker-compose restart admin
 
 # 停止服务
 docker-compose down
+
+# 停止并删除数据卷（⚠️ 会删除数据库数据）
+docker-compose down -v
+
+# 进入容器
+docker-compose exec api sh
+docker-compose exec admin sh
 ```
 
 ### 访问地址

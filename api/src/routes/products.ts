@@ -36,7 +36,15 @@ export const productRoutes = new Elysia({ prefix: "/api/products" })
       ]);
 
       return success({
-        list: productList.map((r) => ({ ...r.products, category: r.categories })),
+        list: productList.map(
+          (r: {
+            products: typeof products.$inferSelect;
+            categories: typeof categories.$inferSelect | null;
+          }) => ({
+            ...r.products,
+            category: r.categories,
+          })
+        ),
         total: totalResult[0]?.count ?? 0,
         page: page || 1,
         pageSize: take,

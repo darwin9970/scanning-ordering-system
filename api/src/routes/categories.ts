@@ -33,25 +33,32 @@ export const categoryRoutes = new Elysia({ prefix: "/api/categories" })
       ]);
 
       const result = await Promise.all(
-        categoryList.map(async (row) => {
-          const [productCount] = await db
-            .select({ count: count() })
-            .from(products)
-            .where(eq(products.categoryId, row.categories.id));
+        categoryList.map(
+          async (row: {
+            categories: typeof categories.$inferSelect;
+            stores: typeof stores.$inferSelect | null;
+          }) => {
+            const [productCount] = await db
+              .select({ count: count() })
+              .from(products)
+              .where(eq(products.categoryId, row.categories.id));
 
-          const printerList = await db
-            .select({ printer: printers })
-            .from(categoryPrinters)
-            .leftJoin(printers, eq(categoryPrinters.printerId, printers.id))
-            .where(eq(categoryPrinters.categoryId, row.categories.id));
+            const printerList = await db
+              .select({ printer: printers })
+              .from(categoryPrinters)
+              .leftJoin(printers, eq(categoryPrinters.printerId, printers.id))
+              .where(eq(categoryPrinters.categoryId, row.categories.id));
 
-          return {
-            ...row.categories,
-            store: row.stores,
-            _count: { products: productCount?.count ?? 0 },
-            printers: printerList.map((p) => ({ printer: p.printer })),
-          };
-        })
+            return {
+              ...row.categories,
+              store: row.stores,
+              _count: { products: productCount?.count ?? 0 },
+              printers: printerList.map((p: { printer: typeof printers.$inferSelect | null }) => ({
+                printer: p.printer,
+              })),
+            };
+          }
+        )
       );
 
       return success({

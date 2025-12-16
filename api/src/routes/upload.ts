@@ -4,7 +4,7 @@ import { existsSync } from "fs";
 import { join } from "path";
 import { success, error } from "../lib/utils";
 import { requirePermission } from "../lib/auth";
-import redis from "../lib/redis";
+import { getRedis } from "../lib/redis";
 
 // 上传目录
 const UPLOAD_DIR = join(process.cwd(), "uploads");
@@ -45,6 +45,7 @@ function getClientIp(headers: Record<string, string | undefined>) {
 }
 
 async function checkRateLimit(key: string) {
+  const redis = getRedis();
   if (!redis) return true;
   const count = await redis.incr(key);
   if (count === 1) await redis.expire(key, UPLOAD_RATE_LIMIT.ttl);

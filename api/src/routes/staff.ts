@@ -39,17 +39,19 @@ export const staffRoutes = new Elysia({ prefix: "/api/staff" })
       ]);
 
       return success({
-        list: result.map((r) => ({
-          id: r.admin.id,
-          username: r.admin.username,
-          name: r.admin.name,
-          role: r.admin.role,
-          status: r.admin.status,
-          storeId: r.admin.storeId,
-          store: r.store,
-          createdAt: r.admin.createdAt,
-          updatedAt: r.admin.updatedAt,
-        })),
+        list: result.map(
+          (r: { admin: typeof admins.$inferSelect; store: typeof stores.$inferSelect | null }) => ({
+            id: r.admin.id,
+            username: r.admin.username,
+            name: r.admin.name,
+            role: r.admin.role,
+            status: r.admin.status,
+            storeId: r.admin.storeId,
+            store: r.store,
+            createdAt: r.admin.createdAt,
+            updatedAt: r.admin.updatedAt,
+          })
+        ),
         total: totalResult[0]?.count ?? 0,
         page,
         pageSize,

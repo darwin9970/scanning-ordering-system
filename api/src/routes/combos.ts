@@ -31,7 +31,7 @@ export const comboRoutes = new Elysia({ prefix: "/api/combos" })
 
       // 获取每个套餐的商品列表
       const result = await Promise.all(
-        comboList.map(async (combo) => {
+        comboList.map(async (combo: typeof combos.$inferSelect) => {
           const items = await db
             .select({
               comboItem: comboItems,
@@ -45,11 +45,17 @@ export const comboRoutes = new Elysia({ prefix: "/api/combos" })
 
           return {
             ...combo,
-            items: items.map((i) => ({
-              ...i.comboItem,
-              product: i.product,
-              variant: i.variant,
-            })),
+            items: items.map(
+              (i: {
+                comboItem: typeof comboItems.$inferSelect;
+                product: typeof products.$inferSelect | null;
+                variant: typeof productVariants.$inferSelect | null;
+              }) => ({
+                ...i.comboItem,
+                product: i.product,
+                variant: i.variant,
+              })
+            ),
           };
         })
       );
@@ -94,11 +100,17 @@ export const comboRoutes = new Elysia({ prefix: "/api/combos" })
 
       return success({
         ...combo,
-        items: items.map((i) => ({
-          ...i.comboItem,
-          product: i.product,
-          variant: i.variant,
-        })),
+        items: items.map(
+          (i: {
+            comboItem: typeof comboItems.$inferSelect;
+            product: typeof products.$inferSelect | null;
+            variant: typeof productVariants.$inferSelect | null;
+          }) => ({
+            ...i.comboItem,
+            product: i.product,
+            variant: i.variant,
+          })
+        ),
       });
     },
     {

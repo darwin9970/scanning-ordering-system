@@ -3,7 +3,7 @@ import { eq, and, desc, count, sql, like, gte, lte } from "drizzle-orm";
 import { db, members, users, orders, storeMembers } from "../db";
 import { success, error, pagination } from "../lib/utils";
 import { requirePermission, hasPermission } from "../lib/auth";
-import redis from "../lib/redis";
+import redis, { getRedis } from "../lib/redis";
 import { logOperation } from "../lib/operation-log";
 
 // 积分规则：每消费1元获得1积分
@@ -26,29 +26,36 @@ function getClientIp(headers: Record<string, string | undefined>) {
 }
 
 async function checkRateLimit(key: string) {
-  if (!redis) return true;
-  const count = await redis.incr(key);
-  if (count === 1) await redis.expire(key, MEMBER_RATE_LIMIT.ttl);
+  const client = getRedis();
+  if (!client) return true;
+  const count = await client.incr(key);
+  if (count === 1) await client.expire(key, MEMBER_RATE_LIMIT.ttl);
+  if (process.env.NODE_ENV === "test") {
+    console.log("[test] member rate key", key, "count", count);
+  }
   return count <= MEMBER_RATE_LIMIT.limit;
 }
 
 async function ensureIdempotent(key?: string): Promise<IdempotencyResult> {
-  if (!key || !redis) return { ok: true };
-  const existing = await redis.get(key);
+  const client = getRedis();
+  if (!key || !client) return { ok: true };
+  const existing = await client.get(key);
   if (existing) return { ok: false, message: "重复请求，请勿重复提交" };
-  await redis.set(key, "processing", "EX", 600, "NX");
+  await client.set(key, "processing", "EX", 600, "NX");
   return { ok: true, redisKey: key };
 }
 
 async function finalizeIdempotent(redisKey?: string) {
-  if (redis && redisKey) {
-    await redis.set(redisKey, "done", "EX", 600);
+  const client = getRedis();
+  if (client && redisKey) {
+    await client.set(redisKey, "done", "EX", 600);
   }
 }
 
 async function releaseIdempotent(redisKey?: string) {
-  if (redis && redisKey) {
-    await redis.del(redisKey);
+  const client = getRedis();
+  if (client && redisKey) {
+    await client.del(redisKey);
   }
 }
 
@@ -104,10 +111,12 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
       ]);
 
       return success({
-        list: userList.map((r) => ({
-          ...r.user,
-          member: r.member,
-        })),
+        list: userList.map(
+          (r: { user: typeof users.$inferSelect; member: typeof members.$inferSelect | null }) => ({
+            ...r.user,
+            member: r.member,
+          })
+        ),
         total: totalResult[0]?.count ?? 0,
         page: page || 1,
         pageSize: take,
@@ -179,24 +188,29 @@ export const memberRoutes = new Elysia({ prefix: "/api/members" })
 
       // 获取每个会员的消费统计
       const result = await Promise.all(
-        memberList.map(async (r) => {
-          const [stats] = await db
-            .select({
-              totalOrders: count(),
-              totalAmount: sql<string>`COALESCE(SUM(${orders.payAmount}), 0)`,
-            })
-            .from(orders)
-            .where(eq(orders.userId, r.member.userId));
+        memberList.map(
+          async (r: {
+            member: typeof members.$inferSelect;
+            user: typeof users.$inferSelect | null;
+          }) => {
+            const [stats] = await db
+              .select({
+                totalOrders: count(),
+                totalAmount: sql<string>`COALESCE(SUM(${orders.payAmount}), 0)`,
+              })
+              .from(orders)
+              .where(eq(orders.userId, r.member.userId));
 
-          return {
-            ...r.member,
-            user: r.user,
-            stats: {
-              totalOrders: stats?.totalOrders ?? 0,
-              totalAmount: Number(stats?.totalAmount || 0),
-            },
-          };
-        })
+            return {
+              ...r.member,
+              user: r.user,
+              stats: {
+                totalOrders: stats?.totalOrders ?? 0,
+                totalAmount: Number(stats?.totalAmount || 0),
+              },
+            };
+          }
+        )
       );
 
       return success({

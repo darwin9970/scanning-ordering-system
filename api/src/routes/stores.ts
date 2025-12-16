@@ -39,7 +39,7 @@ export const storeRoutes = new Elysia({ prefix: "/api/stores" })
 
       // 获取关联计数
       const storesWithCounts = await Promise.all(
-        storeList.map(async (store) => {
+        storeList.map(async (store: typeof stores.$inferSelect) => {
           const [tableCount, productCount] = await Promise.all([
             db.select({ count: count() }).from(tables).where(eq(tables.storeId, store.id)),
             db.select({ count: count() }).from(products).where(eq(products.storeId, store.id)),

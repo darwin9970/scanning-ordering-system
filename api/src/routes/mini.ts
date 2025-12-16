@@ -271,14 +271,23 @@ export const miniRoutes = new Elysia({ prefix: "/mini" })
         .limit(100);
 
       return success({
-        logs: logs.map((log) => ({
-          id: log.id,
-          change: log.change,
-          reason: log.reason,
-          createdAt: log.createdAt,
-          orderId: log.orderId,
-          orderNo: log.orderNo || undefined,
-        })),
+        logs: logs.map(
+          (log: {
+            id: number;
+            change: number;
+            reason: string;
+            createdAt: Date;
+            orderId: number | null;
+            orderNo: string | null;
+          }) => ({
+            id: log.id,
+            change: log.change,
+            reason: log.reason,
+            createdAt: log.createdAt,
+            orderId: log.orderId,
+            orderNo: log.orderNo || undefined,
+          })
+        ),
         currentPoints: member.points,
       });
     },
@@ -319,9 +328,11 @@ export const miniRoutes = new Elysia({ prefix: "/mini" })
         .from(userCoupons)
         .where(and(eq(userCoupons.userId, userId), eq(userCoupons.storeId, storeId)))
         .groupBy(userCoupons.couponId);
-      const map = new Map(userCouponList.map((uc) => [uc.couponId, uc.count]));
+      const map = new Map(
+        userCouponList.map((uc: { couponId: number; count: number }) => [uc.couponId, uc.count])
+      );
 
-      const result = couponList.map((c) => {
+      const result = couponList.map((c: typeof coupons.$inferSelect) => {
         const claimed = map.get(c.id) || 0;
         return { ...c, claimed, canClaim: claimed < c.perUserLimit };
       });
@@ -628,18 +639,23 @@ export const miniRoutes = new Elysia({ prefix: "/mini" })
         .orderBy(asc(products.sort));
 
       return success({
-        list: productList.map((r) => ({
-          id: r.products.id,
-          categoryId: r.products.categoryId,
-          name: r.products.name,
-          description: r.products.description,
-          image: r.products.imageUrl,
-          price: Number(r.products.basePrice),
-          sales: r.products.sales,
-          status: r.products.status,
-          createdAt: r.products.createdAt,
-          category: r.categories ? { id: r.categories.id, name: r.categories.name } : null,
-        })),
+        list: productList.map(
+          (r: {
+            products: typeof products.$inferSelect;
+            categories: typeof categories.$inferSelect | null;
+          }) => ({
+            id: r.products.id,
+            categoryId: r.products.categoryId,
+            name: r.products.name,
+            description: r.products.description,
+            image: r.products.imageUrl,
+            price: Number(r.products.basePrice),
+            sales: r.products.sales,
+            status: r.products.status,
+            createdAt: r.products.createdAt,
+            category: r.categories ? { id: r.categories.id, name: r.categories.name } : null,
+          })
+        ),
       });
     },
     {
@@ -720,7 +736,7 @@ export const miniRoutes = new Elysia({ prefix: "/mini" })
       const couponList = await db.select().from(coupons).where(eq(coupons.storeId, storeId));
 
       // 过滤有效的优惠券
-      const validCoupons = couponList.filter((c) => {
+      const validCoupons = couponList.filter((c: typeof coupons.$inferSelect) => {
         if (c.status !== "ACTIVE") return false;
         if (c.startTime && new Date(c.startTime) > now) return false;
         if (c.endTime && new Date(c.endTime) < now) return false;

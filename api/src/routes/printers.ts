@@ -22,7 +22,7 @@ export const printerRoutes = new Elysia({ prefix: "/api/printers" })
       ]);
 
       const result = await Promise.all(
-        printerList.map(async (printer) => {
+        printerList.map(async (printer: typeof printers.$inferSelect) => {
           const cats = await db
             .select({ category: categories })
             .from(categoryPrinters)
@@ -31,7 +31,9 @@ export const printerRoutes = new Elysia({ prefix: "/api/printers" })
 
           return {
             ...printer,
-            categories: cats.map((c) => ({ category: c.category })),
+            categories: cats.map((c: { category: typeof categories.$inferSelect | null }) => ({
+              category: c.category,
+            })),
           };
         })
       );

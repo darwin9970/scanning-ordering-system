@@ -3,7 +3,7 @@ import { eq, and, asc, count } from "drizzle-orm";
 import { db, tables, stores } from "../db";
 import { success, error, pagination, generateQrToken } from "../lib/utils";
 import { requirePermission, hasPermission } from "../lib/auth";
-import redis from "../lib/redis";
+import { getRedis } from "../lib/redis";
 import { logOperation } from "../lib/operation-log";
 
 const TABLE_RATE_PREFIX = "rate:table:";
@@ -22,6 +22,7 @@ function getClientIp(headers: Record<string, string | undefined>) {
 }
 
 async function checkRateLimit(key: string) {
+  const redis = getRedis();
   if (!redis) return true;
   const countVal = await redis.incr(key);
   if (countVal === 1) await redis.expire(key, TABLE_RATE_LIMIT.ttl);
@@ -29,6 +30,7 @@ async function checkRateLimit(key: string) {
 }
 
 async function ensureIdempotent(key?: string): Promise<IdempotencyResult> {
+  const redis = getRedis();
   if (!key || !redis) return { ok: true };
   const existing = await redis.get(key);
   if (existing) return { ok: false, message: "重复请求，请勿重复提交" };
@@ -37,12 +39,14 @@ async function ensureIdempotent(key?: string): Promise<IdempotencyResult> {
 }
 
 async function finalizeIdempotent(redisKey?: string) {
+  const redis = getRedis();
   if (redis && redisKey) {
     await redis.set(redisKey, "done", "EX", 600);
   }
 }
 
 async function releaseIdempotent(redisKey?: string) {
+  const redis = getRedis();
   if (redis && redisKey) {
     await redis.del(redisKey);
   }
@@ -79,7 +83,15 @@ export const tableRoutes = new Elysia({ prefix: "/api/tables" })
       ]);
 
       return success({
-        list: tableList.map((r) => ({ ...r.table, store: r.store })),
+        list: tableList.map(
+          (r: {
+            table: typeof tables.$inferSelect;
+            store: { id: number; name: string } | null;
+          }) => ({
+            ...r.table,
+            store: r.store,
+          })
+        ),
         total: totalResult[0]?.count ?? 0,
         page: page || 1,
         pageSize: take,

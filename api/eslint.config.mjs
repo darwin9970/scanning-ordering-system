@@ -25,6 +25,10 @@ const eslintConfig = [
         require: "readonly",
         Bun: "readonly",
         Response: "readonly",
+        Request: "readonly",
+        FormData: "readonly",
+        File: "readonly",
+        Blob: "readonly",
         setTimeout: "readonly",
         setInterval: "readonly",
         clearTimeout: "readonly",
@@ -58,6 +62,23 @@ const eslintConfig = [
 
       // Indentation - let Prettier handle it
       indent: "off",
+    },
+  },
+  {
+    files: ["**/*.spec.ts", "**/*.test.ts"],
+    languageOptions: {
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
+    },
+    rules: {
+      // Allow dynamic imports in test files (Bun supports them)
+      "@typescript-eslint/no-unsupported-features/es-syntax": "off",
+      // Allow any types in test files for mocks
+      "@typescript-eslint/no-explicit-any": "off",
+      // Disable TypeScript compiler checks for dynamic imports
+      "no-restricted-syntax": "off",
     },
   },
   {

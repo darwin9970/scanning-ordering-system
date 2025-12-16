@@ -147,7 +147,17 @@ export const dashboardRoutes = new Elysia({ prefix: "/api/dashboard" })
         .orderBy(desc(products.sales))
         .limit(limit);
 
-      return success(productList.map((r) => ({ ...r.products, category: r.categories })));
+      return success(
+        productList.map(
+          (r: {
+            products: typeof products.$inferSelect;
+            categories: typeof categories.$inferSelect | null;
+          }) => ({
+            ...r.products,
+            category: r.categories,
+          })
+        )
+      );
     },
     {
       query: t.Object({
@@ -173,7 +183,17 @@ export const dashboardRoutes = new Elysia({ prefix: "/api/dashboard" })
         .orderBy(desc(orders.createdAt))
         .limit(limit);
 
-      return success(orderList.map((r) => ({ ...r.orders, table: r.tables })));
+      return success(
+        orderList.map(
+          (r: {
+            orders: typeof orders.$inferSelect;
+            tables: typeof tables.$inferSelect | null;
+          }) => ({
+            ...r.orders,
+            table: r.tables,
+          })
+        )
+      );
     },
     {
       query: t.Object({
@@ -192,7 +212,7 @@ export const dashboardRoutes = new Elysia({ prefix: "/api/dashboard" })
       const categoryList = await db.select().from(categories).where(conditions);
 
       const result = await Promise.all(
-        categoryList.map(async (cat) => {
+        categoryList.map(async (cat: typeof categories.$inferSelect) => {
           const [productCount] = await db
             .select({ count: count() })
             .from(products)

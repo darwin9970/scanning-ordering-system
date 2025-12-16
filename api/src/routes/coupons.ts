@@ -3,7 +3,7 @@ import { eq, and, gte, lte, count, desc, sql } from "drizzle-orm";
 import { db, coupons, userCoupons } from "../db";
 import { success, error, pagination } from "../lib/utils";
 import { requirePermission, hasPermission } from "../lib/auth";
-import redis from "../lib/redis";
+import { getRedis } from "../lib/redis";
 import { logOperation } from "../lib/operation-log";
 
 const COUPON_RATE_PREFIX = "rate:coupon:";
@@ -22,6 +22,7 @@ function getClientIp(headers: Record<string, string | undefined>) {
 }
 
 async function checkRateLimit(key: string) {
+  const redis = getRedis();
   if (!redis) return true;
   const count = await redis.incr(key);
   if (count === 1) await redis.expire(key, COUPON_RATE_LIMIT.ttl);
@@ -29,6 +30,7 @@ async function checkRateLimit(key: string) {
 }
 
 async function ensureIdempotent(key?: string): Promise<IdempotencyResult> {
+  const redis = getRedis();
   if (!key || !redis) return { ok: true };
   const existing = await redis.get(key);
   if (existing) return { ok: false, message: "重复请求，请勿重复提交" };
@@ -37,12 +39,14 @@ async function ensureIdempotent(key?: string): Promise<IdempotencyResult> {
 }
 
 async function finalizeIdempotent(redisKey?: string) {
+  const redis = getRedis();
   if (redis && redisKey) {
     await redis.set(redisKey, "done", "EX", 600);
   }
 }
 
 async function releaseIdempotent(redisKey?: string) {
+  const redis = getRedis();
   if (redis && redisKey) {
     await redis.del(redisKey);
   }
@@ -360,7 +364,9 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
           .where(eq(userCoupons.userId, userId))
           .groupBy(userCoupons.couponId);
 
-        const userCouponMap = new Map(userCouponList.map((uc) => [uc.couponId, uc.count]));
+        const userCouponMap = new Map(
+          userCouponList.map((uc: { couponId: number; count: number }) => [uc.couponId, uc.count])
+        );
 
         result = couponList.map((coupon) => ({
           ...coupon,
@@ -498,15 +504,23 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
       let result = userCouponList;
       if (storeId) {
         result = userCouponList.filter(
-          (uc) => uc.coupon?.storeId === storeId || uc.coupon?.storeId === null
+          (uc: {
+            userCoupon: typeof userCoupons.$inferSelect;
+            coupon: typeof coupons.$inferSelect | null;
+          }) => uc.coupon?.storeId === storeId || uc.coupon?.storeId === null
         );
       }
 
       return success(
-        result.map((r) => ({
-          ...r.userCoupon,
-          coupon: r.coupon,
-        }))
+        result.map(
+          (r: {
+            userCoupon: typeof userCoupons.$inferSelect;
+            coupon: typeof coupons.$inferSelect | null;
+          }) => ({
+            ...r.userCoupon,
+            coupon: r.coupon,
+          })
+        )
       );
     },
     {
@@ -544,43 +558,53 @@ export const couponRoutes = new Elysia({ prefix: "/api/coupons" })
         .orderBy(desc(coupons.value));
 
       // 过滤：门店匹配 + 满足最低消费
-      const usableCoupons = userCouponList.filter((uc) => {
-        if (!uc.coupon) return false;
+      const usableCoupons = userCouponList.filter(
+        (uc: {
+          userCoupon: typeof userCoupons.$inferSelect;
+          coupon: typeof coupons.$inferSelect | null;
+        }) => {
+          if (!uc.coupon) return false;
 
-        // 门店匹配（null表示全店通用）
-        if (uc.coupon.storeId !== null && uc.coupon.storeId !== storeId) {
-          return false;
+          // 门店匹配（null表示全店通用）
+          if (uc.coupon.storeId !== null && uc.coupon.storeId !== storeId) {
+            return false;
+          }
+
+          // 满足最低消费
+          if (amount && Number(uc.coupon.minAmount) > amount) {
+            return false;
+          }
+
+          return true;
         }
-
-        // 满足最低消费
-        if (amount && Number(uc.coupon.minAmount) > amount) {
-          return false;
-        }
-
-        return true;
-      });
+      );
 
       // 计算优惠金额
-      const result = usableCoupons.map((uc) => {
-        let discount = 0;
-        if (uc.coupon) {
-          if (uc.coupon.type === "FIXED" || uc.coupon.type === "NO_THRESHOLD") {
-            discount = Number(uc.coupon.value);
-          } else if (uc.coupon.type === "PERCENT" && amount) {
-            discount = amount * (1 - Number(uc.coupon.value));
-            // 限制最大优惠
-            if (uc.coupon.maxDiscount && discount > Number(uc.coupon.maxDiscount)) {
-              discount = Number(uc.coupon.maxDiscount);
+      const result = usableCoupons.map(
+        (uc: {
+          userCoupon: typeof userCoupons.$inferSelect;
+          coupon: typeof coupons.$inferSelect | null;
+        }) => {
+          let discount = 0;
+          if (uc.coupon) {
+            if (uc.coupon.type === "FIXED" || uc.coupon.type === "NO_THRESHOLD") {
+              discount = Number(uc.coupon.value);
+            } else if (uc.coupon.type === "PERCENT" && amount) {
+              discount = amount * (1 - Number(uc.coupon.value));
+              // 限制最大优惠
+              if (uc.coupon.maxDiscount && discount > Number(uc.coupon.maxDiscount)) {
+                discount = Number(uc.coupon.maxDiscount);
+              }
             }
           }
-        }
 
-        return {
-          ...uc.userCoupon,
-          coupon: uc.coupon,
-          discount: Math.round(discount * 100) / 100,
-        };
-      });
+          return {
+            ...uc.userCoupon,
+            coupon: uc.coupon,
+            discount: Math.round(discount * 100) / 100,
+          };
+        }
+      );
 
       return success(result);
     },

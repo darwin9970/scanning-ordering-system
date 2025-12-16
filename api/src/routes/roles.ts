@@ -48,7 +48,9 @@ export const roleRoutes = new Elysia({ prefix: "/api/roles" })
       const dbConfigs = await db.select().from(rolePermissions);
 
       // 创建角色配置映射
-      const configMap = new Map(dbConfigs.map((c) => [c.role, c]));
+      const configMap = new Map(
+        dbConfigs.map((c: typeof rolePermissions.$inferSelect) => [c.role, c])
+      );
 
       // 返回所有角色的配置（如果数据库没有则使用默认值）
       const roles: Role[] = ["SUPER_ADMIN", "OWNER", "STAFF"];
@@ -56,7 +58,8 @@ export const roleRoutes = new Elysia({ prefix: "/api/roles" })
         const dbConfig = configMap.get(role);
         return {
           role,
-          permissions: dbConfig?.permissions || ROLE_PERMISSIONS[role],
+          permissions:
+            (dbConfig?.permissions as Permission[] | undefined) || ROLE_PERMISSIONS[role],
           description: dbConfig?.description || getDefaultDescription(role),
           updatedAt: dbConfig?.updatedAt || null,
         };
@@ -89,7 +92,7 @@ export const roleRoutes = new Elysia({ prefix: "/api/roles" })
 
       return success({
         role,
-        permissions: dbConfig?.permissions || ROLE_PERMISSIONS[role],
+        permissions: (dbConfig?.permissions as Permission[] | undefined) || ROLE_PERMISSIONS[role],
         description: dbConfig?.description || getDefaultDescription(role),
         updatedAt: dbConfig?.updatedAt || null,
       });

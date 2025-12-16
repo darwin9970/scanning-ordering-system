@@ -53,11 +53,17 @@ export const serviceRoutes = new Elysia({ prefix: "/api/service" })
       ]);
 
       return success({
-        list: callList.map((r) => ({
-          ...r.call,
-          table: r.table,
-          order: r.order,
-        })),
+        list: callList.map(
+          (r: {
+            call: typeof serviceCalls.$inferSelect;
+            table: typeof tables.$inferSelect | null;
+            order: typeof orders.$inferSelect | null;
+          }) => ({
+            ...r.call,
+            table: r.table,
+            order: r.order,
+          })
+        ),
         total: totalResult[0]?.count ?? 0,
         page: page || 1,
         pageSize: take,
