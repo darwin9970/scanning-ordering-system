@@ -70,15 +70,18 @@ mini/
 ### 方式二：使用命令行 (需要 Node.js)
 
 1. **安装依赖**
+
    ```bash
    cd mini
    npm install
    ```
 
 2. **运行 H5 版本**
+
    ```bash
    npm run dev:h5
    ```
+
    打开浏览器访问 http://localhost:5173
 
 3. **编译微信小程序**
@@ -115,14 +118,14 @@ const PROD_BASE_URL = 'https://your-api-domain.com'
 
 ## 页面说明
 
-| 页面 | 路径 | 说明 |
-|:---|:---|:---|
-| 首页 | /pages/index/index | 扫码入口，引导用户扫码点餐 |
-| 菜单 | /pages/menu/menu | 分类浏览商品，加购物车 |
-| 购物车 | /pages/cart/cart | 查看已选商品，修改数量 |
-| 确认订单 | /pages/order/confirm | 填写备注，提交订单 |
-| 订单详情 | /pages/order/detail | 查看订单状态 |
-| 订单列表 | /pages/order/list | 历史订单列表 |
+| 页面     | 路径                 | 说明                       |
+| :------- | :------------------- | :------------------------- |
+| 首页     | /pages/index/index   | 扫码入口，引导用户扫码点餐 |
+| 菜单     | /pages/menu/menu     | 分类浏览商品，加购物车     |
+| 购物车   | /pages/cart/cart     | 查看已选商品，修改数量     |
+| 确认订单 | /pages/order/confirm | 填写备注，提交订单         |
+| 订单详情 | /pages/order/detail  | 查看订单状态               |
+| 订单列表 | /pages/order/list    | 历史订单列表               |
 
 ## 注意事项
 

@@ -367,7 +367,8 @@ const publicRoutes = new Elysia()
         .where(and(eq(pageConfigs.storeId, Number(storeId)), eq(pageConfigs.pageType, 'TABBAR')))
         .limit(1)
 
-      if (config.length === 0 || !config[0].tabBarConfig) {
+      const foundConfig = config[0]
+      if (!foundConfig || !foundConfig.tabBarConfig) {
         // 返回默认TabBar配置
         return {
           code: 200,
@@ -375,7 +376,7 @@ const publicRoutes = new Elysia()
             color: '#999999',
             selectedColor: '#ff6b35',
             backgroundColor: '#ffffff',
-            borderStyle: 'black',
+            borderStyle: 'black' as const,
             list: [
               {
                 pagePath: 'pages/home/home',
@@ -407,7 +408,14 @@ const publicRoutes = new Elysia()
         }
       }
 
-      return { code: 200, data: { ...config[0].tabBarConfig, isDefault: false } }
+      const tabBarData = foundConfig.tabBarConfig as any
+      return {
+        code: 200,
+        data: {
+          ...tabBarData,
+          isDefault: false
+        }
+      }
     },
     {
       query: t.Object({
