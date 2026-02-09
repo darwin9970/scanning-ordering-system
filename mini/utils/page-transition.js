@@ -24,7 +24,7 @@ export function pageEnter(type = 'slide') {
       animationDuration: 300
     }
   }
-  
+
   return animationMap[type] || animationMap.slide
 }
 
@@ -47,7 +47,7 @@ export function pageExit(type = 'slide') {
       animationDuration: 300
     }
   }
-  
+
   return animationMap[type] || animationMap.slide
 }
 
@@ -63,4 +63,3 @@ export function animateNavigation(options = {}) {
     timingFunction: options.timingFunction || 'ease-out'
   }
 }
-

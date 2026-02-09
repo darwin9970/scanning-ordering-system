@@ -9,7 +9,9 @@
     "dev:h5": "uni -p h5",
     "build:h5": "uni build -p h5",
     "lint": "eslint --ext .js,.vue . --fix",
-    "lint:check": "eslint --ext .js,.vue ."
+    "lint:check": "eslint --ext .js,.vue .",
+    "format": "prettier --write \"**/*.{js,vue,json,css,scss}\" --ignore-path .gitignore",
+    "format:check": "prettier --check \"**/*.{js,vue,json,css,scss}\" --ignore-path .gitignore"
   },
   "dependencies": {
     "@dcloudio/uni-app": "^3.0.0-4010520240507001",
@@ -20,6 +22,15 @@
     "pinia": "^2.1.7",
     "vue": "^3.4.21"
   },
+  "lint-staged": {
+    "*.{js,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,scss}": [
+      "prettier --write"
+    ]
+  },
   "devDependencies": {
     "@dcloudio/types": "^3.4.8",
     "@dcloudio/uni-automator": "^3.0.0-4010520240507001",
@@ -27,7 +38,11 @@
     "@dcloudio/uni-stacktracey": "^3.0.0-4010520240507001",
     "@dcloudio/vite-plugin-uni": "^3.0.0-4010520240507001",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-vue": "^9.26.0",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.8.1",
     "sass": "^1.77.0",
     "vite": "^5.2.11"
   }

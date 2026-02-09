@@ -1,52 +1,52 @@
-import { Elysia, t } from "elysia";
-import { jwt } from "@elysiajs/jwt";
-import { eq } from "drizzle-orm";
-import { db, admins, stores } from "../db";
-import { hashPassword, verifyPassword, success, error } from "../lib/utils";
-import { getRolePermissions, type Role } from "../lib/auth";
+import { Elysia, t } from 'elysia'
+import { jwt } from '@elysiajs/jwt'
+import { eq } from 'drizzle-orm'
+import { db, admins, stores } from '../db'
+import { hashPassword, verifyPassword, success, error } from '../lib/utils'
+import { getRolePermissions, type Role } from '../lib/auth'
 
-export const authRoutes = new Elysia({ prefix: "/api/auth" })
+export const authRoutes = new Elysia({ prefix: '/api/auth' })
   .use(
     jwt({
-      name: "jwt",
-      secret: process.env.JWT_SECRET || "your-super-secret-key-change-in-production",
+      name: 'jwt',
+      secret: process.env.JWT_SECRET || 'your-super-secret-key-change-in-production'
     })
   )
   .post(
-    "/login",
+    '/login',
     async ({ body, jwt }) => {
-      const { username, password } = body;
+      const { username, password } = body
 
       const result = await db
         .select()
         .from(admins)
         .leftJoin(stores, eq(admins.storeId, stores.id))
         .where(eq(admins.username, username))
-        .limit(1);
+        .limit(1)
 
-      const admin = result[0];
+      const admin = result[0]
 
       if (!admin) {
-        return error("用户名或密码错误", 401);
+        return error('用户名或密码错误', 401)
       }
 
       if (!verifyPassword(password, admin.admins.password)) {
-        return error("用户名或密码错误", 401);
+        return error('用户名或密码错误', 401)
       }
 
-      if (admin.admins.status !== "ACTIVE") {
-        return error("账号已被禁用", 403);
+      if (admin.admins.status !== 'ACTIVE') {
+        return error('账号已被禁用', 403)
       }
 
       const token = await jwt.sign({
         id: admin.admins.id,
         username: admin.admins.username,
         role: admin.admins.role,
-        storeId: admin.admins.storeId,
-      });
+        storeId: admin.admins.storeId
+      })
 
       // 从数据库获取角色对应的权限列表
-      const permissions = await getRolePermissions(admin.admins.role as Role);
+      const permissions = await getRolePermissions(admin.admins.role as Role)
 
       return success({
         token,
@@ -56,30 +56,30 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
           name: admin.admins.name,
           role: admin.admins.role,
           store: admin.stores,
-          permissions, // 返回权限列表
-        },
-      });
+          permissions // 返回权限列表
+        }
+      })
     },
     {
       body: t.Object({
         username: t.String({ minLength: 1 }),
-        password: t.String({ minLength: 1 }),
+        password: t.String({ minLength: 1 })
       }),
       detail: {
-        tags: ["Auth"],
-        summary: "管理员登录",
-      },
+        tags: ['Auth'],
+        summary: '管理员登录'
+      }
     }
   )
   .post(
-    "/register",
+    '/register',
     async ({ body }) => {
-      const { username, password, name, role, storeId } = body;
+      const { username, password, name, role, storeId } = body
 
-      const existing = await db.select().from(admins).where(eq(admins.username, username)).limit(1);
+      const existing = await db.select().from(admins).where(eq(admins.username, username)).limit(1)
 
       if (existing.length > 0) {
-        return error("用户名已存在", 400);
+        return error('用户名已存在', 400)
       }
 
       const [admin] = await db
@@ -88,17 +88,17 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
           username,
           password: hashPassword(password),
           name,
-          role: (role || "STAFF") as "SUPER_ADMIN" | "OWNER" | "STAFF",
-          storeId,
+          role: (role || 'STAFF') as 'SUPER_ADMIN' | 'OWNER' | 'STAFF',
+          storeId
         })
-        .returning();
+        .returning()
 
       return success({
         id: admin!.id,
         username: admin!.username,
         name: admin!.name,
-        role: admin!.role,
-      });
+        role: admin!.role
+      })
     },
     {
       body: t.Object({
@@ -106,29 +106,29 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
         password: t.String({ minLength: 6 }),
         name: t.String({ minLength: 1, maxLength: 50 }),
         role: t.Optional(
-          t.Union([t.Literal("SUPER_ADMIN"), t.Literal("OWNER"), t.Literal("STAFF")])
+          t.Union([t.Literal('SUPER_ADMIN'), t.Literal('OWNER'), t.Literal('STAFF')])
         ),
-        storeId: t.Optional(t.Number()),
+        storeId: t.Optional(t.Number())
       }),
       detail: {
-        tags: ["Auth"],
-        summary: "注册管理员 (仅超管可用)",
-      },
+        tags: ['Auth'],
+        summary: '注册管理员 (仅超管可用)'
+      }
     }
   )
   .get(
-    "/me",
+    '/me',
     async ({ headers, jwt }) => {
-      const authorization = headers.authorization;
-      if (!authorization?.startsWith("Bearer ")) {
-        return error("未授权", 401);
+      const authorization = headers.authorization
+      if (!authorization?.startsWith('Bearer ')) {
+        return error('未授权', 401)
       }
 
-      const token = authorization.slice(7);
-      const payload = await jwt.verify(token);
+      const token = authorization.slice(7)
+      const payload = await jwt.verify(token)
 
       if (!payload) {
-        return error("Token 无效或已过期", 401);
+        return error('Token 无效或已过期', 401)
       }
 
       const result = await db
@@ -136,16 +136,16 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
         .from(admins)
         .leftJoin(stores, eq(admins.storeId, stores.id))
         .where(eq(admins.id, payload.id as number))
-        .limit(1);
+        .limit(1)
 
-      const admin = result[0];
+      const admin = result[0]
 
       if (!admin) {
-        return error("用户不存在", 404);
+        return error('用户不存在', 404)
       }
 
       // 从数据库获取角色对应的权限列表
-      const permissions = await getRolePermissions(admin.admins.role as Role);
+      const permissions = await getRolePermissions(admin.admins.role as Role)
 
       return success({
         id: admin.admins.id,
@@ -153,13 +153,13 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
         name: admin.admins.name,
         role: admin.admins.role,
         store: admin.stores,
-        permissions, // 返回权限列表
-      });
+        permissions // 返回权限列表
+      })
     },
     {
       detail: {
-        tags: ["Auth"],
-        summary: "获取当前用户信息",
-      },
+        tags: ['Auth'],
+        summary: '获取当前用户信息'
+      }
     }
-  );
+  )

@@ -147,30 +147,30 @@
 // 列表项动画
 .list-item {
   transition: all $duration-fast $ease-out;
-  
+
   &-enter-active {
     transition: all $duration-base $ease-out;
   }
-  
+
   &-enter-from {
     transform: translateY(20rpx);
     opacity: 0;
   }
-  
+
   &-enter-to {
     transform: translateY(0);
     opacity: 1;
   }
-  
+
   &-leave-active {
     transition: all $duration-fast $ease-out;
   }
-  
+
   &-leave-from {
     transform: translateX(0);
     opacity: 1;
   }
-  
+
   &-leave-to {
     transform: translateX(100%);
     opacity: 0;
@@ -214,4 +214,3 @@
 .bottom-popup-leave-to {
   transform: translateY(100%);
 }
-

@@ -1,2 +1,2 @@
-export * from "./useComponents";
-export * from "./usePageConfig";
+export * from './useComponents'
+export * from './usePageConfig'

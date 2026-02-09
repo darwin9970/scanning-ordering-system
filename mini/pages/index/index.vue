@@ -2,7 +2,7 @@
   <view class="page-index">
     <!-- 状态栏占位 -->
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }" />
-    
+
     <!-- 如果已配置页面布局，显示配置的布局 -->
     <template v-if="pageComponents.length > 0 && useCustomLayout">
       <page-renderer
@@ -21,15 +21,10 @@
         @nav-click="handleNavClick"
         @product-click="handleProductClick"
       />
-      
+
       <!-- 配置布局时，底部显示扫码入口 -->
       <view class="page-index__scan-footer">
-        <q-button 
-          class="page-index__scan-btn" 
-          type="primary" 
-          size="large"
-          @click="handleScan"
-        >
+        <q-button class="page-index__scan-btn" type="primary" size="large" @click="handleScan">
           扫码点餐
         </q-button>
         <view class="page-index__manual" @tap="showManualInput = true">
@@ -38,24 +33,16 @@
         </view>
       </view>
     </template>
-    
+
     <!-- 默认布局（未配置时显示） -->
     <template v-else>
       <!-- Logo -->
-      <image 
-        class="page-index__logo" 
-        src="/static/images/logo.png" 
-        mode="aspectFill"
-      />
-      
+      <image class="page-index__logo" src="/static/images/logo.png" mode="aspectFill" />
+
       <!-- 标题 -->
-      <text class="page-index__title">
-        欢迎光临
-      </text>
-      <text class="page-index__subtitle">
-        扫码开始点餐吧~
-      </text>
-      
+      <text class="page-index__title">欢迎光临</text>
+      <text class="page-index__subtitle">扫码开始点餐吧~</text>
+
       <!-- 扫码区域 -->
       <view class="page-index__scan-area">
         <view class="scan-animation">
@@ -64,50 +51,39 @@
           <uni-icons type="scan" size="80" color="#FF6B35" />
         </view>
       </view>
-      
+
       <!-- 扫码按钮 -->
-      <q-button 
-        class="page-index__scan-btn" 
-        type="primary" 
-        size="large"
-        @click="handleScan"
-      >
+      <q-button class="page-index__scan-btn" type="primary" size="large" @click="handleScan">
         扫码点餐
       </q-button>
-      
+
       <!-- 手动输入 -->
       <view class="page-index__manual" @tap="showManualInput = true">
         <text>手动输入桌台号</text>
         <uni-icons type="right" size="14" color="#999999" />
       </view>
     </template>
-    
+
     <!-- 手动输入弹窗 -->
     <uni-popup ref="manualPopup" type="center" :mask-click="true">
       <view class="manual-popup">
-        <text class="manual-popup__title">
-          输入桌台号
-        </text>
+        <text class="manual-popup__title">输入桌台号</text>
         <view class="manual-popup__input-wrap">
-          <input 
+          <input
             v-model="manualInput.storeId"
-            class="manual-popup__input" 
+            class="manual-popup__input"
             type="number"
             placeholder="门店ID"
-          >
-          <input 
+          />
+          <input
             v-model="manualInput.tableNo"
-            class="manual-popup__input" 
+            class="manual-popup__input"
             placeholder="桌台号 (如 A01)"
-          >
+          />
         </view>
         <view class="manual-popup__btns">
-          <q-button type="secondary" @click="closeManualPopup">
-            取消
-          </q-button>
-          <q-button type="primary" @click="handleManualSubmit">
-            确定
-          </q-button>
+          <q-button type="secondary" @click="closeManualPopup">取消</q-button>
+          <q-button type="primary" @click="handleManualSubmit">确定</q-button>
         </view>
       </view>
     </uni-popup>
@@ -118,7 +94,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useTableStore } from '@/store/table'
 import { useCartStore } from '@/store/cart'
-import { getBanners, getPageConfig, getAvailableCoupons, getStoreInfo } from '@/api'
+import { getBanners, getPageConfig, getAvailableCoupons } from '@/api'
 
 const tableStore = useTableStore()
 const cartStore = useCartStore()
@@ -204,7 +180,7 @@ const handleScan = () => {
     }
   })
   // #endif
-  
+
   // #ifdef H5
   // H5 环境直接使用测试数据
   goToMenu(1, 1)
@@ -218,7 +194,7 @@ const parseQRCode = (url) => {
     const urlObj = new URL(url)
     const storeId = urlObj.searchParams.get('storeId')
     const tableId = urlObj.searchParams.get('tableId')
-    
+
     if (storeId && tableId) {
       goToMenu(Number(storeId), Number(tableId))
     } else {
@@ -266,7 +242,7 @@ const handleManualSubmit = () => {
     })
     return
   }
-  
+
   closeManualPopup()
   goToMenu(Number(manualInput.storeId), manualInput.tableNo)
 }
@@ -276,7 +252,7 @@ const loadBanners = async () => {
   try {
     const storeId = uni.getStorageSync('storeId')
     if (!storeId) return
-    
+
     const res = await getBanners({
       storeId,
       position: 'HOME_TOP'
@@ -310,6 +286,11 @@ const loadPageConfig = async () => {
     }
   } catch (e) {
     console.error('加载页面配置失败:', e)
+    uni.showToast({
+      title: '页面配置加载失败',
+      icon: 'none',
+      duration: 2000
+    })
   }
 }
 
@@ -318,7 +299,7 @@ const loadCoupons = async () => {
   try {
     const storeId = uni.getStorageSync('storeId')
     if (!storeId) return
-    
+
     const res = await getAvailableCoupons(storeId)
     if (res.code === 200) {
       coupons.value = res.data || []
@@ -344,7 +325,7 @@ const handleBannerClick = (banner) => {
         url: '/pages/menu/menu'
       })
       break
-    case 'page':
+    case 'page': {
       const tabBarPages = ['/pages/menu/menu', '/pages/order/list', '/pages/mine/mine']
       if (tabBarPages.includes(banner.linkValue)) {
         uni.switchTab({ url: banner.linkValue })
@@ -352,13 +333,14 @@ const handleBannerClick = (banner) => {
         uni.navigateTo({ url: banner.linkValue })
       }
       break
+    }
   }
 }
 
 // 处理导航点击
 const handleNavClick = (item) => {
   if (!item.link || !item.link.type) return
-  
+
   switch (item.link.type) {
     case 'page':
       if (item.link.value) {
@@ -405,14 +387,18 @@ const handleProductClick = (product) => {
 }
 
 // 监听storeId变化
-watch(() => tableStore.storeId, (newStoreId) => {
-  if (newStoreId) {
-    console.log('storeId变化，重新加载数据:', newStoreId)
-    loadPageConfig()
-    loadBanners()
-    loadCoupons()
-  }
-}, { immediate: true })
+watch(
+  () => tableStore.storeId,
+  (newStoreId) => {
+    if (newStoreId) {
+      console.log('storeId变化，重新加载数据:', newStoreId)
+      loadPageConfig()
+      loadBanners()
+      loadCoupons()
+    }
+  },
+  { immediate: true }
+)
 
 // 页面加载
 onMounted(() => {
@@ -443,7 +429,7 @@ const onShow = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  
+
   &__scan-footer {
     position: fixed;
     bottom: 120rpx;
@@ -455,7 +441,7 @@ const onShow = () => {
     padding: 0 24rpx;
     z-index: 10;
   }
-  
+
   &__logo {
     width: 160rpx;
     height: 160rpx;
@@ -464,20 +450,20 @@ const onShow = () => {
     background: $bg-card;
     box-shadow: $shadow-base;
   }
-  
+
   &__title {
     margin-top: 40rpx;
     font-size: 40rpx;
     font-weight: $font-weight-semibold;
     color: $text-primary;
   }
-  
+
   &__subtitle {
     margin-top: 12rpx;
     font-size: 28rpx;
     color: $text-secondary;
   }
-  
+
   &__scan-area {
     margin-top: 80rpx;
     width: 400rpx;
@@ -486,19 +472,19 @@ const onShow = () => {
     align-items: center;
     justify-content: center;
   }
-  
+
   &__scan-btn {
     margin-top: 60rpx;
     width: 400rpx;
   }
-  
+
   &__manual {
     margin-top: 40rpx;
     display: flex;
     align-items: center;
     font-size: 28rpx;
     color: $text-tertiary;
-    
+
     text {
       margin-right: 8rpx;
     }
@@ -517,7 +503,7 @@ const onShow = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &__border {
     position: absolute;
     top: 0;
@@ -527,7 +513,7 @@ const onShow = () => {
     border: 4rpx dashed $primary-light;
     border-radius: 24rpx;
   }
-  
+
   &__line {
     position: absolute;
     top: 20rpx;
@@ -540,7 +526,8 @@ const onShow = () => {
 }
 
 @keyframes scan-line {
-  0%, 100% {
+  0%,
+  100% {
     top: 20rpx;
     opacity: 0;
   }
@@ -555,7 +542,7 @@ const onShow = () => {
   background: $bg-card;
   border-radius: $radius-xl;
   padding: 40rpx;
-  
+
   &__title {
     font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
@@ -563,14 +550,14 @@ const onShow = () => {
     text-align: center;
     margin-bottom: 32rpx;
   }
-  
+
   &__input-wrap {
     display: flex;
     flex-direction: column;
     gap: 20rpx;
     margin-bottom: 32rpx;
   }
-  
+
   &__input {
     height: 88rpx;
     background: $bg-grey;
@@ -578,11 +565,11 @@ const onShow = () => {
     padding: 0 24rpx;
     font-size: $font-size-base;
   }
-  
+
   &__btns {
     display: flex;
     gap: 20rpx;
-    
+
     .q-btn {
       flex: 1;
     }

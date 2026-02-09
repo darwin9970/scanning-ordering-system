@@ -42,5 +42,17 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+# Mini 项目检查
+echo ""
+echo "📦 Checking mini..."
+cd ../mini
+
+# 运行 lint-staged
+npx lint-staged
+if [ $? -ne 0 ]; then
+  echo "❌ Mini lint-staged failed."
+  exit 1
+fi
+
 echo ""
 echo "✅ All checks passed!"

@@ -26,32 +26,32 @@ defineProps({
   padding: 4rpx 12rpx;
   font-size: $font-size-xs;
   border-radius: $radius-xs;
-  
+
   &--primary {
     background: $primary-light;
     color: $primary;
   }
-  
+
   &--success {
     background: $success-light;
     color: $success;
   }
-  
+
   &--warning {
     background: $warning-light;
     color: $warning;
   }
-  
+
   &--error {
     background: $error-light;
     color: $error;
   }
-  
+
   &--info {
     background: $info-light;
     color: $info;
   }
-  
+
   &--outline {
     background: transparent;
     border: 1rpx solid currentColor;

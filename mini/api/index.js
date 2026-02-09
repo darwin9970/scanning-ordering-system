@@ -11,7 +11,7 @@ import { get, post, put, del } from './request'
  * @param {number} tableId - 桌台ID
  */
 export const getTableInfo = (storeId, tableId) => {
-  return get(`/api/tables/${tableId}`, { storeId })
+  return get(`/mini/tables/${tableId}`, { storeId })
 }
 
 // ==================== 分类相关 ====================
@@ -62,27 +62,31 @@ export const getCart = (storeId, tableId) => {
  * @param {object} item - 商品信息
  */
 export const addToCart = (storeId, tableId, item) => {
-  return post(`/api/cart/${storeId}/${tableId}/add`, item)
+  return post(`/api/cart/${storeId}/${tableId}/items`, item)
 }
 
 /**
  * 更新购物车商品数量
  * @param {number} storeId - 门店ID
  * @param {number} tableId - 桌台ID
- * @param {object} data - { itemKey, quantity }
+ * @param {number} variantId - 商品规格ID
+ * @param {object} data - { quantity, attributes?, operator? }
  */
-export const updateCartItem = (storeId, tableId, data) => {
-  return put(`/api/cart/${storeId}/${tableId}/update`, data)
+export const updateCartItem = (storeId, tableId, variantId, data) => {
+  return put(`/api/cart/${storeId}/${tableId}/items/${variantId}`, data)
 }
 
 /**
  * 从购物车移除商品
  * @param {number} storeId - 门店ID
  * @param {number} tableId - 桌台ID
- * @param {string} itemKey - 商品唯一标识
+ * @param {number} variantId - 商品规格ID
+ * @param {string} operator - 操作者标识 (可选)
  */
-export const removeFromCart = (storeId, tableId, itemKey) => {
-  return del(`/api/cart/${storeId}/${tableId}/remove`, { itemKey })
+export const removeFromCart = (storeId, tableId, variantId, operator) => {
+  return del(`/api/cart/${storeId}/${tableId}/items/${variantId}`, {
+    operator
+  })
 }
 
 /**
@@ -101,7 +105,7 @@ export const clearCart = (storeId, tableId) => {
  * @param {object} orderData - 订单数据
  */
 export const createOrder = (orderData) => {
-  return post('/api/orders', orderData)
+  return post('/mini/orders', orderData)
 }
 
 /**
@@ -109,7 +113,7 @@ export const createOrder = (orderData) => {
  * @param {number} orderId - 订单ID
  */
 export const getOrderDetail = (orderId) => {
-  return get(`/api/orders/${orderId}`)
+  return get(`/mini/orders/${orderId}`)
 }
 
 /**
@@ -118,7 +122,7 @@ export const getOrderDetail = (orderId) => {
  * @param {number} tableId - 桌台ID
  */
 export const getTableOrders = (storeId, tableId) => {
-  return get('/api/orders', { storeId, tableId })
+  return get('/mini/orders', { storeId, tableId })
 }
 
 /**
@@ -127,7 +131,7 @@ export const getTableOrders = (storeId, tableId) => {
  * @param {array} items - 加菜商品列表
  */
 export const addOrderItems = (orderId, items) => {
-  return post(`/api/orders/${orderId}/add-items`, { items })
+  return post(`/mini/orders/${orderId}/add-items`, { items })
 }
 
 // ==================== 服务呼叫 ====================
@@ -191,7 +195,7 @@ export const calculateDiscount = (data) => {
  * @param {number} storeId - 门店ID
  */
 export const getStoreInfo = (storeId) => {
-  return get(`/api/stores/${storeId}`)
+  return get(`/mini/store/${storeId}`)
 }
 
 // ==================== 轮播图相关 ====================
@@ -244,6 +248,15 @@ export const getPageConfig = (params) => {
   return get('/api/page-configs/published', params)
 }
 
+/**
+ * 获取TabBar配置
+ * @param {object} params - 查询参数
+ * @param {number} params.storeId - 门店ID
+ */
+export const getTabBarConfig = (params) => {
+  return get('/api/page-configs/tabbar', params)
+}
+
 export default {
   getTableInfo,
   getCategories,
@@ -255,15 +268,20 @@ export default {
   removeFromCart,
   clearCart,
   createOrder,
+  createMiniOrder,
   getOrderDetail,
   getTableOrders,
   addOrderItems,
   callService,
   getAvailableCoupons,
+  getAvailableCouponsWithStatus,
+  claimCoupon,
   calculateDiscount,
   getStoreInfo,
   getBanners,
   login,
   getMemberProfile,
-  getPageConfig
+  getPointsHistory,
+  getPageConfig,
+  getTabBarConfig
 }

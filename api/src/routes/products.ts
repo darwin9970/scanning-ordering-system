@@ -1,27 +1,26 @@
-import { Elysia, t } from "elysia";
-import { eq, and, like, desc, count } from "drizzle-orm";
-import { db, products, categories, productVariants, productAttributes } from "../db";
-import { success, error, pagination } from "../lib/utils";
-import { requirePermission } from "../lib/auth";
-import { logOperation } from "../lib/operation-log";
+import { Elysia, t } from 'elysia'
+import { eq, and, like, desc, count } from 'drizzle-orm'
+import { db, products, categories, productVariants, productAttributes } from '../db'
+import { success, error, pagination } from '../lib/utils'
+import { requirePermission } from '../lib/auth'
+import { logOperation } from '../lib/operation-log'
 
-export const productRoutes = new Elysia({ prefix: "/api/products" })
+export const productRoutes = new Elysia({ prefix: '/api/products' })
   // 读取商品需要 product:read 权限
-  .use(requirePermission("product:read"))
+  .use(requirePermission('product:read'))
   .get(
-    "/",
+    '/',
     async ({ query }) => {
-      const { page, pageSize, storeId, categoryId, status, keyword } = query;
-      const { take, skip } = pagination(page, pageSize);
+      const { page, pageSize, storeId, categoryId, status, keyword } = query
+      const { take, skip } = pagination(page, pageSize)
 
-      const conditions = [];
-      if (storeId) conditions.push(eq(products.storeId, storeId));
-      if (categoryId) conditions.push(eq(products.categoryId, categoryId));
-      if (status)
-        conditions.push(eq(products.status, status as "AVAILABLE" | "SOLDOUT" | "HIDDEN"));
-      if (keyword) conditions.push(like(products.name, `%${keyword}%`));
+      const conditions = []
+      if (storeId) conditions.push(eq(products.storeId, storeId))
+      if (categoryId) conditions.push(eq(products.categoryId, categoryId))
+      if (status) conditions.push(eq(products.status, status as 'AVAILABLE' | 'SOLDOUT' | 'HIDDEN'))
+      if (keyword) conditions.push(like(products.name, `%${keyword}%`))
 
-      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
       const [productList, totalResult] = await Promise.all([
         db
@@ -32,23 +31,23 @@ export const productRoutes = new Elysia({ prefix: "/api/products" })
           .orderBy(desc(products.createdAt))
           .limit(take)
           .offset(skip),
-        db.select({ count: count() }).from(products).where(whereClause),
-      ]);
+        db.select({ count: count() }).from(products).where(whereClause)
+      ])
 
       return success({
         list: productList.map(
           (r: {
-            products: typeof products.$inferSelect;
-            categories: typeof categories.$inferSelect | null;
+            products: typeof products.$inferSelect
+            categories: typeof categories.$inferSelect | null
           }) => ({
             ...r.products,
-            category: r.categories,
+            category: r.categories
           })
         ),
         total: totalResult[0]?.count ?? 0,
         page: page || 1,
-        pageSize: take,
-      });
+        pageSize: take
+      })
     },
     {
       query: t.Object({
@@ -57,42 +56,42 @@ export const productRoutes = new Elysia({ prefix: "/api/products" })
         storeId: t.Optional(t.Number()),
         categoryId: t.Optional(t.Number()),
         status: t.Optional(t.String()),
-        keyword: t.Optional(t.String()),
+        keyword: t.Optional(t.String())
       }),
-      detail: { tags: ["Products"], summary: "获取商品列表" },
+      detail: { tags: ['Products'], summary: '获取商品列表' }
     }
   )
   .get(
-    "/:id",
+    '/:id',
     async ({ params }) => {
       const [product] = await db
         .select()
         .from(products)
         .leftJoin(categories, eq(products.categoryId, categories.id))
         .where(eq(products.id, params.id))
-        .limit(1);
+        .limit(1)
 
-      if (!product) return error("商品不存在", 404);
+      if (!product) return error('商品不存在', 404)
 
       const [variants, attributes] = await Promise.all([
         db.select().from(productVariants).where(eq(productVariants.productId, params.id)),
-        db.select().from(productAttributes).where(eq(productAttributes.productId, params.id)),
-      ]);
+        db.select().from(productAttributes).where(eq(productAttributes.productId, params.id))
+      ])
 
       return success({
         ...product.products,
         category: product.categories,
         variants,
-        attributes,
-      });
+        attributes
+      })
     },
     {
       params: t.Object({ id: t.Number() }),
-      detail: { tags: ["Products"], summary: "获取商品详情" },
+      detail: { tags: ['Products'], summary: '获取商品详情' }
     }
   )
   .post(
-    "/",
+    '/',
     async ({ body }) => {
       const [product] = await db
         .insert(products)
@@ -102,19 +101,19 @@ export const productRoutes = new Elysia({ prefix: "/api/products" })
           name: body.name,
           description: body.description,
           imageUrl: body.imageUrl,
-          type: (body.type || "SINGLE") as "SINGLE" | "VARIANT",
-          basePrice: body.basePrice.toString(),
+          type: (body.type || 'SINGLE') as 'SINGLE' | 'VARIANT',
+          basePrice: body.basePrice.toString()
         })
-        .returning();
+        .returning()
 
       // 创建默认规格
-      if (body.type !== "VARIANT") {
+      if (body.type !== 'VARIANT') {
         await db.insert(productVariants).values({
           productId: product!.id,
           specs: {},
           price: body.basePrice.toString(),
-          stock: -1,
-        });
+          stock: -1
+        })
       }
 
       // 创建规格
@@ -125,10 +124,10 @@ export const productRoutes = new Elysia({ prefix: "/api/products" })
               productId: product!.id,
               specs: v.specs,
               price: v.price.toString(),
-              stock: v.stock ?? -1,
+              stock: v.stock ?? -1
             })
           )
-        );
+        )
       }
 
       // 创建属性
@@ -138,46 +137,46 @@ export const productRoutes = new Elysia({ prefix: "/api/products" })
             productId: product!.id,
             name: a.name,
             options: a.options,
-            required: a.required ?? false,
+            required: a.required ?? false
           }))
-        );
+        )
       }
 
-      return success(product, "商品创建成功");
+      return success(product, '商品创建成功')
     },
     {
       body: t.Object({
         storeId: t.Number(),
         categoryId: t.Number(),
-        name: t.String({ minLength: 1, maxLength: 100, error: "商品名称1-100字符" }),
-        description: t.Optional(t.String({ maxLength: 500, error: "描述最多500字符" })),
+        name: t.String({ minLength: 1, maxLength: 100, error: '商品名称1-100字符' }),
+        description: t.Optional(t.String({ maxLength: 500, error: '描述最多500字符' })),
         imageUrl: t.Optional(t.String({ maxLength: 500 })),
         type: t.Optional(t.String()),
-        basePrice: t.Number({ minimum: 0, error: "价格不能为负数" }),
+        basePrice: t.Number({ minimum: 0, error: '价格不能为负数' }),
         variants: t.Optional(t.Array(t.Any())),
-        attributes: t.Optional(t.Array(t.Any())),
+        attributes: t.Optional(t.Array(t.Any()))
       }),
-      detail: { tags: ["Products"], summary: "创建商品" },
+      detail: { tags: ['Products'], summary: '创建商品' }
     }
   )
   .put(
-    "/:id",
+    '/:id',
     async ({ params, body }) => {
-      const updateData: Record<string, unknown> = {};
-      if (body.name !== undefined) updateData.name = body.name;
-      if (body.categoryId !== undefined) updateData.categoryId = body.categoryId;
-      if (body.description !== undefined) updateData.description = body.description;
-      if (body.imageUrl !== undefined) updateData.imageUrl = body.imageUrl;
-      if (body.basePrice !== undefined) updateData.basePrice = body.basePrice.toString();
-      if (body.sort !== undefined) updateData.sort = body.sort;
+      const updateData: Record<string, unknown> = {}
+      if (body.name !== undefined) updateData.name = body.name
+      if (body.categoryId !== undefined) updateData.categoryId = body.categoryId
+      if (body.description !== undefined) updateData.description = body.description
+      if (body.imageUrl !== undefined) updateData.imageUrl = body.imageUrl
+      if (body.basePrice !== undefined) updateData.basePrice = body.basePrice.toString()
+      if (body.sort !== undefined) updateData.sort = body.sort
 
       const [product] = await db
         .update(products)
         .set(updateData)
         .where(eq(products.id, params.id))
-        .returning();
+        .returning()
 
-      return success(product, "商品更新成功");
+      return success(product, '商品更新成功')
     },
     {
       params: t.Object({ id: t.Number() }),
@@ -187,51 +186,47 @@ export const productRoutes = new Elysia({ prefix: "/api/products" })
         description: t.Optional(t.String()),
         imageUrl: t.Optional(t.String()),
         basePrice: t.Optional(t.Number()),
-        sort: t.Optional(t.Number()),
+        sort: t.Optional(t.Number())
       }),
-      detail: { tags: ["Products"], summary: "更新商品" },
+      detail: { tags: ['Products'], summary: '更新商品' }
     }
   )
   .put(
-    "/:id/status",
+    '/:id/status',
     async ({ params, body }) => {
       const [product] = await db
         .update(products)
-        .set({ status: body.status as "AVAILABLE" | "SOLDOUT" | "HIDDEN" })
+        .set({ status: body.status as 'AVAILABLE' | 'SOLDOUT' | 'HIDDEN' })
         .where(eq(products.id, params.id))
-        .returning();
+        .returning()
 
-      return success(product, "状态更新成功");
+      return success(product, '状态更新成功')
     },
     {
       params: t.Object({ id: t.Number() }),
       body: t.Object({ status: t.String() }),
-      detail: { tags: ["Products"], summary: "更新商品状态" },
+      detail: { tags: ['Products'], summary: '更新商品状态' }
     }
   )
   .delete(
-    "/:id",
+    '/:id',
     async ({ params, user }) => {
-      const [existing] = await db
-        .select()
-        .from(products)
-        .where(eq(products.id, params.id))
-        .limit(1);
-      await db.delete(products).where(eq(products.id, params.id));
+      const [existing] = await db.select().from(products).where(eq(products.id, params.id)).limit(1)
+      await db.delete(products).where(eq(products.id, params.id))
 
       await logOperation({
         adminId: user?.id,
-        action: "delete",
-        targetType: "product",
+        action: 'delete',
+        targetType: 'product',
         targetId: params.id,
         storeId: existing?.storeId ?? null,
-        details: { name: existing?.name },
-      });
+        details: { name: existing?.name }
+      })
 
-      return success(null, "商品删除成功");
+      return success(null, '商品删除成功')
     },
     {
       params: t.Object({ id: t.Number() }),
-      detail: { tags: ["Products"], summary: "删除商品" },
+      detail: { tags: ['Products'], summary: '删除商品' }
     }
-  );
+  )

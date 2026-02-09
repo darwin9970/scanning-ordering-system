@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import * as React from "react";
+import * as React from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,33 +9,33 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { AlertTriangle } from "lucide-react";
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
+import { AlertTriangle } from 'lucide-react'
 
 interface DeleteConfirmDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-  title?: string;
-  description?: string;
-  confirmText?: string;
-  cancelText?: string;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onConfirm: () => void
+  title?: string
+  description?: string
+  confirmText?: string
+  cancelText?: string
 }
 
 export function DeleteConfirmDialog({
   open,
   onOpenChange,
   onConfirm,
-  title = "确认删除",
-  description = "此操作不可撤销，确定要继续吗？",
-  confirmText = "删除",
-  cancelText = "取消",
+  title = '确认删除',
+  description = '此操作不可撤销，确定要继续吗？',
+  confirmText = '删除',
+  cancelText = '取消'
 }: DeleteConfirmDialogProps) {
   const handleConfirm = () => {
-    onConfirm();
-    onOpenChange(false);
-  };
+    onConfirm()
+    onOpenChange(false)
+  }
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -62,5 +62,5 @@ export function DeleteConfirmDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }

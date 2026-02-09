@@ -21,25 +21,25 @@ import {
   Hash,
   Package,
   CreditCard,
-  LayoutGrid,
-} from "lucide-react";
-import type { PageComponent } from "@/types";
+  LayoutGrid
+} from 'lucide-react'
+import type { PageComponent } from '@/types'
 
 interface ComponentPreviewProps {
-  component: PageComponent;
-  mini?: boolean; // 迷你模式用于组件面板
+  component: PageComponent
+  mini?: boolean // 迷你模式用于组件面板
 }
 
 export function ComponentPreview({ component, mini = false }: ComponentPreviewProps) {
-  const { type, props } = component;
+  const { type, props } = component
 
   // 迷你预览模式 - 用于组件面板展示
   if (mini) {
-    return <MiniPreview type={type} />;
+    return <MiniPreview type={type} />
   }
 
   switch (type) {
-    case "BANNER":
+    case 'BANNER':
       return (
         <div
           className="bg-gradient-to-r from-orange-400 to-pink-400"
@@ -50,11 +50,11 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             <span>轮播图区域</span>
           </div>
         </div>
-      );
+      )
 
-    case "NAV_GRID":
-      const items = (props.items as { icon: string; text: string }[]) || [];
-      const columns = (props.columns as number) || 4;
+    case 'NAV_GRID':
+      const items = (props.items as { icon: string; text: string }[]) || []
+      const columns = (props.columns as number) || 4
       return (
         <div className="p-4 bg-white">
           <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
@@ -66,29 +66,29 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             ))}
           </div>
         </div>
-      );
+      )
 
-    case "NOTICE":
+    case 'NOTICE':
       return (
         <div className="bg-orange-50 px-4 py-2 flex items-center gap-2">
           <Bell className="h-4 w-4 text-orange-500" />
           <span className="text-sm text-orange-700 truncate">店内公告信息将在这里滚动显示...</span>
         </div>
-      );
+      )
 
-    case "HOT_PRODUCTS":
-    case "NEW_PRODUCTS":
-      const limit = (props.limit as number) || 4;
+    case 'HOT_PRODUCTS':
+    case 'NEW_PRODUCTS':
+      const limit = (props.limit as number) || 4
       return (
         <div className="p-4 bg-white">
           <div className="flex items-center gap-2 mb-3">
-            {type === "HOT_PRODUCTS" ? (
+            {type === 'HOT_PRODUCTS' ? (
               <Flame className="h-4 w-4 text-red-500" />
             ) : (
               <Sparkles className="h-4 w-4 text-yellow-500" />
             )}
             <span className="font-medium text-sm">
-              {type === "HOT_PRODUCTS" ? "热销推荐" : "新品上市"}
+              {type === 'HOT_PRODUCTS' ? '热销推荐' : '新品上市'}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2">
@@ -99,9 +99,9 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
               ))}
           </div>
         </div>
-      );
+      )
 
-    case "PRODUCT_LIST":
+    case 'PRODUCT_LIST':
       return (
         <div className="p-4 bg-white space-y-3">
           {[1, 2, 3].map((i) => (
@@ -115,9 +115,9 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             </div>
           ))}
         </div>
-      );
+      )
 
-    case "PRODUCT_GRID":
+    case 'PRODUCT_GRID':
       return (
         <div className="p-4 bg-white">
           <div className="grid grid-cols-2 gap-3">
@@ -130,9 +130,9 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             ))}
           </div>
         </div>
-      );
+      )
 
-    case "IMAGE":
+    case 'IMAGE':
       return (
         <div
           className="bg-gray-200 flex items-center justify-center"
@@ -147,9 +147,9 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             </>
           )}
         </div>
-      );
+      )
 
-    case "COUPON":
+    case 'COUPON':
       return (
         <div className="p-4 bg-white">
           <div className="flex gap-2 overflow-hidden">
@@ -163,39 +163,39 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             ))}
           </div>
         </div>
-      );
+      )
 
-    case "SPACER":
+    case 'SPACER':
       return (
         <div
           style={{
             height: (props.height as number) || 20,
-            backgroundColor: (props.backgroundColor as string) || "#f5f5f5",
+            backgroundColor: (props.backgroundColor as string) || '#f5f5f5'
           }}
         />
-      );
+      )
 
     // === 极简组件 ===
-    case "FOCUS_ENTRY":
+    case 'FOCUS_ENTRY':
       return (
         <div className="p-3">
           <div
             className="rounded-full px-6 py-3 text-white text-center font-medium flex items-center justify-center gap-2"
-            style={{ backgroundColor: (props.bgColor as string) || "#ff6b35" }}
+            style={{ backgroundColor: (props.bgColor as string) || '#ff6b35' }}
           >
-            <span className="text-xl">{(props.icon as string) || "🔥"}</span>
-            <span>{(props.text as string) || "点我下单"}</span>
+            <span className="text-xl">{(props.icon as string) || '🔥'}</span>
+            <span>{(props.text as string) || '点我下单'}</span>
           </div>
         </div>
-      );
+      )
 
-    case "STAMP_CARD":
-    case "STAMP_CARD_STD":
+    case 'STAMP_CARD':
+    case 'STAMP_CARD_STD':
       return (
         <div className="p-4 bg-gradient-to-r from-amber-100 to-orange-100 rounded-lg mx-3">
           <div className="flex items-center gap-2 mb-2">
             <Star className="h-5 w-5 text-amber-500" />
-            <span className="font-medium">{(props.title as string) || "集点活动"}</span>
+            <span className="font-medium">{(props.title as string) || '集点活动'}</span>
           </div>
           <div className="flex gap-1">
             {Array(Math.min((props.total as number) || 10, 10))
@@ -203,27 +203,27 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
               .map((_, i) => (
                 <div
                   key={i}
-                  className={`w-6 h-6 rounded-full border-2 ${i < ((props.current as number) || 0) ? "bg-amber-500 border-amber-500" : "border-amber-300"}`}
+                  className={`w-6 h-6 rounded-full border-2 ${i < ((props.current as number) || 0) ? 'bg-amber-500 border-amber-500' : 'border-amber-300'}`}
                 />
               ))}
           </div>
         </div>
-      );
+      )
 
-    case "COUPON_ENTRY":
+    case 'COUPON_ENTRY':
       return (
         <div className="p-3">
           <div className="bg-gradient-to-r from-red-500 to-orange-400 rounded-lg px-4 py-3 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Ticket className="h-5 w-5" />
-              <span>{(props.text as string) || "领券中心"}</span>
+              <span>{(props.text as string) || '领券中心'}</span>
             </div>
             <span className="text-xs bg-white/20 px-2 py-1 rounded">去领取 &gt;</span>
           </div>
         </div>
-      );
+      )
 
-    case "BALANCE_ENTRY":
+    case 'BALANCE_ENTRY':
       return (
         <div className="p-4 bg-white">
           <div className="flex items-center justify-between">
@@ -237,9 +237,9 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             </div>
           </div>
         </div>
-      );
+      )
 
-    case "POINTS_ENTRY":
+    case 'POINTS_ENTRY':
       return (
         <div className="p-4 bg-white">
           <div className="flex items-center justify-between">
@@ -253,19 +253,19 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             </div>
           </div>
         </div>
-      );
+      )
 
-    case "SERVICE_ENTRY":
+    case 'SERVICE_ENTRY':
       return (
         <div className="p-3">
           <div className="bg-green-500 rounded-full px-4 py-2 text-white flex items-center justify-center gap-2">
             <MessageCircle className="h-4 w-4" />
-            <span>{(props.text as string) || "联系客服"}</span>
+            <span>{(props.text as string) || '联系客服'}</span>
           </div>
         </div>
-      );
+      )
 
-    case "NEARBY_STORES":
+    case 'NEARBY_STORES':
       return (
         <div className="p-4 bg-white">
           <div className="flex items-center gap-2 mb-3">
@@ -281,31 +281,31 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             ))}
           </div>
         </div>
-      );
+      )
 
-    case "FLOAT_WINDOW":
+    case 'FLOAT_WINDOW':
       return (
         <div className="h-20 relative bg-gray-50">
           <div className="absolute right-3 bottom-3 w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white text-xl shadow-lg">
-            {(props.icon as string) || "🎁"}
+            {(props.icon as string) || '🎁'}
           </div>
         </div>
-      );
+      )
 
     // === 标准组件 ===
-    case "SEARCH":
+    case 'SEARCH':
       return (
-        <div className="p-3" style={{ backgroundColor: (props.bgColor as string) || "#f5f5f5" }}>
+        <div className="p-3" style={{ backgroundColor: (props.bgColor as string) || '#f5f5f5' }}>
           <div className="bg-white rounded-full px-4 py-2 flex items-center gap-2 shadow-sm">
             <Search className="h-4 w-4 text-gray-400" />
             <span className="text-gray-400 text-sm">
-              {(props.placeholder as string) || "搜索商品"}
+              {(props.placeholder as string) || '搜索商品'}
             </span>
           </div>
         </div>
-      );
+      )
 
-    case "STORE_TITLE":
+    case 'STORE_TITLE':
       return (
         <div className="p-4 bg-white">
           <div className="flex items-center gap-3">
@@ -321,9 +321,9 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             </div>
           </div>
         </div>
-      );
+      )
 
-    case "STORE_LIST":
+    case 'STORE_LIST':
       return (
         <div className="p-4 bg-white">
           <div className="flex items-center gap-2 mb-3">
@@ -342,9 +342,9 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             ))}
           </div>
         </div>
-      );
+      )
 
-    case "CART_FLOAT":
+    case 'CART_FLOAT':
       return (
         <div className="h-16 relative bg-gray-50">
           <div className="absolute right-4 bottom-2 bg-orange-500 rounded-full px-4 py-2 flex items-center gap-2 text-white shadow-lg">
@@ -353,9 +353,9 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             <span className="bg-white text-orange-500 text-xs px-2 py-0.5 rounded-full">0</span>
           </div>
         </div>
-      );
+      )
 
-    case "PROMOTION":
+    case 'PROMOTION':
       return (
         <div className="p-4 bg-white">
           <div className="flex items-center gap-2 mb-3">
@@ -371,9 +371,9 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             ))}
           </div>
         </div>
-      );
+      )
 
-    case "WECHAT_OA":
+    case 'WECHAT_OA':
       return (
         <div className="p-4 bg-white">
           <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
@@ -384,14 +384,14 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             </div>
           </div>
         </div>
-      );
+      )
 
-    case "COMBO_PROMO":
+    case 'COMBO_PROMO':
       return (
         <div className="p-4 bg-white">
           <div className="flex items-center gap-2 mb-3">
             <Package className="h-4 w-4 text-purple-500" />
-            <span className="font-medium">{(props.title as string) || "超值套餐"}</span>
+            <span className="font-medium">{(props.title as string) || '超值套餐'}</span>
           </div>
           <div className="flex gap-2 overflow-hidden">
             {[1, 2, 3].map((i) => (
@@ -403,32 +403,32 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             ))}
           </div>
         </div>
-      );
+      )
 
     // === 基础元素 ===
-    case "TEXT":
+    case 'TEXT':
       return (
         <div
           className="p-3"
           style={{
             fontSize: (props.fontSize as number) || 14,
-            textAlign: (props.align as "left" | "center" | "right") || "left",
-            fontWeight: (props.fontWeight as string) || "normal",
-            color: (props.color as string) || "#333",
+            textAlign: (props.align as 'left' | 'center' | 'right') || 'left',
+            fontWeight: (props.fontWeight as string) || 'normal',
+            color: (props.color as string) || '#333'
           }}
         >
-          {(props.content as string) || "请输入文本"}
+          {(props.content as string) || '请输入文本'}
         </div>
-      );
+      )
 
-    case "USER_NICKNAME":
+    case 'USER_NICKNAME':
       return (
         <div className="p-3" style={{ fontSize: (props.fontSize as number) || 16 }}>
-          {(props.prefix as string) || "Hi, "}用户昵称
+          {(props.prefix as string) || 'Hi, '}用户昵称
         </div>
-      );
+      )
 
-    case "USER_AVATAR":
+    case 'USER_AVATAR':
       return (
         <div className="p-3 flex justify-center">
           <div
@@ -436,32 +436,32 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             style={{
               width: (props.size as number) || 60,
               height: (props.size as number) || 60,
-              borderRadius: (props.borderRadius as number) || 30,
+              borderRadius: (props.borderRadius as number) || 30
             }}
           >
             <User className="h-8 w-8 text-gray-400" />
           </div>
         </div>
-      );
+      )
 
-    case "USER_PHONE":
+    case 'USER_PHONE':
       return (
         <div
           className="p-3 flex items-center gap-2"
           style={{ fontSize: (props.fontSize as number) || 14 }}
         >
           <Phone className="h-4 w-4 text-gray-400" />
-          <span>{(props.masked as boolean) ? "138****8888" : "13888888888"}</span>
+          <span>{(props.masked as boolean) ? '138****8888' : '13888888888'}</span>
         </div>
-      );
+      )
 
-    case "USER_POINTS":
+    case 'USER_POINTS':
       return (
         <div className="p-3 text-center">
           <div
             style={{
               fontSize: (props.fontSize as number) || 24,
-              color: (props.color as string) || "#ff6b35",
+              color: (props.color as string) || '#ff6b35'
             }}
           >
             0
@@ -470,15 +470,15 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             <div className="text-xs text-gray-400">积分</div>
           )}
         </div>
-      );
+      )
 
-    case "USER_BALANCE":
+    case 'USER_BALANCE':
       return (
         <div className="p-3 text-center">
           <div
             style={{
               fontSize: (props.fontSize as number) || 24,
-              color: (props.color as string) || "#ff6b35",
+              color: (props.color as string) || '#ff6b35'
             }}
           >
             ¥0.00
@@ -487,39 +487,39 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             <div className="text-xs text-gray-400">余额</div>
           )}
         </div>
-      );
+      )
 
-    case "COUPON_COUNT":
+    case 'COUPON_COUNT':
       return (
         <div className="p-3 flex items-center gap-1">
-          <Ticket className="h-4 w-4" style={{ color: (props.color as string) || "#ff6b35" }} />
-          <span style={{ color: (props.color as string) || "#ff6b35" }}>3张可用</span>
+          <Ticket className="h-4 w-4" style={{ color: (props.color as string) || '#ff6b35' }} />
+          <span style={{ color: (props.color as string) || '#ff6b35' }}>3张可用</span>
         </div>
-      );
+      )
 
-    case "STORE_NAME":
+    case 'STORE_NAME':
       return (
         <div className="p-3" style={{ fontSize: (props.fontSize as number) || 16 }}>
           <Store className="h-4 w-4 inline mr-1" />
           门店名称
         </div>
-      );
+      )
 
-    case "STORE_DISTANCE":
+    case 'STORE_DISTANCE':
       return (
         <div
           className="p-3"
           style={{
             fontSize: (props.fontSize as number) || 12,
-            color: (props.color as string) || "#999",
+            color: (props.color as string) || '#999'
           }}
         >
           <MapPin className="h-3 w-3 inline mr-1" />
           距离500m
         </div>
-      );
+      )
 
-    case "MEMBER_BADGE":
+    case 'MEMBER_BADGE':
       return (
         <div className="p-3 flex items-center gap-2">
           <div className="bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full px-3 py-1 flex items-center gap-1">
@@ -527,9 +527,9 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             <span className="text-white text-sm">黄金会员</span>
           </div>
         </div>
-      );
+      )
 
-    case "MEMBER_PROGRESS":
+    case 'MEMBER_PROGRESS':
       return (
         <div className="p-3">
           <div className="flex justify-between text-xs text-gray-400 mb-1">
@@ -540,34 +540,34 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             className="rounded-full overflow-hidden"
             style={{
               height: (props.height as number) || 8,
-              backgroundColor: (props.bgColor as string) || "#eee",
+              backgroundColor: (props.bgColor as string) || '#eee'
             }}
           >
             <div
               className="h-full rounded-full"
-              style={{ width: "60%", backgroundColor: (props.activeColor as string) || "#ff6b35" }}
+              style={{ width: '60%', backgroundColor: (props.activeColor as string) || '#ff6b35' }}
             />
           </div>
         </div>
-      );
+      )
 
     // === 自由容器 ===
-    case "FREE_CONTAINER":
+    case 'FREE_CONTAINER':
       return (
         <div
           className="border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400"
           style={{
             height: (props.height as number) || 200,
             padding: (props.padding as number) || 0,
-            backgroundColor: (props.bgColor as string) || "transparent",
+            backgroundColor: (props.bgColor as string) || 'transparent'
           }}
         >
           <LayoutGrid className="h-6 w-6 mr-2" />
           自由容器
         </div>
-      );
+      )
 
-    case "FLOAT_CONTAINER":
+    case 'FLOAT_CONTAINER':
       return (
         <div className="h-20 relative bg-gray-50">
           <div
@@ -577,18 +577,18 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             <LayoutGrid className="h-4 w-4" />
           </div>
         </div>
-      );
+      )
 
     // === 专属组件 ===
-    case "ORDER_COMPONENT":
+    case 'ORDER_COMPONENT':
       return (
         <div className="bg-white">
           <div className="flex">
             <div className="w-20 bg-gray-50 p-2 space-y-2">
-              {["热销", "主食", "饮品"].map((cat, i) => (
+              {['热销', '主食', '饮品'].map((cat, i) => (
                 <div
                   key={i}
-                  className={`text-xs py-1 px-2 rounded ${i === 0 ? "bg-orange-100 text-orange-500" : "text-gray-500"}`}
+                  className={`text-xs py-1 px-2 rounded ${i === 0 ? 'bg-orange-100 text-orange-500' : 'text-gray-500'}`}
                 >
                   {cat}
                 </div>
@@ -608,9 +608,9 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             </div>
           </div>
         </div>
-      );
+      )
 
-    case "USER_INFO":
+    case 'USER_INFO':
       return (
         <div className="p-4 bg-gradient-to-r from-orange-400 to-pink-400">
           <div className="flex items-center gap-3 text-white">
@@ -637,15 +637,15 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             </div>
           </div>
         </div>
-      );
+      )
 
-    case "FUNC_ENTRY":
+    case 'FUNC_ENTRY':
       const funcItems = (props.items as { icon: string; text: string }[]) || [
-        { icon: "📋", text: "我的订单" },
-        { icon: "🎫", text: "优惠券" },
-        { icon: "⭐", text: "收藏" },
-        { icon: "⚙️", text: "设置" },
-      ];
+        { icon: '📋', text: '我的订单' },
+        { icon: '🎫', text: '优惠券' },
+        { icon: '⭐', text: '收藏' },
+        { icon: '⚙️', text: '设置' }
+      ]
       return (
         <div className="p-4 bg-white">
           <div
@@ -660,10 +660,10 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             ))}
           </div>
         </div>
-      );
+      )
 
-    case "MEMBER_RIGHTS":
-      const rights = (props.items as string[]) || ["免费配送", "会员折扣", "生日特权", "积分加倍"];
+    case 'MEMBER_RIGHTS':
+      const rights = (props.items as string[]) || ['免费配送', '会员折扣', '生日特权', '积分加倍']
       return (
         <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50">
           <div className="flex items-center gap-2 mb-3">
@@ -681,9 +681,9 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             ))}
           </div>
         </div>
-      );
+      )
 
-    case "MEMBER_LEVEL":
+    case 'MEMBER_LEVEL':
       return (
         <div className="p-4 bg-white">
           <div className="flex items-center justify-between mb-3">
@@ -701,14 +701,14 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             <span>铂金会员</span>
           </div>
         </div>
-      );
+      )
 
-    case "RECHARGE_OPTIONS":
+    case 'RECHARGE_OPTIONS':
       const rechargeItems = (props.items as { amount: number; gift: number }[]) || [
         { amount: 100, gift: 10 },
         { amount: 200, gift: 30 },
-        { amount: 500, gift: 100 },
-      ];
+        { amount: 500, gift: 100 }
+      ]
       return (
         <div className="p-4 bg-white">
           <div
@@ -718,7 +718,7 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             {rechargeItems.map((item, i) => (
               <div
                 key={i}
-                className={`border-2 rounded-lg p-3 text-center ${i === 0 ? "border-orange-500 bg-orange-50" : "border-gray-200"}`}
+                className={`border-2 rounded-lg p-3 text-center ${i === 0 ? 'border-orange-500 bg-orange-50' : 'border-gray-200'}`}
               >
                 <div className="text-lg font-bold">¥{item.amount}</div>
                 <div className="text-xs text-orange-500">送¥{item.gift}</div>
@@ -726,22 +726,22 @@ export function ComponentPreview({ component, mini = false }: ComponentPreviewPr
             ))}
           </div>
         </div>
-      );
+      )
 
-    case "RECHARGE_BUTTON":
+    case 'RECHARGE_BUTTON':
       return (
         <div className="p-4">
           <button
             className="w-full py-3 rounded-full text-white font-medium"
-            style={{ backgroundColor: (props.bgColor as string) || "#ff6b35" }}
+            style={{ backgroundColor: (props.bgColor as string) || '#ff6b35' }}
           >
-            {(props.text as string) || "立即充值"}
+            {(props.text as string) || '立即充值'}
           </button>
         </div>
-      );
+      )
 
     default:
-      return <div className="p-4 bg-gray-100 text-center text-gray-500 text-sm">{type}</div>;
+      return <div className="p-4 bg-gray-100 text-center text-gray-500 text-sm">{type}</div>
   }
 }
 
@@ -814,8 +814,8 @@ function MiniPreview({ type }: { type: string }) {
         <User className="h-4 w-4 text-white" />
       </div>
     ),
-    SPACER: <div className="w-full h-2 bg-gray-200 rounded" />,
-  };
+    SPACER: <div className="w-full h-2 bg-gray-200 rounded" />
+  }
 
   return (
     previews[type] || (
@@ -823,5 +823,5 @@ function MiniPreview({ type }: { type: string }) {
         预览
       </div>
     )
-  );
+  )
 }

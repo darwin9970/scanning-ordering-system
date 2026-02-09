@@ -1,0 +1,7 @@
+node_modules
+dist
+unpackage
+.hbuilderx
+uni_modules
+*.min.js
+*.min.css

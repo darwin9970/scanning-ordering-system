@@ -15,19 +15,19 @@ import { showError, showWarning } from './toast'
  */
 export function handleApiError(error, options = {}) {
   const { action = '操作', onRetry, showRetry = false } = options
-  
+
   // 网络错误
   if (error.errMsg?.includes('network') || error.errMsg?.includes('timeout')) {
     showNetworkError(action, onRetry, showRetry)
     return
   }
-  
+
   // 业务错误
   if (error.message) {
     showError(error.message)
     return
   }
-  
+
   // 未知错误
   showError(`${action}失败，请稍后重试`)
 }
@@ -78,9 +78,9 @@ export function handleHttpError(status, action = '操作') {
     503: '服务暂时不可用',
     504: '请求超时'
   }
-  
+
   const message = errorMap[status] || `${action}失败，请稍后重试`
-  
+
   if (status === 401) {
     // 未授权，跳转登录
     uni.showModal({
@@ -98,4 +98,3 @@ export function handleHttpError(status, action = '操作') {
     showError(message)
   }
 }
-

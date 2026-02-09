@@ -1,25 +1,25 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from 'react'
+import { api } from '@/lib/api'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  TableRow
+} from '@/components/ui/table'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  SelectValue
+} from '@/components/ui/select'
 import {
   Bell,
   Clock,
@@ -28,148 +28,150 @@ import {
   RefreshCw,
   User,
   Utensils,
-  CreditCard,
-} from "lucide-react";
+  CreditCard
+} from 'lucide-react'
+
+import type { LucideIcon } from 'lucide-react'
 
 interface ServiceCall {
-  id: number;
-  storeId: number;
-  tableId: number;
-  orderId: number | null;
-  type: "CALL_WAITER" | "RUSH_ORDER" | "REQUEST_BILL";
-  status: "PENDING" | "PROCESSING" | "COMPLETED";
-  note: string | null;
-  createdAt: string;
-  updatedAt: string;
+  id: number
+  storeId: number
+  tableId: number
+  orderId: number | null
+  type: 'CALL_WAITER' | 'RUSH_ORDER' | 'REQUEST_BILL'
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED'
+  note: string | null
+  createdAt: string
+  updatedAt: string
   table?: {
-    id: number;
-    name: string;
-  };
+    id: number
+    name: string
+  }
   order?: {
-    id: number;
-    orderNo: string;
-  };
+    id: number
+    orderNo: string
+  }
 }
 
-const typeConfig: Record<string, { label: string; icon: any; color: string }> = {
-  CALL_WAITER: { label: "呼叫服务员", icon: User, color: "bg-blue-100 text-blue-800" },
-  RUSH_ORDER: { label: "催单", icon: Utensils, color: "bg-orange-100 text-orange-800" },
-  REQUEST_BILL: { label: "请求结账", icon: CreditCard, color: "bg-green-100 text-green-800" },
-};
+const typeConfig: Record<string, { label: string; icon: LucideIcon; color: string }> = {
+  CALL_WAITER: { label: '呼叫服务员', icon: User, color: 'bg-blue-100 text-blue-800' },
+  RUSH_ORDER: { label: '催单', icon: Utensils, color: 'bg-orange-100 text-orange-800' },
+  REQUEST_BILL: { label: '请求结账', icon: CreditCard, color: 'bg-green-100 text-green-800' }
+}
 
 const statusConfig: Record<
   string,
-  { label: string; variant: "default" | "secondary" | "destructive" }
+  { label: string; variant: 'default' | 'secondary' | 'destructive' }
 > = {
-  PENDING: { label: "待处理", variant: "destructive" },
-  PROCESSING: { label: "处理中", variant: "secondary" },
-  COMPLETED: { label: "已完成", variant: "default" },
-};
+  PENDING: { label: '待处理', variant: 'destructive' },
+  PROCESSING: { label: '处理中', variant: 'secondary' },
+  COMPLETED: { label: '已完成', variant: 'default' }
+}
 
 export default function ServicePage() {
-  const [calls, setCalls] = useState<ServiceCall[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>("PENDING");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [pendingCount, setPendingCount] = useState(0);
+  const [calls, setCalls] = useState<ServiceCall[]>([])
+  const [loading, setLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState<string>('PENDING')
+  const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [pendingCount, setPendingCount] = useState(0)
 
   const fetchCalls = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const params: Record<string, any> = { storeId: 1 };
-      if (statusFilter !== "all") params.status = statusFilter;
-      if (typeFilter !== "all") params.type = typeFilter;
+      const params: Record<string, string | number> = { storeId: 1 }
+      if (statusFilter !== 'all') params.status = statusFilter
+      if (typeFilter !== 'all') params.type = typeFilter
 
       const queryString = new URLSearchParams(
         Object.entries(params).map(([k, v]) => [k, String(v)])
-      ).toString();
+      ).toString()
 
-      const res = await api.request<{ list: ServiceCall[] }>(`/api/service?${queryString}`);
-      setCalls(res.list);
+      const res = await api.request<{ list: ServiceCall[] }>(`/api/service?${queryString}`)
+      setCalls(res.list)
     } catch (error) {
-      console.error("Failed to fetch service calls:", error);
+      console.error('Failed to fetch service calls:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const fetchPendingCount = async () => {
     try {
-      const res = await api.request<{ count: number }>("/api/service/pending-count?storeId=1");
-      setPendingCount(res.count);
+      const res = await api.request<{ count: number }>('/api/service/pending-count?storeId=1')
+      setPendingCount(res.count)
     } catch (error) {
-      console.error("Failed to fetch pending count:", error);
+      console.error('Failed to fetch pending count:', error)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchCalls();
-    fetchPendingCount();
+    fetchCalls()
+    fetchPendingCount()
 
     // 每30秒自动刷新
     const interval = setInterval(() => {
-      fetchCalls();
-      fetchPendingCount();
-    }, 30000);
+      fetchCalls()
+      fetchPendingCount()
+    }, 30000)
 
-    return () => clearInterval(interval);
-  }, [statusFilter, typeFilter]);
+    return () => clearInterval(interval)
+  }, [statusFilter, typeFilter])
 
   const handleProcess = async (id: number) => {
     try {
       await api.request(`/api/service/${id}/process`, {
-        method: "PUT",
-        body: JSON.stringify({ status: "PROCESSING" }),
-      });
-      fetchCalls();
-      fetchPendingCount();
+        method: 'PUT',
+        body: JSON.stringify({ status: 'PROCESSING' })
+      })
+      fetchCalls()
+      fetchPendingCount()
     } catch (error) {
-      console.error("Failed to process:", error);
+      console.error('Failed to process:', error)
     }
-  };
+  }
 
   const handleComplete = async (id: number) => {
     try {
       await api.request(`/api/service/${id}/process`, {
-        method: "PUT",
-        body: JSON.stringify({ status: "COMPLETED" }),
-      });
-      fetchCalls();
-      fetchPendingCount();
+        method: 'PUT',
+        body: JSON.stringify({ status: 'COMPLETED' })
+      })
+      fetchCalls()
+      fetchPendingCount()
     } catch (error) {
-      console.error("Failed to complete:", error);
+      console.error('Failed to complete:', error)
     }
-  };
+  }
 
   const handleBatchComplete = async () => {
     const pendingIds = calls
-      .filter((c) => c.status === "PENDING" || c.status === "PROCESSING")
-      .map((c) => c.id);
+      .filter((c) => c.status === 'PENDING' || c.status === 'PROCESSING')
+      .map((c) => c.id)
 
-    if (pendingIds.length === 0) return;
+    if (pendingIds.length === 0) return
 
     try {
-      await api.request("/api/service/batch-complete", {
-        method: "PUT",
-        body: JSON.stringify({ ids: pendingIds }),
-      });
-      fetchCalls();
-      fetchPendingCount();
+      await api.request('/api/service/batch-complete', {
+        method: 'PUT',
+        body: JSON.stringify({ ids: pendingIds })
+      })
+      fetchCalls()
+      fetchPendingCount()
     } catch (error) {
-      console.error("Failed to batch complete:", error);
+      console.error('Failed to batch complete:', error)
     }
-  };
+  }
 
   const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
 
-    if (diff < 60) return `${diff}秒前`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
-    return date.toLocaleDateString();
-  };
+    if (diff < 60) return `${diff}秒前`
+    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
+    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
+    return date.toLocaleDateString()
+  }
 
   return (
     <div className="space-y-6">
@@ -182,14 +184,14 @@ export default function ServicePage() {
           <Button
             variant="outline"
             onClick={() => {
-              fetchCalls();
-              fetchPendingCount();
+              fetchCalls()
+              fetchPendingCount()
             }}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             刷新
           </Button>
-          {calls.some((c) => c.status !== "COMPLETED") && (
+          {calls.some((c) => c.status !== 'COMPLETED') && (
             <Button onClick={handleBatchComplete}>
               <CheckCircle className="h-4 w-4 mr-2" />
               全部完成
@@ -200,15 +202,15 @@ export default function ServicePage() {
 
       {/* 统计卡片 */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className={pendingCount > 0 ? "border-red-200 bg-red-50" : ""}>
+        <Card className={pendingCount > 0 ? 'border-red-200 bg-red-50' : ''}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">待处理</CardTitle>
             <AlertCircle
-              className={`h-4 w-4 ${pendingCount > 0 ? "text-red-500" : "text-muted-foreground"}`}
+              className={`h-4 w-4 ${pendingCount > 0 ? 'text-red-500' : 'text-muted-foreground'}`}
             />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${pendingCount > 0 ? "text-red-600" : ""}`}>
+            <div className={`text-2xl font-bold ${pendingCount > 0 ? 'text-red-600' : ''}`}>
               {pendingCount}
             </div>
           </CardContent>
@@ -220,7 +222,7 @@ export default function ServicePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {calls.filter((c) => c.type === "CALL_WAITER" && c.status !== "COMPLETED").length}
+              {calls.filter((c) => c.type === 'CALL_WAITER' && c.status !== 'COMPLETED').length}
             </div>
           </CardContent>
         </Card>
@@ -231,7 +233,7 @@ export default function ServicePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {calls.filter((c) => c.type === "RUSH_ORDER" && c.status !== "COMPLETED").length}
+              {calls.filter((c) => c.type === 'RUSH_ORDER' && c.status !== 'COMPLETED').length}
             </div>
           </CardContent>
         </Card>
@@ -242,7 +244,7 @@ export default function ServicePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {calls.filter((c) => c.type === "REQUEST_BILL" && c.status !== "COMPLETED").length}
+              {calls.filter((c) => c.type === 'REQUEST_BILL' && c.status !== 'COMPLETED').length}
             </div>
           </CardContent>
         </Card>
@@ -307,13 +309,13 @@ export default function ServicePage() {
               </TableHeader>
               <TableBody>
                 {calls.map((call) => {
-                  const type = typeConfig[call.type];
-                  const TypeIcon = type.icon;
+                  const type = typeConfig[call.type]
+                  const TypeIcon = type.icon
 
                   return (
                     <TableRow
                       key={call.id}
-                      className={call.status === "PENDING" ? "bg-red-50" : ""}
+                      className={call.status === 'PENDING' ? 'bg-red-50' : ''}
                     >
                       <TableCell className="font-medium">
                         {call.table?.name || `桌台 ${call.tableId}`}
@@ -324,8 +326,8 @@ export default function ServicePage() {
                           {type.label}
                         </Badge>
                       </TableCell>
-                      <TableCell>{call.order?.orderNo || "-"}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">{call.note || "-"}</TableCell>
+                      <TableCell>{call.order?.orderNo || '-'}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{call.note || '-'}</TableCell>
                       <TableCell className="text-muted-foreground">
                         {formatTime(call.createdAt)}
                       </TableCell>
@@ -336,7 +338,7 @@ export default function ServicePage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          {call.status === "PENDING" && (
+                          {call.status === 'PENDING' && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -345,7 +347,7 @@ export default function ServicePage() {
                               处理
                             </Button>
                           )}
-                          {call.status !== "COMPLETED" && (
+                          {call.status !== 'COMPLETED' && (
                             <Button size="sm" onClick={() => handleComplete(call.id)}>
                               完成
                             </Button>
@@ -353,7 +355,7 @@ export default function ServicePage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  );
+                  )
                 })}
                 {calls.length === 0 && (
                   <TableRow>
@@ -368,5 +370,5 @@ export default function ServicePage() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

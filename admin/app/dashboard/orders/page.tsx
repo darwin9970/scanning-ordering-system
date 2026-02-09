@@ -1,37 +1,37 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { formatPrice, formatDate, ORDER_STATUS_MAP } from "@/lib/utils";
-import type { OrderStatus, Order, Product } from "@/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { api } from '@/lib/api'
+import { formatPrice, formatDate, ORDER_STATUS_MAP } from '@/lib/utils'
+import type { OrderStatus, Order, Product, OrderItem, ProductVariant } from '@/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  TableRow
+} from '@/components/ui/table'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  SelectValue
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  DialogTitle
+} from '@/components/ui/dialog'
 import {
   Search,
   Eye,
@@ -41,188 +41,187 @@ import {
   Plus,
   Minus,
   Receipt,
-  Coins,
   Ticket,
   ShoppingCart,
-  UtensilsCrossed,
-} from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { toast } from "sonner";
+  UtensilsCrossed
+} from 'lucide-react'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { toast } from 'sonner'
 
 interface AddItemCart {
-  variantId: number;
-  productName: string;
-  variantName: string;
-  price: number;
-  quantity: number;
+  variantId: number
+  productName: string
+  variantName: string
+  price: number
+  quantity: number
 }
 
 export default function OrdersPage() {
-  const [page, setPage] = useState(1);
-  const [status, setStatus] = useState<OrderStatus | "">("");
-  const [keyword, setKeyword] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [fullRefundDialogOpen, setFullRefundDialogOpen] = useState(false);
-  const [refundingOrderId, setRefundingOrderId] = useState<number | null>(null);
+  const [page, setPage] = useState(1)
+  const [status, setStatus] = useState<OrderStatus | ''>('')
+  const [keyword, setKeyword] = useState('')
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [fullRefundDialogOpen, setFullRefundDialogOpen] = useState(false)
+  const [refundingOrderId, setRefundingOrderId] = useState<number | null>(null)
 
   // 部分退款
-  const [partialRefundDialogOpen, setPartialRefundDialogOpen] = useState(false);
-  const [refundItems, setRefundItems] = useState<{ itemId: number; quantity: number }[]>([]);
-  const [refundReason, setRefundReason] = useState("");
+  const [partialRefundDialogOpen, setPartialRefundDialogOpen] = useState(false)
+  const [refundItems, setRefundItems] = useState<{ itemId: number; quantity: number }[]>([])
+  const [refundReason, setRefundReason] = useState('')
 
   // 加菜
-  const [addItemDialogOpen, setAddItemDialogOpen] = useState(false);
-  const [addItemsCart, setAddItemsCart] = useState<AddItemCart[]>([]);
-  const [addItemsSearch, setAddItemsSearch] = useState("");
+  const [addItemDialogOpen, setAddItemDialogOpen] = useState(false)
+  const [addItemsCart, setAddItemsCart] = useState<AddItemCart[]>([])
+  const [addItemsSearch, setAddItemsSearch] = useState('')
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["orders", page, status, keyword],
+    queryKey: ['orders', page, status, keyword],
     queryFn: () =>
       api.getOrders({
         page,
         pageSize: 10,
         status: (status as OrderStatus) || undefined,
-        orderNo: keyword || undefined,
-      }),
-  });
+        orderNo: keyword || undefined
+      })
+  })
 
   const handleStatusChange = async (orderId: number, newStatus: OrderStatus) => {
     try {
-      await api.updateOrderStatus(orderId, newStatus);
-      refetch();
+      await api.updateOrderStatus(orderId, newStatus)
+      refetch()
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "操作失败");
+      toast.error(error instanceof Error ? error.message : '操作失败')
     }
-  };
+  }
 
   const handleRefund = (orderId: number) => {
-    setRefundingOrderId(orderId);
-    setFullRefundDialogOpen(true);
-  };
+    setRefundingOrderId(orderId)
+    setFullRefundDialogOpen(true)
+  }
 
   const confirmRefund = async () => {
-    if (refundingOrderId === null) return;
+    if (refundingOrderId === null) return
     try {
-      await api.refundOrder(refundingOrderId, "商家操作退款");
-      refetch();
-      setDetailOpen(false);
-      toast.success("退款成功");
-      setRefundingOrderId(null);
-    } catch (error: any) {
-      toast.error(error.message || "退款失败");
+      await api.refundOrder(refundingOrderId, '商家操作退款')
+      refetch()
+      setDetailOpen(false)
+      toast.success('退款成功')
+      setRefundingOrderId(null)
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : '退款失败')
     }
-  };
+  }
 
   // 打开部分退款对话框
   const openPartialRefund = () => {
-    if (!selectedOrder) return;
+    if (!selectedOrder) return
     setRefundItems(
-      selectedOrder.items?.map((item: any) => ({
+      selectedOrder.items?.map((item: OrderItem) => ({
         itemId: item.id,
-        quantity: 0,
+        quantity: 0
       })) || []
-    );
-    setRefundReason("");
-    setPartialRefundDialogOpen(true);
-  };
+    )
+    setRefundReason('')
+    setPartialRefundDialogOpen(true)
+  }
 
   // 更新退款数量
   const updateRefundQuantity = (itemId: number, delta: number) => {
-    const item = selectedOrder?.items?.find((i: any) => i.id === itemId);
-    if (!item) return;
+    const item = selectedOrder?.items?.find((i: OrderItem) => i.id === itemId)
+    if (!item) return
 
     setRefundItems((prev) =>
       prev.map((ri) => {
         if (ri.itemId === itemId) {
-          const newQty = Math.max(
-            0,
-            Math.min(item.quantity - (item.refundedQuantity || 0), ri.quantity + delta)
-          );
-          return { ...ri, quantity: newQty };
+          const refundableQty = item.quantity - (item.refundedQuantity || 0)
+          const newQty = Math.max(0, Math.min(refundableQty, ri.quantity + delta))
+          return { ...ri, quantity: newQty }
         }
-        return ri;
+        return ri
       })
-    );
-  };
+    )
+  }
 
   // 提交部分退款
   const handlePartialRefund = async () => {
-    if (!selectedOrder) return;
-    const itemsToRefund = refundItems.filter((ri) => ri.quantity > 0);
+    if (!selectedOrder) return
+    const itemsToRefund = refundItems.filter((ri) => ri.quantity > 0)
     if (itemsToRefund.length === 0) {
-      toast.error("请选择要退款的商品");
-      return;
+      toast.error('请选择要退款的商品')
+      return
     }
 
     try {
       await api.request(`/api/orders/${selectedOrder.id}/partial-refund`, {
-        method: "POST",
-        body: { items: itemsToRefund, reason: refundReason },
-      });
-      refetch();
-      setPartialRefundDialogOpen(false);
-      setDetailOpen(false);
-      toast.success("部分退款成功");
-    } catch (error: any) {
-      toast.error(error.message || "退款失败");
+        method: 'POST',
+        body: { items: itemsToRefund, reason: refundReason }
+      })
+      refetch()
+      setPartialRefundDialogOpen(false)
+      setDetailOpen(false)
+      toast.success('部分退款成功')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : '退款失败')
     }
-  };
+  }
 
   // 获取可退款数量
-  const getRefundableQty = (item: any) => {
-    return item.quantity - (item.refundedQuantity || 0);
-  };
+  const getRefundableQty = (item: OrderItem) => {
+    return item.quantity - (item.refundedQuantity || 0)
+  }
 
   // 计算退款金额
   const calculateRefundAmount = () => {
-    if (!selectedOrder) return 0;
+    if (!selectedOrder) return 0
     return refundItems.reduce((sum, ri) => {
-      const item = selectedOrder.items?.find((i: any) => i.id === ri.itemId);
-      if (!item) return sum;
-      return sum + Number(item.price) * ri.quantity;
-    }, 0);
-  };
+      const item = selectedOrder.items?.find((i: OrderItem) => i.id === ri.itemId)
+      if (!item) return sum
+      return sum + Number(item.price) * ri.quantity
+    }, 0)
+  }
 
   // 加菜功能 - 获取商品列表
   const { data: productsData } = useQuery({
-    queryKey: ["products-for-add", addItemsSearch],
+    queryKey: ['products-for-add', addItemsSearch],
     queryFn: () => api.getProducts({ pageSize: 50, keyword: addItemsSearch || undefined }),
-    enabled: addItemDialogOpen,
-  });
+    enabled: addItemDialogOpen
+  })
 
   // 打开加菜对话框
   const openAddItemDialog = () => {
-    if (!selectedOrder) return;
-    setAddItemsCart([]);
-    setAddItemsSearch("");
-    setAddItemDialogOpen(true);
-  };
+    if (!selectedOrder) return
+    setAddItemsCart([])
+    setAddItemsSearch('')
+    setAddItemDialogOpen(true)
+  }
 
   // 添加商品到加菜购物车
-  const addToCart = (product: any, variant: any) => {
-    const existingIndex = addItemsCart.findIndex((item) => item.variantId === variant.id);
+  const addToCart = (
+    product: Product,
+    variant: ProductVariant | { id: number; name: string; price: string | number }
+  ) => {
+    const existingIndex = addItemsCart.findIndex((item) => item.variantId === variant.id)
     if (existingIndex >= 0) {
-      const newCart = [...addItemsCart];
-      newCart[existingIndex].quantity += 1;
-      setAddItemsCart(newCart);
+      const newCart = [...addItemsCart]
+      newCart[existingIndex].quantity += 1
+      setAddItemsCart(newCart)
     } else {
       setAddItemsCart([
         ...addItemsCart,
         {
           variantId: variant.id,
           productName: product.name,
-          variantName: variant.name || "默认",
+          variantName: ('name' in variant ? variant.name : '') || '默认',
           price: Number(variant.price),
-          quantity: 1,
-        },
-      ]);
+          quantity: 1
+        }
+      ])
     }
-  };
+  }
 
   // 更新加菜购物车数量
   const updateCartQuantity = (variantId: number, delta: number) => {
@@ -230,57 +229,57 @@ export default function OrdersPage() {
       prev
         .map((item) => {
           if (item.variantId === variantId) {
-            const newQty = item.quantity + delta;
-            return newQty > 0 ? { ...item, quantity: newQty } : item;
+            const newQty = item.quantity + delta
+            return newQty > 0 ? { ...item, quantity: newQty } : item
           }
-          return item;
+          return item
         })
         .filter((item) => item.quantity > 0)
-    );
-  };
+    )
+  }
 
   // 从加菜购物车移除
   const removeFromCart = (variantId: number) => {
-    setAddItemsCart((prev) => prev.filter((item) => item.variantId !== variantId));
-  };
+    setAddItemsCart((prev) => prev.filter((item) => item.variantId !== variantId))
+  }
 
   // 计算加菜总金额
   const calculateAddItemsTotal = () => {
-    return addItemsCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  };
+    return addItemsCart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  }
 
   // 提交加菜
   const handleAddItems = async () => {
-    if (!selectedOrder || addItemsCart.length === 0) return;
+    if (!selectedOrder || addItemsCart.length === 0) return
 
     try {
       await api.request(`/api/orders/${selectedOrder.id}/add-items`, {
-        method: "POST",
+        method: 'POST',
         body: {
           items: addItemsCart.map((item) => ({
             variantId: item.variantId,
-            quantity: item.quantity,
-          })),
-        },
-      });
-      refetch();
-      setAddItemDialogOpen(false);
-      setDetailOpen(false);
-      toast.success("加菜成功");
-    } catch (error: any) {
-      toast.error(error.message || "退款失败");
+            quantity: item.quantity
+          }))
+        }
+      })
+      refetch()
+      setAddItemDialogOpen(false)
+      setDetailOpen(false)
+      toast.success('加菜成功')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : '加菜失败')
     }
-  };
+  }
 
   const viewDetail = async (orderId: number) => {
     try {
-      const order = await api.getOrder(orderId);
-      setSelectedOrder(order);
-      setDetailOpen(true);
-    } catch (error: any) {
-      toast.error(error.message || "退款失败");
+      const order = await api.getOrder(orderId)
+      setSelectedOrder(order)
+      setDetailOpen(true)
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : '获取详情失败')
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -296,7 +295,7 @@ export default function OrdersPage() {
       </div>
 
       <Card className="shadow-lg border-0">
-        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+        <CardHeader className="bg-linear-to-r from-primary/5 to-transparent">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <CardTitle className="text-xl font-bold">订单列表</CardTitle>
             <div className="flex gap-2">
@@ -310,8 +309,8 @@ export default function OrdersPage() {
                 />
               </div>
               <Select
-                value={status || "ALL"}
-                onValueChange={(v) => setStatus(v === "ALL" ? "" : (v as OrderStatus))}
+                value={status || 'ALL'}
+                onValueChange={(v) => setStatus(v === 'ALL' ? '' : (v as OrderStatus))}
               >
                 <SelectTrigger className="w-[130px]">
                   <SelectValue placeholder="全部状态" />
@@ -356,7 +355,7 @@ export default function OrdersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data?.list.map((order: any, index: number) => (
+                  {data?.list.map((order: Order) => (
                     <TableRow
                       key={order.id}
                       className="hover:bg-muted/50 even:bg-muted/30 transition-colors cursor-pointer"
@@ -365,7 +364,7 @@ export default function OrdersPage() {
                       <TableCell>{order.table?.name}</TableCell>
                       <TableCell>{formatPrice(order.payAmount)}</TableCell>
                       <TableCell>
-                        <Badge className={ORDER_STATUS_MAP[order.status]?.color || ""}>
+                        <Badge className={(ORDER_STATUS_MAP[order.status]?.color as string) || ''}>
                           {ORDER_STATUS_MAP[order.status]?.label || order.status}
                         </Badge>
                       </TableCell>
@@ -380,25 +379,25 @@ export default function OrdersPage() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          {order.status === "PAID" && (
+                          {order.status === 'PAID' && (
                             <Button
                               size="sm"
                               variant="ghost"
                               className="hover:bg-green-50 hover:text-green-600"
                               onClick={() =>
-                                handleStatusChange(order.id, "PREPARING" as OrderStatus)
+                                handleStatusChange(order.id, 'PREPARING' as OrderStatus)
                               }
                             >
                               <Check className="h-4 w-4" />
                             </Button>
                           )}
-                          {order.status === "PREPARING" && (
+                          {order.status === 'PREPARING' && (
                             <Button
                               size="sm"
                               variant="ghost"
                               className="hover:bg-green-50 hover:text-green-600"
                               onClick={() =>
-                                handleStatusChange(order.id, "COMPLETED" as OrderStatus)
+                                handleStatusChange(order.id, 'COMPLETED' as OrderStatus)
                               }
                             >
                               <Check className="h-4 w-4" />
@@ -450,51 +449,53 @@ export default function OrdersPage() {
                   <span className="text-muted-foreground">桌台:</span> {selectedOrder.table?.name}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">状态:</span>{" "}
-                  <Badge className={ORDER_STATUS_MAP[selectedOrder.status]?.color || ""}>
+                  <span className="text-muted-foreground">状态:</span>{' '}
+                  <Badge
+                    className={(ORDER_STATUS_MAP[selectedOrder.status]?.color as string) || ''}
+                  >
                     {ORDER_STATUS_MAP[selectedOrder.status]?.label}
                   </Badge>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">下单时间:</span>{" "}
+                  <span className="text-muted-foreground">下单时间:</span>{' '}
                   {formatDate(selectedOrder.createdAt)}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">支付时间:</span>{" "}
-                  {selectedOrder.payTime ? formatDate(selectedOrder.payTime) : "-"}
+                  <span className="text-muted-foreground">支付时间:</span>{' '}
+                  {selectedOrder.payTime ? formatDate(selectedOrder.payTime) : '-'}
                 </div>
-                {(selectedOrder as any).dinerCount && (
+                {selectedOrder.dinerCount && (
                   <div>
-                    <span className="text-muted-foreground">就餐人数:</span>{" "}
-                    {(selectedOrder as any).dinerCount} 人
+                    <span className="text-muted-foreground">就餐人数:</span>{' '}
+                    {selectedOrder.dinerCount} 人
                   </div>
                 )}
               </div>
 
               {/* 优惠信息 */}
-              {((selectedOrder as any).couponDiscount > 0 ||
-                (selectedOrder as any).pointsUsed > 0) && (
+              {(Number(selectedOrder.couponDiscount) > 0 ||
+                Number(selectedOrder.pointsUsed) > 0) && (
                 <div className="bg-orange-50 rounded-lg p-3 space-y-1">
                   <h4 className="font-medium text-sm flex items-center gap-2">
                     <Ticket className="h-4 w-4 text-orange-500" />
                     优惠信息
                   </h4>
                   <div className="text-sm space-y-1">
-                    {(selectedOrder as any).couponDiscount > 0 && (
+                    {Number(selectedOrder.couponDiscount) > 0 && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">优惠券抵扣</span>
                         <span className="text-orange-600">
-                          -{formatPrice((selectedOrder as any).couponDiscount)}
+                          -{formatPrice(selectedOrder.couponDiscount || 0)}
                         </span>
                       </div>
                     )}
-                    {(selectedOrder as any).pointsUsed > 0 && (
+                    {Number(selectedOrder.pointsUsed) > 0 && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">
-                          积分抵扣（{(selectedOrder as any).pointsUsed}积分）
+                          积分抵扣（{selectedOrder.pointsUsed}积分）
                         </span>
                         <span className="text-orange-600">
-                          -{formatPrice((selectedOrder as any).pointsDeduction || 0)}
+                          -{formatPrice(selectedOrder.pointsDeduction || 0)}
                         </span>
                       </div>
                     )}
@@ -509,13 +510,13 @@ export default function OrdersPage() {
                   商品列表
                 </h4>
                 <div className="space-y-2">
-                  {selectedOrder.items?.map((item: any) => (
+                  {selectedOrder.items?.map((item: OrderItem) => (
                     <div key={item.id} className="flex justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <span>
                           {item.snapshot?.name} x {item.quantity}
                         </span>
-                        {item.refundedQuantity > 0 && (
+                        {item.refundedQuantity && item.refundedQuantity > 0 && (
                           <Badge variant="destructive" className="text-xs">
                             已退{item.refundedQuantity}件
                           </Badge>
@@ -528,24 +529,24 @@ export default function OrdersPage() {
                 <div className="mt-3 pt-3 border-t space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">商品小计</span>
-                    <span>{formatPrice(selectedOrder.totalAmount)}</span>
+                    <span>{formatPrice(selectedOrder.totalAmount || 0)}</span>
                   </div>
-                  {(selectedOrder as any).couponDiscount > 0 && (
+                  {Number(selectedOrder.couponDiscount) > 0 && (
                     <div className="flex justify-between text-sm text-orange-600">
                       <span>优惠券</span>
-                      <span>-{formatPrice((selectedOrder as any).couponDiscount)}</span>
+                      <span>-{formatPrice(selectedOrder.couponDiscount || 0)}</span>
                     </div>
                   )}
-                  {(selectedOrder as any).pointsDeduction > 0 && (
+                  {Number(selectedOrder.pointsDeduction) > 0 && (
                     <div className="flex justify-between text-sm text-orange-600">
                       <span>积分抵扣</span>
-                      <span>-{formatPrice((selectedOrder as any).pointsDeduction)}</span>
+                      <span>-{formatPrice(selectedOrder.pointsDeduction || 0)}</span>
                     </div>
                   )}
-                  {(selectedOrder as any).refundAmount > 0 && (
+                  {Number(selectedOrder.refundAmount) > 0 && (
                     <div className="flex justify-between text-sm text-red-600">
                       <span>已退款</span>
-                      <span>-{formatPrice((selectedOrder as any).refundAmount)}</span>
+                      <span>-{formatPrice(selectedOrder.refundAmount || 0)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-medium pt-2 border-t">
@@ -563,7 +564,7 @@ export default function OrdersPage() {
             </div>
           )}
           <DialogFooter className="gap-2 flex-wrap">
-            {selectedOrder && ["PAID", "PREPARING"].includes(selectedOrder.status) && (
+            {selectedOrder && ['PAID', 'PREPARING'].includes(selectedOrder.status) && (
               <>
                 <Button onClick={openAddItemDialog}>
                   <UtensilsCrossed className="h-4 w-4 mr-2" />
@@ -594,9 +595,9 @@ export default function OrdersPage() {
           {selectedOrder && (
             <div className="space-y-4">
               <div className="space-y-2 max-h-60 overflow-y-auto">
-                {selectedOrder.items?.map((item: any) => {
-                  const refundItem = refundItems.find((ri) => ri.itemId === item.id);
-                  const refundableQty = getRefundableQty(item);
+                {selectedOrder.items?.map((item: OrderItem) => {
+                  const refundItem = refundItems.find((ri) => ri.itemId === item.id)
+                  const refundableQty = getRefundableQty(item)
 
                   if (refundableQty <= 0) {
                     return (
@@ -609,7 +610,7 @@ export default function OrdersPage() {
                         </span>
                         <Badge variant="secondary">已全部退款</Badge>
                       </div>
-                    );
+                    )
                   }
 
                   return (
@@ -650,7 +651,7 @@ export default function OrdersPage() {
                         </Button>
                       </div>
                     </div>
-                  );
+                  )
                 })}
               </div>
 
@@ -712,18 +713,18 @@ export default function OrdersPage() {
               </div>
               <ScrollArea className="h-[350px] pr-4">
                 <div className="space-y-2">
-                  {productsData?.list?.map((product: any) => (
+                  {productsData?.list?.map((product: Product) => (
                     <div key={product.id} className="border rounded-lg p-3">
                       <div className="font-medium mb-2">{product.name}</div>
                       <div className="space-y-1">
-                        {product.variants?.length > 0 ? (
-                          product.variants.map((variant: any) => (
+                        {product.variants && product.variants.length > 0 ? (
+                          product.variants.map((variant: ProductVariant) => (
                             <div
                               key={variant.id}
                               className="flex items-center justify-between text-sm"
                             >
                               <span className="text-muted-foreground">
-                                {variant.name || "默认"} - {formatPrice(variant.price)}
+                                {variant.name || '默认'} - {formatPrice(variant.price)}
                               </span>
                               <Button
                                 size="sm"
@@ -743,8 +744,8 @@ export default function OrdersPage() {
                               onClick={() =>
                                 addToCart(product, {
                                   id: product.id * 1000, // 临时ID
-                                  name: "默认",
-                                  price: product.basePrice,
+                                  name: '默认',
+                                  price: product.basePrice
                                 })
                               }
                             >
@@ -852,5 +853,5 @@ export default function OrdersPage() {
         variant="destructive"
       />
     </div>
-  );
+  )
 }

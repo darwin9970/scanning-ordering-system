@@ -1,10 +1,6 @@
 <template>
   <view class="q-empty">
-    <image 
-      class="q-empty__image" 
-      :src="imageSrc" 
-      mode="aspectFit"
-    />
+    <image class="q-empty__image" :src="imageSrc" mode="aspectFit" />
     <text class="q-empty__text">
       {{ text }}
     </text>
@@ -63,13 +59,13 @@ const imageSrc = computed(() => {
   align-items: center;
   justify-content: center;
   padding: 80rpx 40rpx;
-  
+
   &__image {
     width: 200rpx;
     height: 200rpx;
     margin-bottom: 24rpx;
   }
-  
+
   &__text {
     font-size: $font-size-lg;
     font-weight: $font-weight-medium;
@@ -77,14 +73,14 @@ const imageSrc = computed(() => {
     text-align: center;
     margin-bottom: 12rpx;
   }
-  
+
   &__tip {
     font-size: $font-size-sm;
     color: $text-tertiary;
     text-align: center;
     margin-bottom: 32rpx;
   }
-  
+
   &__action {
     margin-top: 32rpx;
   }

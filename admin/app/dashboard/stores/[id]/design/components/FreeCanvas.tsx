@@ -1,34 +1,34 @@
-"use client";
+'use client'
 
-import { useState, useMemo } from "react";
-import { useDroppable } from "@dnd-kit/core";
-import { Plus } from "lucide-react";
-import type { PageComponent } from "@/types";
-import { CANVAS_MIN_HEIGHT, CANVAS_WIDTH, CANVAS_MAX_HEIGHT } from "../constants";
-import { CanvasItem } from "./CanvasItem";
-import { AlignmentGuides } from "./AlignmentGuides";
-import { ContextMenu } from "./ContextMenu";
+import { useState, useMemo } from 'react'
+import { useDroppable } from '@dnd-kit/core'
+import { Plus } from 'lucide-react'
+import type { PageComponent } from '@/types'
+import { CANVAS_MIN_HEIGHT, CANVAS_WIDTH, CANVAS_MAX_HEIGHT } from '../constants'
+import { CanvasItem } from './CanvasItem'
+import { AlignmentGuides } from './AlignmentGuides'
+import { ContextMenu } from './ContextMenu'
 
 interface FreeCanvasProps {
-  components: PageComponent[];
-  selectedId: string | null;
-  setSelectedId: (id: string | null) => void;
-  deleteComponent: (id: string) => void;
-  toggleVisibility: (id: string) => void;
-  toggleLock: (id: string) => void;
-  isDraggingNew: boolean;
-  activeId: string | null;
-  updateComponent: (id: string, updates: Partial<PageComponent>) => void;
-  startResize: (id: string) => void;
-  copyComponent: (id: string) => void;
-  pasteComponent: () => void;
-  duplicateComponent: (id: string) => void;
-  bringForward: (id: string) => void;
-  sendBackward: (id: string) => void;
-  bringToFront: (id: string) => void;
-  sendToBack: (id: string) => void;
-  hasClipboard: boolean;
-  draggedRect?: { x: number; y: number; width: number; height: number } | null;
+  components: PageComponent[]
+  selectedId: string | null
+  setSelectedId: (id: string | null) => void
+  deleteComponent: (id: string) => void
+  toggleVisibility: (id: string) => void
+  toggleLock: (id: string) => void
+  isDraggingNew: boolean
+  activeId: string | null
+  updateComponent: (id: string, updates: Partial<PageComponent>) => void
+  startResize: (id: string) => void
+  copyComponent: (id: string) => void
+  pasteComponent: () => void
+  duplicateComponent: (id: string) => void
+  bringForward: (id: string) => void
+  sendBackward: (id: string) => void
+  bringToFront: (id: string) => void
+  sendToBack: (id: string) => void
+  hasClipboard: boolean
+  draggedRect?: { x: number; y: number; width: number; height: number } | null
 }
 
 export function FreeCanvas({
@@ -50,51 +50,51 @@ export function FreeCanvas({
   bringToFront,
   sendToBack,
   hasClipboard,
-  draggedRect,
+  draggedRect
 }: FreeCanvasProps) {
   const { setNodeRef, isOver } = useDroppable({
-    id: "preview-area",
-  });
+    id: 'preview-area'
+  })
 
   // 右键菜单状态
   const [contextMenu, setContextMenu] = useState<{
-    x: number;
-    y: number;
-    componentId: string;
-  } | null>(null);
+    x: number
+    y: number
+    componentId: string
+  } | null>(null)
 
   const selectedComponent = useMemo(
     () => components.find((c) => c.id === selectedId),
     [components, selectedId]
-  );
+  )
 
   // 当前拖拽中组件的 rect
   const activeRect = useMemo(() => {
-    if (!activeId || isDraggingNew) return null;
-    const comp = components.find((c) => c.id === activeId);
-    if (!comp) return null;
+    if (!activeId || isDraggingNew) return null
+    const comp = components.find((c) => c.id === activeId)
+    if (!comp) return null
     return (
       draggedRect || {
         x: comp.x ?? 0,
         y: comp.y ?? 0,
         width: comp.width ?? 200,
-        height: comp.height ?? 100,
+        height: comp.height ?? 100
       }
-    );
-  }, [activeId, isDraggingNew, components, draggedRect]);
+    )
+  }, [activeId, isDraggingNew, components, draggedRect])
 
   const handleContextMenu = (e: React.MouseEvent, compId: string) => {
-    e.preventDefault();
+    e.preventDefault()
     setContextMenu({
       x: e.clientX,
       y: e.clientY,
-      componentId: compId,
-    });
-  };
+      componentId: compId
+    })
+  }
 
   const closeContextMenu = () => {
-    setContextMenu(null);
-  };
+    setContextMenu(null)
+  }
 
   return (
     <div
@@ -102,23 +102,23 @@ export function FreeCanvas({
       className={`relative transition-all ${
         isDraggingNew
           ? isOver
-            ? "bg-primary/5 ring-2 ring-primary ring-inset"
-            : "bg-blue-50/30"
-          : ""
+            ? 'bg-primary/5 ring-2 ring-primary ring-inset'
+            : 'bg-blue-50/30'
+          : ''
       }`}
       style={{
         minHeight: CANVAS_MIN_HEIGHT,
-        width: CANVAS_WIDTH,
+        width: CANVAS_WIDTH
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
-          setSelectedId(null);
-          closeContextMenu();
+          setSelectedId(null)
+          closeContextMenu()
         }
       }}
       onContextMenu={(e) => {
         if (e.target === e.currentTarget) {
-          e.preventDefault();
+          e.preventDefault()
         }
       }}
     >
@@ -146,8 +146,8 @@ export function FreeCanvas({
             isSelected={selectedId === comp.id}
             isDragging={activeId === comp.id}
             onSelect={() => {
-              setSelectedId(comp.id);
-              closeContextMenu();
+              setSelectedId(comp.id)
+              closeContextMenu()
             }}
             onDelete={() => deleteComponent(comp.id)}
             onToggleVisibility={() => toggleVisibility(comp.id)}
@@ -156,8 +156,8 @@ export function FreeCanvas({
                 width,
                 height,
                 ...(x !== undefined && { x }),
-                ...(y !== undefined && { y }),
-              });
+                ...(y !== undefined && { y })
+              })
             }}
             onResizeStart={() => startResize(comp.id)}
             onContextMenu={(e) => handleContextMenu(e, comp.id)}
@@ -193,5 +193,5 @@ export function FreeCanvas({
         />
       )}
     </div>
-  );
+  )
 }

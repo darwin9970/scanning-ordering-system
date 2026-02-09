@@ -7,7 +7,7 @@ export default {
       default: false
     }
   },
-  mounted () {
+  mounted() {
     const keyNames = {
       esc: ['Esc', 'Escape'],
       tab: 'Tab',
@@ -23,7 +23,7 @@ export default {
       if (this.disable) {
         return
       }
-      const keyName = Object.keys(keyNames).find(key => {
+      const keyName = Object.keys(keyNames).find((key) => {
         const keyName = $event.key
         const value = keyNames[key]
         return value === keyName || (Array.isArray(value) && value.includes(keyName))
@@ -40,6 +40,6 @@ export default {
     //   document.removeEventListener('keyup', listener)
     // })
   },
-	render: () => {}
+  render: () => {}
 }
 // #endif

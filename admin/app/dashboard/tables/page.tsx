@@ -1,202 +1,202 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { api } from "@/lib/api";
-import { TABLE_STATUS_MAP } from "@/lib/utils";
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { api } from '@/lib/api'
+import { TABLE_STATUS_MAP } from '@/lib/utils'
 import {
   tableSchema,
   tableBatchSchema,
   type TableFormData,
-  type TableBatchFormData,
-} from "@/lib/validations";
-import type { Table } from "@/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  type TableBatchFormData
+} from '@/lib/validations'
+import type { Table } from '@/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Plus, QrCode, RefreshCw, Edit, Trash2, Download, Eye } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
-import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { toast } from "sonner";
+  DialogTitle
+} from '@/components/ui/dialog'
+import { Plus, QrCode, RefreshCw, Edit, Trash2, Download, Eye } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { toast } from 'sonner'
 
 export default function TablesPage() {
-  const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
-  const [qrDialogOpen, setQrDialogOpen] = useState(false);
-  const [editingTable, setEditingTable] = useState<Table | null>(null);
-  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingTableId, setDeletingTableId] = useState<number | null>(null);
-  const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false);
-  const [regeneratingTableId, setRegeneratingTableId] = useState<number | null>(null);
+  const queryClient = useQueryClient()
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false)
+  const [qrDialogOpen, setQrDialogOpen] = useState(false)
+  const [editingTable, setEditingTable] = useState<Table | null>(null)
+  const [selectedTable, setSelectedTable] = useState<Table | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deletingTableId, setDeletingTableId] = useState<number | null>(null)
+  const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false)
+  const [regeneratingTableId, setRegeneratingTableId] = useState<number | null>(null)
 
   // 小程序基础URL（实际部署时替换为真实地址）
   const MINI_PROGRAM_URL =
-    process.env.NEXT_PUBLIC_MINI_PROGRAM_URL || "https://your-mini-program.com";
+    process.env.NEXT_PUBLIC_MINI_PROGRAM_URL || 'https://your-mini-program.com'
 
   const form = useForm<TableFormData>({
     resolver: zodResolver(tableSchema),
-    defaultValues: { storeId: 1, name: "", capacity: 4 },
-  });
+    defaultValues: { storeId: 1, name: '', capacity: 4 }
+  })
 
   const batchForm = useForm<TableBatchFormData>({
     resolver: zodResolver(tableBatchSchema),
-    defaultValues: { storeId: 1, prefix: "A", startNum: 1, count: 10, capacity: 4 },
-  });
+    defaultValues: { storeId: 1, prefix: 'A', startNum: 1, count: 10, capacity: 4 }
+  })
 
   const { data: tables, isLoading } = useQuery({
-    queryKey: ["tables"],
-    queryFn: () => api.getTables({ pageSize: 100 }),
-  });
+    queryKey: ['tables'],
+    queryFn: () => api.getTables({ pageSize: 100 })
+  })
 
   const createMutation = useMutation({
     mutationFn: (data: TableFormData) => api.createTable(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tables"] });
-      setDialogOpen(false);
-    },
-  });
+      queryClient.invalidateQueries({ queryKey: ['tables'] })
+      setDialogOpen(false)
+    }
+  })
 
   const createBatchMutation = useMutation({
     mutationFn: (data: TableBatchFormData) => api.createTablesBatch(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tables"] });
-      setBatchDialogOpen(false);
-    },
-  });
+      queryClient.invalidateQueries({ queryKey: ['tables'] })
+      setBatchDialogOpen(false)
+    }
+  })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<TableFormData> }) =>
       api.updateTable(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tables"] });
-      setDialogOpen(false);
-    },
-  });
+      queryClient.invalidateQueries({ queryKey: ['tables'] })
+      setDialogOpen(false)
+    }
+  })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.deleteTable(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tables"] });
-    },
-  });
+      queryClient.invalidateQueries({ queryKey: ['tables'] })
+    }
+  })
 
   const regenerateQrMutation = useMutation({
     mutationFn: (id: number) => api.regenerateQrCode(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tables"] });
-    },
-  });
+      queryClient.invalidateQueries({ queryKey: ['tables'] })
+    }
+  })
 
   const openCreateDialog = () => {
-    setEditingTable(null);
-    form.reset({ storeId: 1, name: "", capacity: 4 });
-    setDialogOpen(true);
-  };
+    setEditingTable(null)
+    form.reset({ storeId: 1, name: '', capacity: 4 })
+    setDialogOpen(true)
+  }
 
   const openEditDialog = (table: Table) => {
-    setEditingTable(table);
-    form.reset({ storeId: table.storeId, name: table.name, capacity: table.capacity });
-    setDialogOpen(true);
-  };
+    setEditingTable(table)
+    form.reset({ storeId: table.storeId, name: table.name, capacity: table.capacity })
+    setDialogOpen(true)
+  }
 
   const onSubmit = (data: TableFormData) => {
     if (editingTable) {
-      updateMutation.mutate({ id: editingTable.id, data });
+      updateMutation.mutate({ id: editingTable.id, data })
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(data)
     }
-  };
+  }
 
   const onBatchSubmit = (data: TableBatchFormData) => {
-    createBatchMutation.mutate(data);
-  };
+    createBatchMutation.mutate(data)
+  }
 
   const handleDelete = (id: number) => {
-    setDeletingTableId(id);
-    setDeleteDialogOpen(true);
-  };
+    setDeletingTableId(id)
+    setDeleteDialogOpen(true)
+  }
 
   const confirmDelete = () => {
     if (deletingTableId !== null) {
-      deleteMutation.mutate(deletingTableId);
-      setDeletingTableId(null);
+      deleteMutation.mutate(deletingTableId)
+      setDeletingTableId(null)
     }
-  };
+  }
 
   const handleRegenerateQr = (id: number) => {
-    setRegeneratingTableId(id);
-    setRegenerateDialogOpen(true);
-  };
+    setRegeneratingTableId(id)
+    setRegenerateDialogOpen(true)
+  }
 
   const confirmRegenerate = () => {
     if (regeneratingTableId !== null) {
-      regenerateQrMutation.mutate(regeneratingTableId);
-      setRegeneratingTableId(null);
+      regenerateQrMutation.mutate(regeneratingTableId)
+      setRegeneratingTableId(null)
     }
-  };
+  }
 
   const handleViewQr = (table: Table) => {
-    setSelectedTable(table);
-    setQrDialogOpen(true);
-  };
+    setSelectedTable(table)
+    setQrDialogOpen(true)
+  }
 
   const getQrCodeUrl = (table: Table) => {
-    return `${MINI_PROGRAM_URL}/order?storeId=${table.storeId}&tableId=${table.id}&code=${table.qrCode}`;
-  };
+    return `${MINI_PROGRAM_URL}/order?storeId=${table.storeId}&tableId=${table.id}&code=${table.qrCode}`
+  }
 
   const handleDownloadQr = () => {
-    if (!selectedTable) return;
+    if (!selectedTable) return
 
-    const svg = document.getElementById("qr-code-svg");
-    if (!svg) return;
+    const svg = document.getElementById('qr-code-svg')
+    if (!svg) return
 
     // 创建canvas
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const img = new Image();
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const svgData = new XMLSerializer().serializeToString(svg)
+    const img = new Image()
 
     img.onload = () => {
-      canvas.width = 300;
-      canvas.height = 300;
+      canvas.width = 300
+      canvas.height = 300
       if (ctx) {
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, 300, 300);
+        ctx.fillStyle = 'white'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(img, 0, 0, 300, 300)
 
-        const link = document.createElement("a");
-        link.download = `桌台-${selectedTable.name}-二维码.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
+        const link = document.createElement('a')
+        link.download = `桌台-${selectedTable.name}-二维码.png`
+        link.href = canvas.toDataURL('image/png')
+        link.click()
       }
-    };
+    }
 
-    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
-  };
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+  }
 
   // 按状态分组
   const groupedTables = tables?.list.reduce(
-    (acc: any, table: any) => {
-      acc[table.status] = acc[table.status] || [];
-      acc[table.status].push(table);
-      return acc;
+    (acc: Record<string, Table[]>, table: Table) => {
+      acc[table.status] = acc[table.status] || []
+      acc[table.status].push(table)
+      return acc
     },
     { FREE: [], OCCUPIED: [], RESERVED: [] }
-  );
+  )
 
   return (
     <div className="space-y-6">
@@ -262,7 +262,7 @@ export default function TablesPage() {
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {tables?.list.map((table: any) => (
+              {tables?.list.map((table: Table) => (
                 <Card key={table.id} className="relative">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
@@ -270,7 +270,7 @@ export default function TablesPage() {
                         <h3 className="text-lg font-bold">{table.name}</h3>
                         <p className="text-sm text-muted-foreground">{table.capacity}人桌</p>
                       </div>
-                      <Badge className={TABLE_STATUS_MAP[table.status]?.color || ""}>
+                      <Badge className={TABLE_STATUS_MAP[table.status]?.color || ''}>
                         {TABLE_STATUS_MAP[table.status]?.label}
                       </Badge>
                     </div>
@@ -320,12 +320,12 @@ export default function TablesPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingTable ? "编辑桌台" : "添加桌台"}</DialogTitle>
+            <DialogTitle>{editingTable ? '编辑桌台' : '添加桌台'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label>桌台号 *</Label>
-              <Input {...form.register("name")} placeholder="如 A01、B02（1-50字符）" />
+              <Input {...form.register('name')} placeholder="如 A01、B02（1-50字符）" />
               {form.formState.errors.name && (
                 <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
               )}
@@ -334,7 +334,7 @@ export default function TablesPage() {
               <Label>容纳人数</Label>
               <Input
                 type="number"
-                {...form.register("capacity", { valueAsNumber: true })}
+                {...form.register('capacity', { valueAsNumber: true })}
                 placeholder="1-50人"
               />
               {form.formState.errors.capacity && (
@@ -346,7 +346,7 @@ export default function TablesPage() {
                 取消
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {editingTable ? "保存" : "添加"}
+                {editingTable ? '保存' : '添加'}
               </Button>
             </DialogFooter>
           </form>
@@ -363,7 +363,7 @@ export default function TablesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>前缀 *</Label>
-                <Input {...batchForm.register("prefix")} placeholder="如 A、B" />
+                <Input {...batchForm.register('prefix')} placeholder="如 A、B" />
                 {batchForm.formState.errors.prefix && (
                   <p className="text-sm text-red-500">
                     {batchForm.formState.errors.prefix.message}
@@ -372,7 +372,7 @@ export default function TablesPage() {
               </div>
               <div className="space-y-2">
                 <Label>起始编号 *</Label>
-                <Input type="number" {...batchForm.register("startNum", { valueAsNumber: true })} />
+                <Input type="number" {...batchForm.register('startNum', { valueAsNumber: true })} />
                 {batchForm.formState.errors.startNum && (
                   <p className="text-sm text-red-500">
                     {batchForm.formState.errors.startNum.message}
@@ -383,14 +383,14 @@ export default function TablesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>创建数量 *</Label>
-                <Input type="number" {...batchForm.register("count", { valueAsNumber: true })} />
+                <Input type="number" {...batchForm.register('count', { valueAsNumber: true })} />
                 {batchForm.formState.errors.count && (
                   <p className="text-sm text-red-500">{batchForm.formState.errors.count.message}</p>
                 )}
               </div>
               <div className="space-y-2">
                 <Label>容纳人数</Label>
-                <Input type="number" {...batchForm.register("capacity", { valueAsNumber: true })} />
+                <Input type="number" {...batchForm.register('capacity', { valueAsNumber: true })} />
                 {batchForm.formState.errors.capacity && (
                   <p className="text-sm text-red-500">
                     {batchForm.formState.errors.capacity.message}
@@ -399,9 +399,9 @@ export default function TablesPage() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              将创建: {batchForm.watch("prefix")}
-              {String(batchForm.watch("startNum")).padStart(2, "0")} ~ {batchForm.watch("prefix")}
-              {String(batchForm.watch("startNum") + batchForm.watch("count") - 1).padStart(2, "0")}
+              将创建: {batchForm.watch('prefix')}
+              {String(batchForm.watch('startNum')).padStart(2, '0')} ~ {batchForm.watch('prefix')}
+              {String(batchForm.watch('startNum') + batchForm.watch('count') - 1).padStart(2, '0')}
             </p>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setBatchDialogOpen(false)}>
@@ -476,5 +476,5 @@ export default function TablesPage() {
         cancelText="取消"
       />
     </div>
-  );
+  )
 }

@@ -11,54 +11,40 @@ module.exports = {
     getCurrentPages: 'readonly',
     getApp: 'readonly'
   },
-  extends: [
-    'eslint:recommended',
-    'plugin:vue/vue3-recommended'
-  ],
+  extends: ['eslint:recommended', 'plugin:vue/vue3-recommended', 'plugin:prettier/recommended'],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module'
   },
   rules: {
-    // 缩进: 2格空格
-    'indent': 'off', // 在 .vue 文件中由 vue/script-indent 处理
-    'vue/html-indent': ['error', 2],
-    'vue/script-indent': ['error', 2, { baseIndent: 0, switchCase: 1 }],
-
-    // 引号
-    'quotes': ['error', 'single'],
-
-    // 分号
-    'semi': ['error', 'never'],
-
     // Vue 规则
     'vue/multi-word-component-names': 'off',
     'vue/no-v-html': 'off',
     'vue/require-default-prop': 'off',
-    'vue/max-attributes-per-line': ['error', {
-      singleline: 3,
-      multiline: 1
-    }],
-    'vue/first-attribute-linebreak': ['error', {
-      singleline: 'ignore',
-      multiline: 'below'
-    }],
-    'vue/html-closing-bracket-newline': ['error', {
-      singleline: 'never',
-      multiline: 'always'
-    }],
+    'vue/max-attributes-per-line': 'off',
+    'vue/first-attribute-linebreak': 'off',
+    'vue/html-closing-bracket-newline': 'off',
+    'vue/html-indent': 'off',
+    'vue/script-indent': 'off',
+    'vue/singleline-html-element-content-newline': 'off',
+    'vue/html-self-closing': 'off',
+
+    // Prettier 处理所有格式化问题
+    'prettier/prettier': ['error', {}, { usePrettierrc: true }],
+
+    // 关闭与 Prettier 冲突的规则
+    indent: 'off',
+    quotes: 'off',
+    semi: 'off',
+    'comma-dangle': 'off',
+    'object-curly-spacing': 'off',
+    'array-bracket-spacing': 'off',
+    'space-before-function-paren': 'off',
 
     // 其他
     'no-console': 'off',
     'no-debugger': 'warn',
     'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-    'comma-dangle': ['error', 'never'],
-    'object-curly-spacing': ['error', 'always'],
-    'array-bracket-spacing': ['error', 'never'],
-    'space-before-function-paren': ['error', {
-      anonymous: 'always',
-      named: 'never',
-      asyncArrow: 'always'
-    }]
+    'no-case-declarations': 'off'
   }
 }

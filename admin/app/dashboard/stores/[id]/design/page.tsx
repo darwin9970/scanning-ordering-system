@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import {
   DndContext,
   closestCenter,
@@ -14,31 +14,31 @@ import {
   type DragOverEvent,
   DragOverlay,
   useDroppable,
-  useDraggable,
-} from "@dnd-kit/core";
+  useDraggable
+} from '@dnd-kit/core'
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Badge } from '@/components/ui/badge'
+import { Slider } from '@/components/ui/slider'
+import { Separator } from '@/components/ui/separator'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+  SelectValue
+} from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,8 +47,8 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
 import {
   ArrowLeft,
   Save,
@@ -67,20 +67,20 @@ import {
   Download,
   FileUp,
   LayoutTemplate,
-  Box,
-} from "lucide-react";
-import { api } from "@/lib/api";
-import { toast } from "sonner";
+  Box
+} from 'lucide-react'
+import { api } from '@/lib/api'
+import { toast } from 'sonner'
 import type {
   PageComponent,
   PageComponentType,
   PageType,
   ComponentCategory,
-  Store as StoreType,
-} from "@/types";
-import { useComponents } from "./hooks/useComponents";
-import { usePageConfig } from "./hooks/usePageConfig";
-import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+  Store as StoreType
+} from '@/types'
+import { useComponents } from './hooks/useComponents'
+import { usePageConfig } from './hooks/usePageConfig'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import {
   PAGE_TYPES,
   SUB_TABS,
@@ -91,20 +91,20 @@ import {
   generateId,
   getDefaultProps,
   getDefaultSize,
-  CANVAS_WIDTH,
-} from "./constants";
+  CANVAS_WIDTH
+} from './constants'
 import {
   SortableItem,
   ComponentConfig,
   ComponentPreview,
   DraggableComponentItem,
-  FreeCanvas,
-} from "./components";
+  FreeCanvas
+} from './components'
 
 export default function StoreDesignPage() {
-  const params = useParams();
-  const router = useRouter();
-  const storeId = Number(params.id);
+  const params = useParams()
+  const router = useRouter()
+  const storeId = Number(params.id)
 
   // 使用 useComponents hook 管理组件状态
   const {
@@ -141,155 +141,155 @@ export default function StoreDesignPage() {
     sendToBack,
     nudgeComponent,
     resizeComponent,
-    startResize,
-  } = useComponents();
+    startResize
+  } = useComponents()
 
   // 兼容性函数：用于非组件相关的修改（TabBar, 页面设置等）
   const setHasChanges = (value: boolean) => {
-    if (value) markChanged();
-    else resetChanges();
-  };
+    if (value) markChanged()
+    else resetChanges()
+  }
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [store, setStore] = useState<StoreType | null>(null);
-  const [currentPage, setCurrentPage] = useState<string>("HOME");
-  const [isPublished, setIsPublished] = useState(false);
-  const [showResetDialog, setShowResetDialog] = useState(false);
-  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
-  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [store, setStore] = useState<StoreType | null>(null)
+  const [currentPage, setCurrentPage] = useState<string>('HOME')
+  const [isPublished, setIsPublished] = useState(false)
+  const [showResetDialog, setShowResetDialog] = useState(false)
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false)
+  const [showExportDialog, setShowExportDialog] = useState(false)
 
   // TabBar配置
   const [tabBarConfig, setTabBarConfig] = useState<{
-    color: string;
-    selectedColor: string;
-    backgroundColor: string;
-    borderStyle: "black" | "white";
-    list: { pagePath: string; text: string; iconPath: string; selectedIconPath: string }[];
+    color: string
+    selectedColor: string
+    backgroundColor: string
+    borderStyle: 'black' | 'white'
+    list: { pagePath: string; text: string; iconPath: string; selectedIconPath: string }[]
   }>({
-    color: "#999999",
-    selectedColor: "#ff6b35",
-    backgroundColor: "#ffffff",
-    borderStyle: "black",
+    color: '#999999',
+    selectedColor: '#ff6b35',
+    backgroundColor: '#ffffff',
+    borderStyle: 'black',
     list: [
       {
-        pagePath: "pages/home/home",
-        text: "首页",
-        iconPath: "/static/tabbar/home.png",
-        selectedIconPath: "/static/tabbar/home-active.png",
+        pagePath: 'pages/home/home',
+        text: '首页',
+        iconPath: '/static/tabbar/home.png',
+        selectedIconPath: '/static/tabbar/home-active.png'
       },
       {
-        pagePath: "pages/menu/menu",
-        text: "点餐",
-        iconPath: "/static/tabbar/menu.png",
-        selectedIconPath: "/static/tabbar/menu-active.png",
+        pagePath: 'pages/menu/menu',
+        text: '点餐',
+        iconPath: '/static/tabbar/menu.png',
+        selectedIconPath: '/static/tabbar/menu-active.png'
       },
       {
-        pagePath: "pages/order/list",
-        text: "订单",
-        iconPath: "/static/tabbar/order.png",
-        selectedIconPath: "/static/tabbar/order-active.png",
+        pagePath: 'pages/order/list',
+        text: '订单',
+        iconPath: '/static/tabbar/order.png',
+        selectedIconPath: '/static/tabbar/order-active.png'
       },
       {
-        pagePath: "pages/mine/mine",
-        text: "我的",
-        iconPath: "/static/tabbar/mine.png",
-        selectedIconPath: "/static/tabbar/mine-active.png",
-      },
-    ],
-  });
+        pagePath: 'pages/mine/mine',
+        text: '我的',
+        iconPath: '/static/tabbar/mine.png',
+        selectedIconPath: '/static/tabbar/mine-active.png'
+      }
+    ]
+  })
 
   // 子Tab配置
-  const [currentSubTab, setCurrentSubTab] = useState<string>("main");
-  const currentSubTabs = SUB_TABS[currentPage] || [];
-  const hasSubTabs = currentSubTabs.length > 1;
+  const [currentSubTab, setCurrentSubTab] = useState<string>('main')
+  const currentSubTabs = SUB_TABS[currentPage] || []
+  const hasSubTabs = currentSubTabs.length > 1
 
   // 页面设置
   const [pageSettings, setPageSettings] = useState({
-    title: "",
-    navBgColor: "#ffffff",
-    navTextColor: "black" as "white" | "black",
-    pageBgColor: "#f5f5f5",
-    hideNav: false,
-  });
+    title: '',
+    navBgColor: '#ffffff',
+    navTextColor: 'black' as 'white' | 'black',
+    pageBgColor: '#f5f5f5',
+    hideNav: false
+  })
 
   // 全局配置
   const [globalConfig, setGlobalConfig] = useState({
-    themeColor: "#ff6b35",
+    themeColor: '#ff6b35',
     paddingLeft: 12,
     paddingRight: 12,
-    borderRadius: "rounded" as "none" | "rounded" | "large" | "custom",
+    borderRadius: 'rounded' as 'none' | 'rounded' | 'large' | 'custom',
     customRadius: 8,
-    shadow: true,
-  });
+    shadow: true
+  })
 
   // 配置面板Tab
-  const [configTab, setConfigTab] = useState<"component" | "page" | "global">("component");
+  const [configTab, setConfigTab] = useState<'component' | 'page' | 'global'>('component')
 
   // 拖拽状态
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [dragType, setDragType] = useState<"new" | "sort" | null>(null);
-  const [insertIndex, setInsertIndex] = useState<number | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [dragType, setDragType] = useState<'new' | 'sort' | null>(null)
+  const [insertIndex, setInsertIndex] = useState<number | null>(null)
 
   // 拖拽传感器
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
+  )
 
   // 拖拽开始
   const handleDragStart = (event: DragStartEvent) => {
-    const id = String(event.active.id);
-    setActiveId(id);
+    const id = String(event.active.id)
+    setActiveId(id)
     // 判断是新增组件拖拽还是排序拖拽
-    if (id.startsWith("new-")) {
-      setDragType("new");
-      setInsertIndex(components.length); // 默认插入到末尾
+    if (id.startsWith('new-')) {
+      setDragType('new')
+      setInsertIndex(components.length) // 默认插入到末尾
     } else {
-      setDragType("sort");
+      setDragType('sort')
     }
-  };
+  }
 
   // 拖拽过程中 - 计算插入位置
   const handleDragOver = (event: DragOverEvent) => {
-    const { over } = event;
+    const { over } = event
 
-    if (dragType === "new" && over) {
+    if (dragType === 'new' && over) {
       // 如果悬停在现有组件上，计算插入位置
-      if (over.id !== "preview-area") {
-        const overIndex = components.findIndex((c) => c.id === over.id);
+      if (over.id !== 'preview-area') {
+        const overIndex = components.findIndex((c) => c.id === over.id)
         if (overIndex !== -1) {
-          setInsertIndex(overIndex);
+          setInsertIndex(overIndex)
         }
-      } else if (over.id === "preview-area") {
+      } else if (over.id === 'preview-area') {
         // 悬停在空白区域，插入到末尾
-        setInsertIndex(components.length);
+        setInsertIndex(components.length)
       }
     }
-  };
+  }
 
   // 拖拽结束处理（自由画布模式）
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over, delta } = event;
+    const { active, over, delta } = event
 
     // 从组件面板拖拽新增
-    if (dragType === "new" && over) {
-      const isValidDrop = over.id === "preview-area" || components.some((c) => c.id === over.id);
+    if (dragType === 'new' && over) {
+      const isValidDrop = over.id === 'preview-area' || components.some((c) => c.id === over.id)
       if (isValidDrop) {
-        const componentType = String(active.id).replace("new-", "") as PageComponentType;
-        addComponent(componentType);
+        const componentType = String(active.id).replace('new-', '') as PageComponentType
+        addComponent(componentType)
       }
     }
     // 自由拖拽移动现有组件
-    else if (dragType === "sort" && delta) {
-      const compId = String(active.id);
-      moveComponent(compId, delta.x, delta.y);
+    else if (dragType === 'sort' && delta) {
+      const compId = String(active.id)
+      moveComponent(compId, delta.x, delta.y)
     }
 
-    setActiveId(null);
-    setDragType(null);
-    setInsertIndex(null);
-  };
+    setActiveId(null)
+    setDragType(null)
+    setInsertIndex(null)
+  }
 
   // 快捷键支持
   useKeyboardShortcuts({
@@ -309,38 +309,38 @@ export default function StoreDesignPage() {
     onBringToFront: () => selectedId && bringToFront(selectedId),
     onSendToBack: () => selectedId && sendToBack(selectedId),
     onToggleLock: () => selectedId && toggleLock(selectedId),
-    onMoveUp: () => selectedId && nudgeComponent(selectedId, "up", 1),
-    onMoveDown: () => selectedId && nudgeComponent(selectedId, "down", 1),
-    onMoveLeft: () => selectedId && nudgeComponent(selectedId, "left", 1),
-    onMoveRight: () => selectedId && nudgeComponent(selectedId, "right", 1),
-    enabled: true,
-  });
+    onMoveUp: () => selectedId && nudgeComponent(selectedId, 'up', 1),
+    onMoveDown: () => selectedId && nudgeComponent(selectedId, 'down', 1),
+    onMoveLeft: () => selectedId && nudgeComponent(selectedId, 'left', 1),
+    onMoveRight: () => selectedId && nudgeComponent(selectedId, 'right', 1),
+    enabled: true
+  })
 
   // 加载数据
   useEffect(() => {
-    loadData();
-  }, [storeId, currentPage]);
+    loadData()
+  }, [storeId, currentPage])
 
   const loadData = async () => {
     try {
       const [storeData, configData] = await Promise.all([
         api.getStore(storeId),
-        api.getPageConfig({ storeId, pageType: currentPage }),
-      ]);
-      setStore(storeData);
+        api.getPageConfig({ storeId, pageType: currentPage })
+      ])
+      setStore(storeData)
       // 如果返回的是预设配置（isDefault: true），显示提示
       if (configData.isDefault && configData.components && configData.components.length > 0) {
-        toast.info("已加载预设的精美布局，您可以在此基础上进行修改", { duration: 4000 });
+        toast.info('已加载预设的精美布局，您可以在此基础上进行修改', { duration: 4000 })
       }
-      setComponents(configData.components || []);
-      setIsPublished(configData.isPublished || false);
-      setSelectedId(null);
+      setComponents(configData.components || [])
+      setIsPublished(configData.isPublished || false)
+      setSelectedId(null)
     } catch (error) {
-      toast.error("加载失败");
+      toast.error('加载失败')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   // 选中的组件
   // 导出配置
@@ -350,339 +350,339 @@ export default function StoreDesignPage() {
       storeId,
       components,
       exportedAt: new Date().toISOString(),
-      version: "1.0",
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `page-config-${currentPage.toLowerCase()}-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("配置已导出");
-  };
+      version: '1.0'
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `page-config-${currentPage.toLowerCase()}-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('配置已导出')
+  }
 
   // 导入配置
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
+    const file = event.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
     reader.onload = (e) => {
       try {
-        const data = JSON.parse(e.target?.result as string);
+        const data = JSON.parse(e.target?.result as string)
         if (data.components && Array.isArray(data.components)) {
-          pushHistory(components);
-          setComponents(data.components);
-          setHasChanges(true);
-          toast.success(`成功导入 ${data.components.length} 个组件`);
+          pushHistory(components)
+          setComponents(data.components)
+          setHasChanges(true)
+          toast.success(`成功导入 ${data.components.length} 个组件`)
         } else {
-          toast.error("无效的配置文件格式");
+          toast.error('无效的配置文件格式')
         }
       } catch {
-        toast.error("解析配置文件失败");
+        toast.error('解析配置文件失败')
       }
-    };
-    reader.readAsText(file);
-    event.target.value = "";
-  };
+    }
+    reader.readAsText(file)
+    event.target.value = ''
+  }
 
   // 预设模板
   const TEMPLATES = [
     {
-      id: "simple-home",
-      name: "简约首页",
-      category: "茶饮",
-      thumbnail: "🏠",
+      id: 'simple-home',
+      name: '简约首页',
+      category: '茶饮',
+      thumbnail: '🏠',
       components: [
         {
-          id: "t1",
-          type: "BANNER",
-          title: "轮播图",
+          id: 't1',
+          type: 'BANNER',
+          title: '轮播图',
           visible: true,
-          props: { autoplay: true, interval: 3000, height: 180 },
+          props: { autoplay: true, interval: 3000, height: 180 }
         },
         {
-          id: "t2",
-          type: "SEARCH",
-          title: "搜索",
+          id: 't2',
+          type: 'SEARCH',
+          title: '搜索',
           visible: true,
-          props: { placeholder: "搜索商品", bgColor: "#f5f5f5" },
+          props: { placeholder: '搜索商品', bgColor: '#f5f5f5' }
         },
         {
-          id: "t3",
-          type: "NAV_GRID",
-          title: "导航",
+          id: 't3',
+          type: 'NAV_GRID',
+          title: '导航',
           visible: true,
           props: {
             columns: 4,
             items: [
-              { icon: "🍵", text: "茶饮", link: { type: "page", value: "" } },
-              { icon: "🧋", text: "奶茶", link: { type: "page", value: "" } },
-              { icon: "🎁", text: "套餐", link: { type: "page", value: "" } },
-              { icon: "🎫", text: "优惠券", link: { type: "page", value: "" } },
-            ],
-          },
+              { icon: '🍵', text: '茶饮', link: { type: 'page', value: '' } },
+              { icon: '🧋', text: '奶茶', link: { type: 'page', value: '' } },
+              { icon: '🎁', text: '套餐', link: { type: 'page', value: '' } },
+              { icon: '🎫', text: '优惠券', link: { type: 'page', value: '' } }
+            ]
+          }
         },
         {
-          id: "t4",
-          type: "HOT_PRODUCTS",
-          title: "热销推荐",
+          id: 't4',
+          type: 'HOT_PRODUCTS',
+          title: '热销推荐',
           visible: true,
-          props: { limit: 6, showRank: true },
-        },
-      ],
+          props: { limit: 6, showRank: true }
+        }
+      ]
     },
     {
-      id: "promo-home",
-      name: "促销首页",
-      category: "快餐",
-      thumbnail: "🎉",
+      id: 'promo-home',
+      name: '促销首页',
+      category: '快餐',
+      thumbnail: '🎉',
       components: [
         {
-          id: "p1",
-          type: "BANNER",
-          title: "活动Banner",
+          id: 'p1',
+          type: 'BANNER',
+          title: '活动Banner',
           visible: true,
-          props: { autoplay: true, interval: 2500, height: 200 },
+          props: { autoplay: true, interval: 2500, height: 200 }
         },
         {
-          id: "p2",
-          type: "NOTICE",
-          title: "公告",
+          id: 'p2',
+          type: 'NOTICE',
+          title: '公告',
           visible: true,
-          props: { scrollable: true, speed: 50 },
+          props: { scrollable: true, speed: 50 }
         },
-        { id: "p3", type: "COUPON", title: "优惠券", visible: true, props: { showCount: 3 } },
+        { id: 'p3', type: 'COUPON', title: '优惠券', visible: true, props: { showCount: 3 } },
         {
-          id: "p4",
-          type: "FOCUS_ENTRY",
-          title: "焦点入口",
+          id: 'p4',
+          type: 'FOCUS_ENTRY',
+          title: '焦点入口',
           visible: true,
-          props: { text: "限时特惠", icon: "⚡", bgColor: "#ff6b35" },
-        },
-        {
-          id: "p5",
-          type: "HOT_PRODUCTS",
-          title: "爆款推荐",
-          visible: true,
-          props: { limit: 8, showRank: true },
+          props: { text: '限时特惠', icon: '⚡', bgColor: '#ff6b35' }
         },
         {
-          id: "p6",
-          type: "NEW_PRODUCTS",
-          title: "新品上市",
+          id: 'p5',
+          type: 'HOT_PRODUCTS',
+          title: '爆款推荐',
           visible: true,
-          props: { limit: 4, showBadge: true },
+          props: { limit: 8, showRank: true }
         },
-      ],
+        {
+          id: 'p6',
+          type: 'NEW_PRODUCTS',
+          title: '新品上市',
+          visible: true,
+          props: { limit: 4, showBadge: true }
+        }
+      ]
     },
     {
-      id: "minimal-menu",
-      name: "极简点餐",
-      category: "咖啡",
-      thumbnail: "☕",
+      id: 'minimal-menu',
+      name: '极简点餐',
+      category: '咖啡',
+      thumbnail: '☕',
       components: [
         {
-          id: "m1",
-          type: "STORE_TITLE",
-          title: "门店标题",
+          id: 'm1',
+          type: 'STORE_TITLE',
+          title: '门店标题',
           visible: true,
-          props: { showDistance: true, showStatus: true },
+          props: { showDistance: true, showStatus: true }
         },
         {
-          id: "m2",
-          type: "ORDER_COMPONENT",
-          title: "点单组件",
+          id: 'm2',
+          type: 'ORDER_COMPONENT',
+          title: '点单组件',
           visible: true,
-          props: { categoryStyle: "left", productStyle: "list", showSales: true },
+          props: { categoryStyle: 'left', productStyle: 'list', showSales: true }
         },
         {
-          id: "m3",
-          type: "CART_FLOAT",
-          title: "购物车",
+          id: 'm3',
+          type: 'CART_FLOAT',
+          title: '购物车',
           visible: true,
-          props: { position: "right-bottom", showCount: true },
-        },
-      ],
+          props: { position: 'right-bottom', showCount: true }
+        }
+      ]
     },
     {
-      id: "member-center",
-      name: "会员中心",
-      category: "通用",
-      thumbnail: "👤",
+      id: 'member-center',
+      name: '会员中心',
+      category: '通用',
+      thumbnail: '👤',
       components: [
         {
-          id: "u1",
-          type: "USER_INFO",
-          title: "会员信息",
+          id: 'u1',
+          type: 'USER_INFO',
+          title: '会员信息',
           visible: true,
           props: {
             showAvatar: true,
             showNickname: true,
             showBalance: true,
             showPoints: true,
-            showCoupons: true,
-          },
+            showCoupons: true
+          }
         },
         {
-          id: "u2",
-          type: "FUNC_ENTRY",
-          title: "功能入口",
+          id: 'u2',
+          type: 'FUNC_ENTRY',
+          title: '功能入口',
           visible: true,
           props: {
             columns: 4,
             items: [
-              { icon: "📋", text: "我的订单", link: { type: "page", value: "" } },
-              { icon: "🎫", text: "优惠券", link: { type: "page", value: "" } },
-              { icon: "💰", text: "余额", link: { type: "page", value: "" } },
-              { icon: "⚙️", text: "设置", link: { type: "page", value: "" } },
-            ],
-          },
+              { icon: '📋', text: '我的订单', link: { type: 'page', value: '' } },
+              { icon: '🎫', text: '优惠券', link: { type: 'page', value: '' } },
+              { icon: '💰', text: '余额', link: { type: 'page', value: '' } },
+              { icon: '⚙️', text: '设置', link: { type: 'page', value: '' } }
+            ]
+          }
         },
         {
-          id: "u3",
-          type: "STAMP_CARD",
-          title: "集点卡",
+          id: 'u3',
+          type: 'STAMP_CARD',
+          title: '集点卡',
           visible: true,
-          props: { title: "集点送好礼", total: 10, current: 3 },
+          props: { title: '集点送好礼', total: 10, current: 3 }
         },
         {
-          id: "u4",
-          type: "BANNER",
-          title: "推荐活动",
+          id: 'u4',
+          type: 'BANNER',
+          title: '推荐活动',
           visible: true,
-          props: { autoplay: true, height: 120 },
-        },
-      ],
+          props: { autoplay: true, height: 120 }
+        }
+      ]
     },
     {
-      id: "recharge-page",
-      name: "充值页面",
-      category: "通用",
-      thumbnail: "💳",
+      id: 'recharge-page',
+      name: '充值页面',
+      category: '通用',
+      thumbnail: '💳',
       components: [
         {
-          id: "r1",
-          type: "BALANCE_ENTRY",
-          title: "余额显示",
+          id: 'r1',
+          type: 'BALANCE_ENTRY',
+          title: '余额显示',
           visible: true,
-          props: { showBalance: true },
+          props: { showBalance: true }
         },
         {
-          id: "r2",
-          type: "RECHARGE_OPTIONS",
-          title: "充值选项",
+          id: 'r2',
+          type: 'RECHARGE_OPTIONS',
+          title: '充值选项',
           visible: true,
           props: {
             columns: 2,
             items: [
-              { amount: 50, gift: 5, giftType: "balance" },
-              { amount: 100, gift: 15, giftType: "balance" },
-              { amount: 200, gift: 40, giftType: "balance" },
-              { amount: 500, gift: 120, giftType: "balance" },
-            ],
-          },
+              { amount: 50, gift: 5, giftType: 'balance' },
+              { amount: 100, gift: 15, giftType: 'balance' },
+              { amount: 200, gift: 40, giftType: 'balance' },
+              { amount: 500, gift: 120, giftType: 'balance' }
+            ]
+          }
         },
         {
-          id: "r3",
-          type: "RECHARGE_BUTTON",
-          title: "充值按钮",
+          id: 'r3',
+          type: 'RECHARGE_BUTTON',
+          title: '充值按钮',
           visible: true,
-          props: { text: "立即充值", bgColor: "#ff6b35" },
+          props: { text: '立即充值', bgColor: '#ff6b35' }
         },
         {
-          id: "r4",
-          type: "TEXT",
-          title: "充值说明",
+          id: 'r4',
+          type: 'TEXT',
+          title: '充值说明',
           visible: true,
           props: {
-            content: "充值即表示同意《储值协议》",
+            content: '充值即表示同意《储值协议》',
             fontSize: 12,
-            color: "#999",
-            align: "center",
-          },
-        },
-      ],
-    },
-  ];
+            color: '#999',
+            align: 'center'
+          }
+        }
+      ]
+    }
+  ]
 
   // 应用模板
   const applyTemplate = (template: (typeof TEMPLATES)[0]) => {
-    pushHistory(components);
+    pushHistory(components)
     // 为每个组件生成新ID
     const newComponents = template.components.map((c) => ({
       ...c,
-      id: generateId(),
-    })) as PageComponent[];
-    setAllComponents(newComponents);
-    setShowTemplateDialog(false);
-    toast.success(`已应用模板：${template.name}`);
-  };
+      id: generateId()
+    })) as PageComponent[]
+    setAllComponents(newComponents)
+    setShowTemplateDialog(false)
+    toast.success(`已应用模板：${template.name}`)
+  }
 
   // 保存配置
   const handleSave = async () => {
-    setSaving(true);
+    setSaving(true)
     try {
-      await api.savePageConfig({ storeId, pageType: currentPage, components });
-      resetChanges();
-      toast.success("保存成功");
+      await api.savePageConfig({ storeId, pageType: currentPage, components })
+      resetChanges()
+      toast.success('保存成功')
     } catch (error) {
-      toast.error("保存失败");
+      toast.error('保存失败')
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   // 发布配置
   const handlePublish = async () => {
-    setSaving(true);
+    setSaving(true)
     try {
       if (hasChanges) {
-        await api.savePageConfig({ storeId, pageType: currentPage, components });
+        await api.savePageConfig({ storeId, pageType: currentPage, components })
       }
-      await api.publishPageConfig({ storeId, pageType: currentPage });
-      setIsPublished(true);
-      setHasChanges(false);
-      toast.success("发布成功");
+      await api.publishPageConfig({ storeId, pageType: currentPage })
+      setIsPublished(true)
+      setHasChanges(false)
+      toast.success('发布成功')
     } catch (error) {
-      toast.error("发布失败");
+      toast.error('发布失败')
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   // 撤销发布
   const handleUnpublish = async () => {
     try {
-      await api.unpublishPageConfig({ storeId, pageType: currentPage });
-      setIsPublished(false);
-      toast.success("已撤销发布");
+      await api.unpublishPageConfig({ storeId, pageType: currentPage })
+      setIsPublished(false)
+      toast.success('已撤销发布')
     } catch (error) {
-      toast.error("操作失败");
+      toast.error('操作失败')
     }
-  };
+  }
 
   // 重置为默认
   const handleReset = async () => {
     try {
-      const result = await api.resetPageConfig({ storeId, pageType: currentPage });
-      setComponents(result.components);
-      setIsPublished(false);
-      setHasChanges(false);
-      setSelectedId(null);
-      setShowResetDialog(false);
-      toast.success("已重置为默认配置");
+      const result = await api.resetPageConfig({ storeId, pageType: currentPage })
+      setComponents(result.components)
+      setIsPublished(false)
+      setHasChanges(false)
+      setSelectedId(null)
+      setShowResetDialog(false)
+      toast.success('已重置为默认配置')
     } catch (error) {
-      toast.error("重置失败");
+      toast.error('重置失败')
     }
-  };
+  }
 
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
-    );
+    )
   }
 
   return (
@@ -702,28 +702,28 @@ export default function StoreDesignPage() {
               {/* 页面切换（10个Tab，支持滚动） */}
               <div className="flex bg-muted rounded-lg p-1 overflow-x-auto max-w-[600px]">
                 {PAGE_TYPES.map((page) => {
-                  const Icon = page.icon;
+                  const Icon = page.icon
                   return (
                     <button
                       key={page.value}
                       onClick={() => {
                         if (hasChanges) {
-                          toast.error("请先保存当前页面配置");
-                          return;
+                          toast.error('请先保存当前页面配置')
+                          return
                         }
-                        setCurrentPage(page.value);
-                        setCurrentSubTab("main"); // 切换页面时重置子Tab
+                        setCurrentPage(page.value)
+                        setCurrentSubTab('main') // 切换页面时重置子Tab
                       }}
                       className={`flex items-center gap-1 px-3 py-1.5 rounded text-xs transition-colors whitespace-nowrap ${
                         currentPage === page.value
-                          ? "bg-background shadow text-foreground"
-                          : "text-muted-foreground hover:text-foreground"
+                          ? 'bg-background shadow text-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
                       <Icon className="h-3 w-3" />
                       {page.label}
                     </button>
-                  );
+                  )
                 })}
               </div>
 
@@ -737,8 +737,8 @@ export default function StoreDesignPage() {
                       title={sub.description}
                       className={`px-2 py-1 rounded text-xs transition-colors ${
                         currentSubTab === sub.id
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-muted"
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:bg-muted'
                       }`}
                     >
                       {sub.label}
@@ -814,7 +814,7 @@ export default function StoreDesignPage() {
       {/* 主内容区 */}
       <div className="flex flex-1 overflow-hidden">
         {/* TABBAR专属配置界面 */}
-        {currentPage === "TABBAR" ? (
+        {currentPage === 'TABBAR' ? (
           <div className="flex-1 p-6 overflow-auto">
             <div className="max-w-4xl mx-auto space-y-6">
               <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -832,16 +832,16 @@ export default function StoreDesignPage() {
                         type="color"
                         value={tabBarConfig.color}
                         onChange={(e) => {
-                          setTabBarConfig((prev) => ({ ...prev, color: e.target.value }));
-                          setHasChanges(true);
+                          setTabBarConfig((prev) => ({ ...prev, color: e.target.value }))
+                          setHasChanges(true)
                         }}
                         className="w-10 h-10 rounded border cursor-pointer"
                       />
                       <Input
                         value={tabBarConfig.color}
                         onChange={(e) => {
-                          setTabBarConfig((prev) => ({ ...prev, color: e.target.value }));
-                          setHasChanges(true);
+                          setTabBarConfig((prev) => ({ ...prev, color: e.target.value }))
+                          setHasChanges(true)
                         }}
                         className="flex-1 text-sm"
                       />
@@ -854,16 +854,16 @@ export default function StoreDesignPage() {
                         type="color"
                         value={tabBarConfig.selectedColor}
                         onChange={(e) => {
-                          setTabBarConfig((prev) => ({ ...prev, selectedColor: e.target.value }));
-                          setHasChanges(true);
+                          setTabBarConfig((prev) => ({ ...prev, selectedColor: e.target.value }))
+                          setHasChanges(true)
                         }}
                         className="w-10 h-10 rounded border cursor-pointer"
                       />
                       <Input
                         value={tabBarConfig.selectedColor}
                         onChange={(e) => {
-                          setTabBarConfig((prev) => ({ ...prev, selectedColor: e.target.value }));
-                          setHasChanges(true);
+                          setTabBarConfig((prev) => ({ ...prev, selectedColor: e.target.value }))
+                          setHasChanges(true)
                         }}
                         className="flex-1 text-sm"
                       />
@@ -876,16 +876,16 @@ export default function StoreDesignPage() {
                         type="color"
                         value={tabBarConfig.backgroundColor}
                         onChange={(e) => {
-                          setTabBarConfig((prev) => ({ ...prev, backgroundColor: e.target.value }));
-                          setHasChanges(true);
+                          setTabBarConfig((prev) => ({ ...prev, backgroundColor: e.target.value }))
+                          setHasChanges(true)
                         }}
                         className="w-10 h-10 rounded border cursor-pointer"
                       />
                       <Input
                         value={tabBarConfig.backgroundColor}
                         onChange={(e) => {
-                          setTabBarConfig((prev) => ({ ...prev, backgroundColor: e.target.value }));
-                          setHasChanges(true);
+                          setTabBarConfig((prev) => ({ ...prev, backgroundColor: e.target.value }))
+                          setHasChanges(true)
                         }}
                         className="flex-1 text-sm"
                       />
@@ -895,9 +895,9 @@ export default function StoreDesignPage() {
                     <Label className="text-sm">边框样式</Label>
                     <Select
                       value={tabBarConfig.borderStyle}
-                      onValueChange={(v: "black" | "white") => {
-                        setTabBarConfig((prev) => ({ ...prev, borderStyle: v }));
-                        setHasChanges(true);
+                      onValueChange={(v: 'black' | 'white') => {
+                        setTabBarConfig((prev) => ({ ...prev, borderStyle: v }))
+                        setHasChanges(true)
                       }}
                     >
                       <SelectTrigger>
@@ -925,14 +925,14 @@ export default function StoreDesignPage() {
                             list: [
                               ...prev.list,
                               {
-                                pagePath: "",
-                                text: "新标签",
-                                iconPath: "/static/tabbar/default.png",
-                                selectedIconPath: "/static/tabbar/default-active.png",
-                              },
-                            ],
-                          }));
-                          setHasChanges(true);
+                                pagePath: '',
+                                text: '新标签',
+                                iconPath: '/static/tabbar/default.png',
+                                selectedIconPath: '/static/tabbar/default-active.png'
+                              }
+                            ]
+                          }))
+                          setHasChanges(true)
                         }}
                       >
                         <Plus className="h-4 w-4 mr-1" />
@@ -944,31 +944,31 @@ export default function StoreDesignPage() {
                   {tabBarConfig.list.map((item, index) => (
                     <div key={index} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                       <div className="w-12 h-12 bg-slate-200 rounded flex items-center justify-center text-2xl">
-                        {item.text === "首页" && "🏠"}
-                        {item.text === "点餐" && "🍽️"}
-                        {item.text === "订单" && "📋"}
-                        {item.text === "我的" && "👤"}
-                        {!["首页", "点餐", "订单", "我的"].includes(item.text) && "📱"}
+                        {item.text === '首页' && '🏠'}
+                        {item.text === '点餐' && '🍽️'}
+                        {item.text === '订单' && '📋'}
+                        {item.text === '我的' && '👤'}
+                        {!['首页', '点餐', '订单', '我的'].includes(item.text) && '📱'}
                       </div>
                       <div className="flex-1 grid grid-cols-2 gap-2">
                         <Input
                           placeholder="标签名称"
                           value={item.text}
                           onChange={(e) => {
-                            const newList = [...tabBarConfig.list];
-                            newList[index].text = e.target.value;
-                            setTabBarConfig((prev) => ({ ...prev, list: newList }));
-                            setHasChanges(true);
+                            const newList = [...tabBarConfig.list]
+                            newList[index].text = e.target.value
+                            setTabBarConfig((prev) => ({ ...prev, list: newList }))
+                            setHasChanges(true)
                           }}
                         />
                         <Input
                           placeholder="页面路径"
                           value={item.pagePath}
                           onChange={(e) => {
-                            const newList = [...tabBarConfig.list];
-                            newList[index].pagePath = e.target.value;
-                            setTabBarConfig((prev) => ({ ...prev, list: newList }));
-                            setHasChanges(true);
+                            const newList = [...tabBarConfig.list]
+                            newList[index].pagePath = e.target.value
+                            setTabBarConfig((prev) => ({ ...prev, list: newList }))
+                            setHasChanges(true)
                           }}
                         />
                       </div>
@@ -977,9 +977,9 @@ export default function StoreDesignPage() {
                         variant="ghost"
                         className="text-muted-foreground hover:text-destructive"
                         onClick={() => {
-                          const newList = tabBarConfig.list.filter((_, i) => i !== index);
-                          setTabBarConfig((prev) => ({ ...prev, list: newList }));
-                          setHasChanges(true);
+                          const newList = tabBarConfig.list.filter((_, i) => i !== index)
+                          setTabBarConfig((prev) => ({ ...prev, list: newList }))
+                          setHasChanges(true)
                         }}
                         disabled={tabBarConfig.list.length <= 2}
                       >
@@ -998,7 +998,7 @@ export default function StoreDesignPage() {
                     className="flex items-center justify-around py-2 px-4 rounded-lg shadow-lg w-[375px]"
                     style={{
                       backgroundColor: tabBarConfig.backgroundColor,
-                      borderTop: `1px solid ${tabBarConfig.borderStyle === "black" ? "#e5e5e5" : "#333"}`,
+                      borderTop: `1px solid ${tabBarConfig.borderStyle === 'black' ? '#e5e5e5' : '#333'}`
                     }}
                   >
                     {tabBarConfig.list.map((item, index) => (
@@ -1007,7 +1007,7 @@ export default function StoreDesignPage() {
                         <span
                           className="text-xs"
                           style={{
-                            color: index === 0 ? tabBarConfig.selectedColor : tabBarConfig.color,
+                            color: index === 0 ? tabBarConfig.selectedColor : tabBarConfig.color
                           }}
                         >
                           {item.text}
@@ -1036,21 +1036,21 @@ export default function StoreDesignPage() {
                     <p className="text-xs text-muted-foreground mb-3">拖拽组件到预览区或点击添加</p>
                     {(
                       [
-                        "simple",
-                        "standard",
-                        "container",
-                        "element",
-                        "special",
+                        'simple',
+                        'standard',
+                        'container',
+                        'element',
+                        'special'
                       ] as ComponentCategory[]
                     ).map((category) => {
                       const categoryComponents = COMPONENT_TYPES.filter((c) => {
-                        if (c.category !== category) return false;
+                        if (c.category !== category) return false
                         // 过滤掉当前页面不可用的专属组件
                         if (c.availableIn && !c.availableIn.includes(currentPage as PageType))
-                          return false;
-                        return true;
-                      });
-                      if (categoryComponents.length === 0) return null;
+                          return false
+                        return true
+                      })
+                      if (categoryComponents.length === 0) return null
                       return (
                         <div key={category} className="mb-4">
                           <h4 className="text-xs font-medium text-muted-foreground mb-2">
@@ -1067,7 +1067,7 @@ export default function StoreDesignPage() {
                             ))}
                           </div>
                         </div>
-                      );
+                      )
                     })}
                   </div>
                 </ScrollArea>
@@ -1118,7 +1118,7 @@ export default function StoreDesignPage() {
                       {/* 页面内容 - 减去状态栏和底部 TabBar */}
                       <ScrollArea className="h-[612px]">
                         {/* 子Tab特殊配置界面 */}
-                        {currentSubTab === "loading" && (
+                        {currentSubTab === 'loading' && (
                           <div className="min-h-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-primary/20 to-primary/5">
                             <div className="w-24 h-24 bg-primary/20 rounded-2xl flex items-center justify-center mb-4">
                               <span className="text-4xl">☕</span>
@@ -1136,7 +1136,7 @@ export default function StoreDesignPage() {
                           </div>
                         )}
 
-                        {currentSubTab === "coupon_popup" && (
+                        {currentSubTab === 'coupon_popup' && (
                           <div className="min-h-full bg-black/50 flex items-center justify-center p-4">
                             <div className="bg-white rounded-2xl w-full max-w-[320px] overflow-hidden shadow-2xl">
                               <div className="bg-gradient-to-r from-red-500 to-orange-500 p-4 text-white text-center">
@@ -1145,8 +1145,8 @@ export default function StoreDesignPage() {
                               </div>
                               <div className="p-4 space-y-3">
                                 {[
-                                  { amount: 10, condition: "满30可用", tag: "新人券" },
-                                  { amount: 5, condition: "满20可用", tag: "无门槛" },
+                                  { amount: 10, condition: '满30可用', tag: '新人券' },
+                                  { amount: 5, condition: '满20可用', tag: '无门槛' }
                                 ].map((coupon, i) => (
                                   <div
                                     key={i}
@@ -1177,7 +1177,7 @@ export default function StoreDesignPage() {
                           </div>
                         )}
 
-                        {currentSubTab === "dining_mode" && (
+                        {currentSubTab === 'dining_mode' && (
                           <div className="min-h-full bg-black/50 flex items-end">
                             <div className="bg-white w-full rounded-t-2xl overflow-hidden">
                               <div className="p-4 text-center border-b">
@@ -1185,16 +1185,16 @@ export default function StoreDesignPage() {
                               </div>
                               <div className="p-4 grid grid-cols-3 gap-3">
                                 {[
-                                  { icon: "🍽️", label: "堂食", desc: "在店内用餐" },
-                                  { icon: "🥡", label: "自取", desc: "打包带走" },
-                                  { icon: "🛵", label: "外卖", desc: "配送到家" },
+                                  { icon: '🍽️', label: '堂食', desc: '在店内用餐' },
+                                  { icon: '🥡', label: '自取', desc: '打包带走' },
+                                  { icon: '🛵', label: '外卖', desc: '配送到家' }
                                 ].map((mode, i) => (
                                   <button
                                     key={i}
                                     className={`p-4 rounded-xl border-2 text-center transition-colors ${
                                       i === 0
-                                        ? "border-primary bg-primary/5"
-                                        : "border-transparent bg-slate-50"
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-transparent bg-slate-50'
                                     }`}
                                   >
                                     <div className="text-3xl mb-2">{mode.icon}</div>
@@ -1215,18 +1215,18 @@ export default function StoreDesignPage() {
                         )}
 
                         {/* 主页面内容 - 自由画布模式 */}
-                        {currentSubTab === "main" && (
+                        {currentSubTab === 'main' && (
                           <FreeCanvas
                             components={components}
                             selectedId={selectedId}
                             setSelectedId={(id) => {
-                              setSelectedId(id);
-                              if (id) setConfigTab("component");
+                              setSelectedId(id)
+                              if (id) setConfigTab('component')
                             }}
                             deleteComponent={deleteComponent}
                             toggleVisibility={toggleVisibility}
                             toggleLock={toggleLock}
-                            isDraggingNew={dragType === "new"}
+                            isDraggingNew={dragType === 'new'}
                             activeId={activeId}
                             updateComponent={updateComponent}
                             startResize={startResize}
@@ -1245,13 +1245,13 @@ export default function StoreDesignPage() {
                       {/* 底部 TabBar 预览 */}
                       <div className="absolute bottom-0 left-0 right-0 h-[84px] bg-white border-t flex items-center justify-around px-4 rounded-b-[2.4rem]">
                         {[
-                          { icon: Home, label: "首页", active: currentPage === "HOME" },
-                          { icon: Menu, label: "菜单", active: currentPage === "MENU" },
-                          { icon: User, label: "我的", active: currentPage === "MINE" },
+                          { icon: Home, label: '首页', active: currentPage === 'HOME' },
+                          { icon: Menu, label: '菜单', active: currentPage === 'MENU' },
+                          { icon: User, label: '我的', active: currentPage === 'MINE' }
                         ].map((tab, i) => (
                           <div
                             key={i}
-                            className={`flex flex-col items-center gap-1 ${tab.active ? "text-orange-500" : "text-gray-400"}`}
+                            className={`flex flex-col items-center gap-1 ${tab.active ? 'text-orange-500' : 'text-gray-400'}`}
                           >
                             <tab.icon className="h-6 w-6" />
                             <span className="text-[10px]">{tab.label}</span>
@@ -1271,31 +1271,31 @@ export default function StoreDesignPage() {
                 {/* 配置面板Tab切换 */}
                 <div className="flex border-b">
                   <button
-                    onClick={() => setConfigTab("component")}
+                    onClick={() => setConfigTab('component')}
                     className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                      configTab === "component"
-                        ? "text-primary border-b-2 border-primary"
-                        : "text-muted-foreground hover:text-foreground"
+                      configTab === 'component'
+                        ? 'text-primary border-b-2 border-primary'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     组件
                   </button>
                   <button
-                    onClick={() => setConfigTab("page")}
+                    onClick={() => setConfigTab('page')}
                     className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                      configTab === "page"
-                        ? "text-primary border-b-2 border-primary"
-                        : "text-muted-foreground hover:text-foreground"
+                      configTab === 'page'
+                        ? 'text-primary border-b-2 border-primary'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     页面
                   </button>
                   <button
-                    onClick={() => setConfigTab("global")}
+                    onClick={() => setConfigTab('global')}
                     className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                      configTab === "global"
-                        ? "text-primary border-b-2 border-primary"
-                        : "text-muted-foreground hover:text-foreground"
+                      configTab === 'global'
+                        ? 'text-primary border-b-2 border-primary'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     全局
@@ -1304,7 +1304,7 @@ export default function StoreDesignPage() {
 
                 <ScrollArea className="flex-1">
                   {/* 组件配置 */}
-                  {configTab === "component" &&
+                  {configTab === 'component' &&
                     (selectedComponent ? (
                       <div className="p-4 space-y-4">
                         <div className="flex items-center justify-between">
@@ -1316,7 +1316,7 @@ export default function StoreDesignPage() {
                           <div className="space-y-2">
                             <Label>组件标题</Label>
                             <Input
-                              value={selectedComponent.title || ""}
+                              value={selectedComponent.title || ''}
                               onChange={(e) => updateTitle(selectedComponent.id, e.target.value)}
                             />
                           </div>
@@ -1342,7 +1342,7 @@ export default function StoreDesignPage() {
                     ))}
 
                   {/* 页面设置 */}
-                  {configTab === "page" && (
+                  {configTab === 'page' && (
                     <div className="p-4 space-y-4">
                       <h3 className="font-medium">页面设置</h3>
                       <Separator />
@@ -1353,8 +1353,8 @@ export default function StoreDesignPage() {
                           placeholder="小程序页面标题"
                           value={pageSettings.title}
                           onChange={(e) => {
-                            setPageSettings((prev) => ({ ...prev, title: e.target.value }));
-                            setHasChanges(true);
+                            setPageSettings((prev) => ({ ...prev, title: e.target.value }))
+                            setHasChanges(true)
                           }}
                         />
                       </div>
@@ -1366,16 +1366,16 @@ export default function StoreDesignPage() {
                             type="color"
                             value={pageSettings.navBgColor}
                             onChange={(e) => {
-                              setPageSettings((prev) => ({ ...prev, navBgColor: e.target.value }));
-                              setHasChanges(true);
+                              setPageSettings((prev) => ({ ...prev, navBgColor: e.target.value }))
+                              setHasChanges(true)
                             }}
                             className="w-10 h-10 rounded border cursor-pointer"
                           />
                           <Input
                             value={pageSettings.navBgColor}
                             onChange={(e) => {
-                              setPageSettings((prev) => ({ ...prev, navBgColor: e.target.value }));
-                              setHasChanges(true);
+                              setPageSettings((prev) => ({ ...prev, navBgColor: e.target.value }))
+                              setHasChanges(true)
                             }}
                             className="flex-1"
                           />
@@ -1386,9 +1386,9 @@ export default function StoreDesignPage() {
                         <Label>导航标题颜色</Label>
                         <Select
                           value={pageSettings.navTextColor}
-                          onValueChange={(v: "white" | "black") => {
-                            setPageSettings((prev) => ({ ...prev, navTextColor: v }));
-                            setHasChanges(true);
+                          onValueChange={(v: 'white' | 'black') => {
+                            setPageSettings((prev) => ({ ...prev, navTextColor: v }))
+                            setHasChanges(true)
                           }}
                         >
                           <SelectTrigger>
@@ -1408,16 +1408,16 @@ export default function StoreDesignPage() {
                             type="color"
                             value={pageSettings.pageBgColor}
                             onChange={(e) => {
-                              setPageSettings((prev) => ({ ...prev, pageBgColor: e.target.value }));
-                              setHasChanges(true);
+                              setPageSettings((prev) => ({ ...prev, pageBgColor: e.target.value }))
+                              setHasChanges(true)
                             }}
                             className="w-10 h-10 rounded border cursor-pointer"
                           />
                           <Input
                             value={pageSettings.pageBgColor}
                             onChange={(e) => {
-                              setPageSettings((prev) => ({ ...prev, pageBgColor: e.target.value }));
-                              setHasChanges(true);
+                              setPageSettings((prev) => ({ ...prev, pageBgColor: e.target.value }))
+                              setHasChanges(true)
                             }}
                             className="flex-1"
                           />
@@ -1429,8 +1429,8 @@ export default function StoreDesignPage() {
                         <Switch
                           checked={pageSettings.hideNav}
                           onCheckedChange={(v) => {
-                            setPageSettings((prev) => ({ ...prev, hideNav: v }));
-                            setHasChanges(true);
+                            setPageSettings((prev) => ({ ...prev, hideNav: v }))
+                            setHasChanges(true)
                           }}
                         />
                       </div>
@@ -1438,7 +1438,7 @@ export default function StoreDesignPage() {
                   )}
 
                   {/* 全局配置 */}
-                  {configTab === "global" && (
+                  {configTab === 'global' && (
                     <div className="p-4 space-y-4">
                       <h3 className="font-medium">全局配置</h3>
                       <Separator />
@@ -1450,16 +1450,16 @@ export default function StoreDesignPage() {
                             type="color"
                             value={globalConfig.themeColor}
                             onChange={(e) => {
-                              setGlobalConfig((prev) => ({ ...prev, themeColor: e.target.value }));
-                              setHasChanges(true);
+                              setGlobalConfig((prev) => ({ ...prev, themeColor: e.target.value }))
+                              setHasChanges(true)
                             }}
                             className="w-10 h-10 rounded border cursor-pointer"
                           />
                           <Input
                             value={globalConfig.themeColor}
                             onChange={(e) => {
-                              setGlobalConfig((prev) => ({ ...prev, themeColor: e.target.value }));
-                              setHasChanges(true);
+                              setGlobalConfig((prev) => ({ ...prev, themeColor: e.target.value }))
+                              setHasChanges(true)
                             }}
                             className="flex-1"
                           />
@@ -1480,9 +1480,9 @@ export default function StoreDesignPage() {
                               onChange={(e) => {
                                 setGlobalConfig((prev) => ({
                                   ...prev,
-                                  paddingLeft: Number(e.target.value),
-                                }));
-                                setHasChanges(true);
+                                  paddingLeft: Number(e.target.value)
+                                }))
+                                setHasChanges(true)
                               }}
                             />
                           </div>
@@ -1496,9 +1496,9 @@ export default function StoreDesignPage() {
                               onChange={(e) => {
                                 setGlobalConfig((prev) => ({
                                   ...prev,
-                                  paddingRight: Number(e.target.value),
-                                }));
-                                setHasChanges(true);
+                                  paddingRight: Number(e.target.value)
+                                }))
+                                setHasChanges(true)
                               }}
                             />
                           </div>
@@ -1509,9 +1509,9 @@ export default function StoreDesignPage() {
                         <Label>边框圆角</Label>
                         <Select
                           value={globalConfig.borderRadius}
-                          onValueChange={(v: "none" | "rounded" | "large" | "custom") => {
-                            setGlobalConfig((prev) => ({ ...prev, borderRadius: v }));
-                            setHasChanges(true);
+                          onValueChange={(v: 'none' | 'rounded' | 'large' | 'custom') => {
+                            setGlobalConfig((prev) => ({ ...prev, borderRadius: v }))
+                            setHasChanges(true)
                           }}
                         >
                           <SelectTrigger>
@@ -1524,7 +1524,7 @@ export default function StoreDesignPage() {
                             <SelectItem value="custom">自定义</SelectItem>
                           </SelectContent>
                         </Select>
-                        {globalConfig.borderRadius === "custom" && (
+                        {globalConfig.borderRadius === 'custom' && (
                           <div className="mt-2">
                             <Label className="text-xs text-muted-foreground">圆角大小 (px)</Label>
                             <Slider
@@ -1533,8 +1533,8 @@ export default function StoreDesignPage() {
                               max={30}
                               step={1}
                               onValueChange={([v]) => {
-                                setGlobalConfig((prev) => ({ ...prev, customRadius: v }));
-                                setHasChanges(true);
+                                setGlobalConfig((prev) => ({ ...prev, customRadius: v }))
+                                setHasChanges(true)
                               }}
                             />
                             <span className="text-xs text-muted-foreground">
@@ -1552,8 +1552,8 @@ export default function StoreDesignPage() {
                         <Switch
                           checked={globalConfig.shadow}
                           onCheckedChange={(v) => {
-                            setGlobalConfig((prev) => ({ ...prev, shadow: v }));
-                            setHasChanges(true);
+                            setGlobalConfig((prev) => ({ ...prev, shadow: v }))
+                            setHasChanges(true)
                           }}
                         />
                       </div>
@@ -1568,14 +1568,14 @@ export default function StoreDesignPage() {
                           style={{
                             backgroundColor: pageSettings.pageBgColor,
                             borderRadius:
-                              globalConfig.borderRadius === "none"
+                              globalConfig.borderRadius === 'none'
                                 ? 0
-                                : globalConfig.borderRadius === "rounded"
+                                : globalConfig.borderRadius === 'rounded'
                                   ? 8
-                                  : globalConfig.borderRadius === "large"
+                                  : globalConfig.borderRadius === 'large'
                                     ? 16
                                     : globalConfig.customRadius,
-                            boxShadow: globalConfig.shadow ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
+                            boxShadow: globalConfig.shadow ? '0 2px 8px rgba(0,0,0,0.1)' : 'none'
                           }}
                         >
                           <div
@@ -1594,24 +1594,24 @@ export default function StoreDesignPage() {
 
             {/* 拖拽预览层 */}
             <DragOverlay>
-              {activeId && dragType === "new" && (
+              {activeId && dragType === 'new' && (
                 <div className="w-32 bg-white rounded-lg shadow-xl border-2 border-primary opacity-90">
                   <div className="h-16 overflow-hidden bg-gray-50 border-b">
                     <div className="transform scale-[0.3] origin-top-left w-[333%]">
                       <ComponentPreview
                         component={{
-                          id: "overlay",
-                          type: activeId.replace("new-", "") as PageComponentType,
-                          title: "",
+                          id: 'overlay',
+                          type: activeId.replace('new-', '') as PageComponentType,
+                          title: '',
                           visible: true,
-                          props: getDefaultProps(activeId.replace("new-", "") as PageComponentType),
+                          props: getDefaultProps(activeId.replace('new-', '') as PageComponentType)
                         }}
                       />
                     </div>
                   </div>
                   <div className="p-2 text-center text-xs font-medium">
-                    {COMPONENT_TYPES.find((c) => c.value === activeId.replace("new-", ""))?.label ||
-                      "组件"}
+                    {COMPONENT_TYPES.find((c) => c.value === activeId.replace('new-', ''))?.label ||
+                      '组件'}
                   </div>
                 </div>
               )}
@@ -1701,5 +1701,5 @@ export default function StoreDesignPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

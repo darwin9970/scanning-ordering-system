@@ -5,18 +5,16 @@
       <view class="navbar__content">
         <view class="navbar__search" @tap="goToSearch">
           <uni-icons type="search" size="18" color="#999999" />
-          <text class="navbar__search-text">
-            搜索菜品
-          </text>
+          <text class="navbar__search-text">搜索菜品</text>
         </view>
         <view class="navbar__table">
           <text>{{ tableStore.tableNo }}桌</text>
         </view>
       </view>
     </view>
-    
+
     <!-- 占位 -->
-    <view class="navbar-placeholder" :style="{ height: (statusBarHeight + 50) + 'px' }" />
+    <view class="navbar-placeholder" :style="{ height: statusBarHeight + 50 + 'px' }" />
 
     <!-- 动态页面组件渲染（优先显示配置的布局） -->
     <page-renderer
@@ -35,6 +33,7 @@
       @banner-click="handleBannerClick"
       @nav-click="handleNavClick"
       @product-click="showProductDetail"
+      @service-click="handleServiceClick"
     />
 
     <!-- 默认轮播图 (无配置时显示) -->
@@ -48,22 +47,17 @@
         indicator-color="rgba(255,255,255,0.5)"
         indicator-active-color="#FFFFFF"
       >
-        <swiper-item
-          v-for="banner in banners"
-          :key="banner.id"
-          @tap="handleBannerClick(banner)"
-        >
-          <image
-            class="banner-swiper__image"
-            :src="banner.image"
-            mode="aspectFill"
-          />
+        <swiper-item v-for="banner in banners" :key="banner.id" @tap="handleBannerClick(banner)">
+          <image class="banner-swiper__image" :src="banner.image" mode="aspectFill" />
         </swiper-item>
       </swiper>
     </view>
 
     <!-- 默认店内公告 (无配置时显示) -->
-    <view v-if="(pageComponents.length === 0 || !useCustomLayout) && storeAnnouncement" class="store-notice">
+    <view
+      v-if="(pageComponents.length === 0 || !useCustomLayout) && storeAnnouncement"
+      class="store-notice"
+    >
       <uni-icons type="sound-filled" size="16" color="#ff9500" />
       <text class="store-notice__text">
         {{ storeAnnouncement }}
@@ -73,25 +67,21 @@
     <!-- 营业状态 -->
     <view v-if="!isStoreOpen" class="store-closed">
       <uni-icons type="info-filled" size="16" color="#ff4d4f" />
-      <text class="store-closed__text">
-        当前非营业时间 ({{ businessHoursText }})
-      </text>
+      <text class="store-closed__text">当前非营业时间 ({{ businessHoursText }})</text>
     </view>
 
     <!-- 主内容区（仅在非自定义布局时显示） -->
     <view v-if="pageComponents.length === 0 || !useCustomLayout" class="main-content">
       <!-- 左侧分类 -->
-      <scroll-view 
-        class="category-nav" 
-        scroll-y
-        :scroll-into-view="'cat-' + activeCategoryId"
-      >
-        <view 
-          v-for="category in tableStore.categories" 
+      <scroll-view class="category-nav" scroll-y :scroll-into-view="'cat-' + activeCategoryId">
+        <view
+          v-for="category in tableStore.categories"
           :id="'cat-' + category.id"
           :key="category.id"
           class="category-nav__item"
-          :class="{ 'category-nav__item--active': activeCategoryId === category.id }"
+          :class="{
+            'category-nav__item--active': activeCategoryId === category.id
+          }"
           @tap="selectCategory(category.id)"
         >
           <text class="category-nav__name">
@@ -102,16 +92,16 @@
           </text>
         </view>
       </scroll-view>
-      
+
       <!-- 右侧商品列表 -->
-      <scroll-view 
-        class="product-list" 
+      <scroll-view
+        class="product-list"
         scroll-y
         :scroll-into-view="scrollToProduct"
         @scroll="handleScroll"
       >
-        <view 
-          v-for="category in tableStore.categories" 
+        <view
+          v-for="category in tableStore.categories"
           :id="'products-' + category.id"
           :key="category.id"
           class="product-group"
@@ -119,17 +109,19 @@
           <view class="product-group__title">
             {{ category.name }}
           </view>
-          
-          <view 
-            v-for="product in getProductsByCategory(category.id)" 
+
+          <view
+            v-for="product in getProductsByCategory(category.id)"
             :key="product.id"
             class="product-card"
-            :class="{ 'product-card--active': getProductQuantity(product.id) > 0 }"
+            :class="{
+              'product-card--active': getProductQuantity(product.id) > 0
+            }"
             @tap="showProductDetail(product)"
           >
-            <image 
-              class="product-card__image" 
-              :src="product.image || '/static/images/default-food.png'" 
+            <image
+              class="product-card__image"
+              :src="product.image || '/static/images/default-food.png'"
               mode="aspectFill"
             />
             <view class="product-card__content">
@@ -139,41 +131,33 @@
               <text class="product-card__desc">
                 {{ product.description }}
               </text>
-              
+
               <view v-if="product.tags?.length" class="product-card__tags">
                 <q-tag v-for="tag in product.tags.slice(0, 2)" :key="tag" type="primary">
                   {{ tag }}
                 </q-tag>
               </view>
-              
+
               <view class="product-card__footer">
                 <view class="product-card__price-wrap">
                   <q-price :value="product.price" size="medium" />
-                  <q-price 
-                    v-if="product.originalPrice" 
-                    :value="product.originalPrice" 
-                    original 
-                  />
+                  <q-price v-if="product.originalPrice" :value="product.originalPrice" original />
                 </view>
-                
+
                 <view class="product-card__actions" @tap.stop>
-                  <q-stepper 
+                  <q-stepper
                     v-if="getProductQuantity(product.id) > 0"
                     :model-value="getProductQuantity(product.id)"
                     @change="(val) => updateProductQuantity(product, val)"
                   />
-                  <view 
-                    v-else 
-                    class="product-card__add-btn"
-                    @tap="addProduct(product)"
-                  >
+                  <view v-else class="product-card__add-btn" @tap="addProduct(product)">
                     <uni-icons type="plus-filled" size="24" color="#FF6B35" />
                   </view>
                 </view>
               </view>
             </view>
           </view>
-          
+
           <!-- 空状态 -->
           <view v-if="getProductsByCategory(category.id).length === 0" class="product-group__empty">
             <q-empty type="default" text="该分类暂无商品" />
@@ -182,7 +166,7 @@
         </view>
       </scroll-view>
     </view>
-    
+
     <!-- 底部购物车栏 -->
     <view v-if="!cartStore.isEmpty" class="cart-bar">
       <view class="cart-bar__inner">
@@ -192,42 +176,40 @@
             {{ cartStore.totalCount }}
           </view>
         </view>
-        
+
         <view class="cart-bar__info">
           <view class="cart-bar__price">
             <q-price :value="cartStore.totalPrice" size="large" />
           </view>
-          <text class="cart-bar__count">
-            已选 {{ cartStore.totalCount }} 件
-          </text>
+          <text class="cart-bar__count">已选 {{ cartStore.totalCount }} 件</text>
         </view>
-        
+
         <view class="cart-bar__btn" @tap="goToCheckout">
           <text>去结算</text>
         </view>
       </view>
     </view>
-    
+
     <!-- 空购物车时的占位 -->
     <view v-else class="cart-bar-placeholder" />
-    
+
     <!-- 自定义 TabBar -->
     <custom-tabbar :current="0" />
-    
+
     <!-- 商品详情弹窗 -->
     <uni-popup ref="productPopup" type="bottom">
       <view v-if="selectedProduct" class="product-popup">
         <view class="product-popup__header">
-          <image 
-            class="product-popup__image" 
-            :src="selectedProduct.image || '/static/images/default-food.png'" 
+          <image
+            class="product-popup__image"
+            :src="selectedProduct.image || '/static/images/default-food.png'"
             mode="aspectFill"
           />
           <view class="product-popup__close" @tap="closeProductPopup">
             <uni-icons type="close" size="20" color="#999999" />
           </view>
         </view>
-        
+
         <view class="product-popup__body">
           <view class="product-popup__info">
             <text class="product-popup__name">
@@ -235,39 +217,33 @@
             </text>
             <view class="product-popup__price-wrap">
               <q-price :value="currentSkuPrice" size="large" />
-              <text class="product-popup__sales">
-                月售 {{ selectedProduct.salesCount || 0 }}
-              </text>
+              <text class="product-popup__sales">月售 {{ selectedProduct.salesCount || 0 }}</text>
             </view>
           </view>
-          
+
           <!-- SKU 选择 -->
           <view v-if="selectedProduct.skus?.length > 1" class="product-popup__section">
-            <text class="product-popup__section-title">
-              规格
-            </text>
+            <text class="product-popup__section-title">规格</text>
             <view class="product-popup__options">
-              <view 
-                v-for="sku in selectedProduct.skus" 
+              <view
+                v-for="sku in selectedProduct.skus"
                 :key="sku.id"
                 class="product-popup__option"
-                :class="{ 'product-popup__option--active': selectedSkuId === sku.id }"
+                :class="{
+                  'product-popup__option--active': selectedSkuId === sku.id
+                }"
                 @tap="selectSku(sku.id)"
               >
                 <text>{{ sku.name }}</text>
-                <text class="product-popup__option-price">
-                  ¥{{ sku.price }}
-                </text>
+                <text class="product-popup__option-price">¥{{ sku.price }}</text>
               </view>
             </view>
           </view>
-          
+
           <!-- 备注 -->
           <view class="product-popup__section">
-            <text class="product-popup__section-title">
-              备注
-            </text>
-            <textarea 
+            <text class="product-popup__section-title">备注</text>
+            <textarea
               v-model="productRemark"
               class="product-popup__remark"
               placeholder="如需特殊要求请备注"
@@ -275,17 +251,50 @@
             />
           </view>
         </view>
-        
+
         <view class="product-popup__footer">
           <q-stepper v-model="productQuantity" :min="1" />
-          <q-button 
-            type="primary" 
-            size="large" 
+          <q-button
+            type="primary"
+            size="large"
             class="product-popup__add-btn"
             @click="confirmAddProduct"
           >
             加入购物车 ¥{{ (currentSkuPrice * productQuantity).toFixed(2) }}
           </q-button>
+        </view>
+      </view>
+    </uni-popup>
+
+    <!-- 服务呼叫弹窗 -->
+    <uni-popup ref="servicePopup" type="bottom" background-color="#fff">
+      <view class="service-popup">
+        <view class="service-popup__header">
+          <text class="service-popup__title">呼叫服务</text>
+          <uni-icons type="closeempty" size="20" color="#999" @click="closeServicePopup" />
+        </view>
+        <view class="service-popup__grid">
+          <view
+            class="service-popup__item"
+            @click="confirmServiceCall('CALL_SERVICE', '呼叫服务员')"
+          >
+            <view class="service-popup__icon service-popup__icon--blue">
+              <uni-icons type="staff-filled" size="28" color="#fff" />
+            </view>
+            <text>呼叫服务员</text>
+          </view>
+          <view class="service-popup__item" @click="confirmServiceCall('URGE_ORDER', '催单')">
+            <view class="service-popup__icon service-popup__icon--orange">
+              <uni-icons type="fire-filled" size="28" color="#fff" />
+            </view>
+            <text>催单</text>
+          </view>
+          <view class="service-popup__item" @click="confirmServiceCall('REQUEST_BILL', '请求结账')">
+            <view class="service-popup__icon service-popup__icon--green">
+              <uni-icons type="wallet-filled" size="28" color="#fff" />
+            </view>
+            <text>结账</text>
+          </view>
         </view>
       </view>
     </uni-popup>
@@ -296,7 +305,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useTableStore } from '@/store/table'
 import { useCartStore } from '@/store/cart'
-import { getBanners, getPageConfig, getAvailableCoupons } from '@/api'
+import { getBanners, getPageConfig, getAvailableCoupons, callService } from '@/api'
 import { showActionSuccess } from '@/utils/toast'
 
 const tableStore = useTableStore()
@@ -384,29 +393,29 @@ const businessHoursText = computed(() => {
 const isStoreOpen = computed(() => {
   const store = tableStore.store
   if (!store) return true
-  
+
   // 检查门店状态
   if (store.status !== 'ACTIVE') return false
-  
+
   // 检查营业时间
   const hours = store.businessHours
   if (!hours) return true
-  
+
   const now = new Date()
   const currentDay = now.getDay() // 0-6, 0 是周日
-  
+
   // 检查休息日
   if (hours.restDays && hours.restDays.includes(currentDay)) {
     return false
   }
-  
+
   // 检查营业时间
   const currentTime = now.getHours() * 100 + now.getMinutes()
   const [openHour, openMin] = hours.open.split(':').map(Number)
   const [closeHour, closeMin] = hours.close.split(':').map(Number)
   const openTime = openHour * 100 + openMin
   const closeTime = closeHour * 100 + closeMin
-  
+
   return currentTime >= openTime && currentTime <= closeTime
 })
 
@@ -459,7 +468,7 @@ const handleBannerClick = (banner) => {
 // 处理导航点击
 const handleNavClick = (item) => {
   if (!item.link || !item.link.type) return
-  
+
   switch (item.link.type) {
     case 'category':
       if (item.link.value) {
@@ -492,16 +501,23 @@ const handleNavClick = (item) => {
         })
       }
       break
+    case 'cart':
+      goToCart()
+      break
+    case 'search':
+      goToSearch()
+      break
   }
 }
 
 // 加载页面配置
 const loadPageConfig = async () => {
-  if (!tableStore.storeId) {
-    console.log('storeId不存在，跳过加载页面配置')
-    return
-  }
   try {
+    const storeId = uni.getStorageSync('storeId')
+    if (!storeId) {
+      console.log('storeId不存在，跳过加载页面配置')
+      return
+    }
     console.log('加载点餐页配置, storeId:', tableStore.storeId)
     const res = await getPageConfig({
       storeId: tableStore.storeId,
@@ -516,6 +532,11 @@ const loadPageConfig = async () => {
     }
   } catch (e) {
     console.error('加载页面配置失败:', e)
+    uni.showToast({
+      title: '页面配置加载失败',
+      icon: 'none',
+      duration: 2000
+    })
   }
 }
 
@@ -532,14 +553,18 @@ const loadCoupons = async () => {
 }
 
 // 监听storeId变化
-watch(() => tableStore.storeId, (newStoreId) => {
-  if (newStoreId) {
-    console.log('storeId变化，重新加载数据:', newStoreId)
-    loadPageConfig()
-    loadBanners()
-    loadCoupons()
-  }
-}, { immediate: true })
+watch(
+  () => tableStore.storeId,
+  (newStoreId) => {
+    if (newStoreId) {
+      console.log('storeId变化，重新加载数据:', newStoreId)
+      loadPageConfig()
+      loadBanners()
+      loadCoupons()
+    }
+  },
+  { immediate: true }
+)
 
 // 页面加载
 onMounted(() => {
@@ -570,19 +595,19 @@ const getProductQuantity = (productId) => {
 // 选择分类
 const selectCategory = (categoryId) => {
   if (activeCategoryId.value === categoryId) return
-  
+
   activeCategoryId.value = categoryId
-  
+
   // 触觉反馈
   // #ifdef MP-WEIXIN
   uni.vibrateShort({
     type: 'light'
   })
   // #endif
-  
+
   // 平滑滚动到对应分类
   scrollToProduct.value = 'products-' + categoryId
-  
+
   // 延迟滚动，确保DOM更新，使用 nextTick 更可靠
   setTimeout(() => {
     scrollToProduct.value = 'products-' + categoryId
@@ -621,7 +646,7 @@ const selectSku = (skuId) => {
 const currentSkuPrice = computed(() => {
   if (!selectedProduct.value) return 0
   if (selectedSkuId.value) {
-    const sku = selectedProduct.value.skus?.find(s => s.id === selectedSkuId.value)
+    const sku = selectedProduct.value.skus?.find((s) => s.id === selectedSkuId.value)
     return sku?.price || selectedProduct.value.price
   }
   return selectedProduct.value.price
@@ -630,26 +655,20 @@ const currentSkuPrice = computed(() => {
 // 确认添加商品
 const confirmAddProduct = () => {
   if (!selectedProduct.value) return
-  
-  const sku = selectedProduct.value.skus?.find(s => s.id === selectedSkuId.value)
-  
-  cartStore.add(
-    selectedProduct.value,
-    sku,
-    [],
-    productQuantity.value,
-    productRemark.value
-  )
-  
+
+  const sku = selectedProduct.value.skus?.find((s) => s.id === selectedSkuId.value)
+
+  cartStore.add(selectedProduct.value, sku, [], productQuantity.value, productRemark.value)
+
   closeProductPopup()
-  
+
   // 触觉反馈
   // #ifdef MP-WEIXIN
   uni.vibrateShort({
     type: 'light'
   })
   // #endif
-  
+
   uni.showToast({
     title: '已加入购物车',
     icon: 'success',
@@ -665,14 +684,14 @@ const addProduct = (product) => {
   } else {
     // 无规格或单规格，直接添加
     cartStore.add(product, product.skus?.[0], [], 1, '')
-    
+
     // 触觉反馈
     // #ifdef MP-WEIXIN
     uni.vibrateShort({
       type: 'light'
     })
     // #endif
-    
+
     uni.showToast({
       title: '已加入购物车',
       icon: 'success',
@@ -684,7 +703,7 @@ const addProduct = (product) => {
 // 更新商品数量
 const updateProductQuantity = (product, quantity) => {
   // 找到购物车中对应的项
-  const item = cartStore.items.find(i => i.productId === product.id)
+  const item = cartStore.items.find((i) => i.productId === product.id)
   if (item) {
     cartStore.updateQuantity(item.itemKey, quantity)
   }
@@ -710,6 +729,51 @@ const goToCheckout = () => {
     url: '/pages/order/confirm'
   })
 }
+
+// ==================== 服务呼叫 ====================
+const servicePopup = ref(null)
+
+// 处理服务点击
+const handleServiceClick = (props) => {
+  // 如果没有配置特殊的action，或者配置为弹窗选择
+  servicePopup.value?.open()
+}
+
+// 关闭服务弹窗
+const closeServicePopup = () => {
+  servicePopup.value?.close()
+}
+
+// 确认呼叫
+const confirmServiceCall = async (type, text) => {
+  if (!tableStore.storeId || !tableStore.tableId) {
+    uni.showToast({ title: '请先扫码点餐', icon: 'none' })
+    return
+  }
+
+  try {
+    uni.showLoading({ title: '呼叫中...' })
+    const res = await callService({
+      storeId: tableStore.storeId,
+      tableId: tableStore.tableId,
+      type: type, // 'CALL_SERVICE' | 'URGE_ORDER' | 'REQUEST_BILL'
+      message: text // 备注信息
+    })
+
+    uni.hideLoading()
+
+    if (res.code === 200) {
+      uni.showToast({ title: '已通知服务员', icon: 'success' })
+      closeServicePopup()
+    } else {
+      uni.showToast({ title: res.msg || '呼叫失败', icon: 'none' })
+    }
+  } catch (e) {
+    uni.hideLoading()
+    uni.showToast({ title: '网络异常', icon: 'none' })
+    console.error('Service call failed:', e)
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -726,14 +790,14 @@ const goToCheckout = () => {
   right: 0;
   z-index: $z-index-fixed;
   background: $bg-card;
-  
+
   &__content {
     display: flex;
     align-items: center;
     padding: 10rpx 24rpx;
     height: 100rpx;
   }
-  
+
   &__search {
     flex: 1;
     height: 72rpx;
@@ -743,13 +807,13 @@ const goToCheckout = () => {
     align-items: center;
     padding: 0 24rpx;
   }
-  
+
   &__search-text {
     margin-left: 12rpx;
     font-size: $font-size-base;
     color: $text-tertiary;
   }
-  
+
   &__table {
     margin-left: 20rpx;
     padding: 12rpx 24rpx;
@@ -789,7 +853,7 @@ const goToCheckout = () => {
   border-radius: $radius-base;
   display: flex;
   align-items: center;
-  
+
   &__text {
     margin-left: 12rpx;
     font-size: $font-size-sm;
@@ -806,7 +870,7 @@ const goToCheckout = () => {
   border-radius: $radius-base;
   display: flex;
   align-items: center;
-  
+
   &__text {
     margin-left: 12rpx;
     font-size: $font-size-sm;
@@ -826,7 +890,7 @@ const goToCheckout = () => {
   width: $category-width;
   background: $bg-grey;
   flex-shrink: 0;
-  
+
   &__item {
     position: relative;
     height: 100rpx;
@@ -836,12 +900,12 @@ const goToCheckout = () => {
     justify-content: center;
     font-size: $font-size-base;
     color: $text-secondary;
-    
+
     &--active {
       background: $bg-card;
       color: $primary;
       font-weight: $font-weight-medium;
-      
+
       &::before {
         content: '';
         position: absolute;
@@ -855,14 +919,14 @@ const goToCheckout = () => {
       }
     }
   }
-  
+
   &__name {
     max-width: 140rpx;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  
+
   &__count {
     font-size: $font-size-xs;
     color: $primary;
@@ -883,15 +947,15 @@ const goToCheckout = () => {
     color: $text-primary;
     padding: 24rpx 0 16rpx;
   }
-  
-          &__empty {
-            padding: 80rpx 40rpx;
-            text-align: center;
-            
-            .q-empty {
-              margin: 0 auto;
-            }
-          }
+
+  &__empty {
+    padding: 80rpx 40rpx;
+    text-align: center;
+
+    .q-empty {
+      margin: 0 auto;
+    }
+  }
 }
 
 // 商品卡片
@@ -903,31 +967,31 @@ const goToCheckout = () => {
   margin-bottom: 20rpx;
   transition: all $duration-base $ease-out;
   box-shadow: $shadow-sm;
-  
+
   &:active {
     transform: scale(0.98);
     box-shadow: $shadow-base;
   }
-  
+
   &--active {
     border: 2rpx solid $primary-light;
     background: lighten($primary-lighter, 2%);
   }
-  
+
   &__image {
     width: 200rpx;
     height: 200rpx;
     border-radius: $radius-md;
     flex-shrink: 0;
   }
-  
+
   &__content {
     flex: 1;
     margin-left: 20rpx;
     display: flex;
     flex-direction: column;
   }
-  
+
   &__name {
     font-size: $font-size-md;
     font-weight: $font-weight-medium;
@@ -937,7 +1001,7 @@ const goToCheckout = () => {
     -webkit-line-clamp: 2;
     overflow: hidden;
   }
-  
+
   &__desc {
     font-size: $font-size-sm;
     color: $text-tertiary;
@@ -946,13 +1010,13 @@ const goToCheckout = () => {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  
+
   &__tags {
     display: flex;
     gap: 8rpx;
     margin-top: 12rpx;
   }
-  
+
   &__footer {
     display: flex;
     align-items: center;
@@ -960,13 +1024,13 @@ const goToCheckout = () => {
     margin-top: auto;
     padding-top: 12rpx;
   }
-  
+
   &__price-wrap {
     display: flex;
     align-items: baseline;
     gap: 8rpx;
   }
-  
+
   &__add-btn {
     width: 56rpx;
     height: 56rpx;
@@ -987,27 +1051,27 @@ const goToCheckout = () => {
   box-shadow: $shadow-top;
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);
-  
+
   &__inner {
     display: flex;
     align-items: center;
     height: $cart-bar-height;
     padding: 0 24rpx;
   }
-  
+
   &__icon-wrap {
     position: relative;
     width: 100rpx;
     height: 100rpx;
     margin-top: -40rpx;
-    background: linear-gradient(135deg, #2D2D2D, #1A1A1A);
+    background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: $shadow-base;
   }
-  
+
   &__badge {
     position: absolute;
     top: 8rpx;
@@ -1016,7 +1080,7 @@ const goToCheckout = () => {
     height: 36rpx;
     padding: 0 10rpx;
     background: $primary;
-    color: #FFFFFF;
+    color: #ffffff;
     font-size: $font-size-xs;
     font-weight: $font-weight-semibold;
     border-radius: 18rpx;
@@ -1024,22 +1088,22 @@ const goToCheckout = () => {
     align-items: center;
     justify-content: center;
   }
-  
+
   &__info {
     flex: 1;
     margin-left: 16rpx;
   }
-  
+
   &__count {
     font-size: $font-size-sm;
     color: $text-secondary;
   }
-  
+
   &__btn {
     width: 200rpx;
     height: 80rpx;
     background: $primary;
-    color: #FFFFFF;
+    color: #ffffff;
     font-size: $font-size-md;
     font-weight: $font-weight-medium;
     border-radius: 40rpx;
@@ -1059,16 +1123,16 @@ const goToCheckout = () => {
   border-radius: 32rpx 32rpx 0 0;
   max-height: 85vh;
   overflow-y: auto;
-  
+
   &__header {
     position: relative;
   }
-  
+
   &__image {
     width: 100%;
     height: 400rpx;
   }
-  
+
   &__close {
     position: absolute;
     top: 24rpx;
@@ -1081,52 +1145,52 @@ const goToCheckout = () => {
     align-items: center;
     justify-content: center;
   }
-  
+
   &__body {
     padding: 24rpx;
   }
-  
+
   &__info {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
   }
-  
+
   &__name {
     font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
     color: $text-primary;
     flex: 1;
   }
-  
+
   &__price-wrap {
     display: flex;
     align-items: baseline;
     gap: 16rpx;
   }
-  
+
   &__sales {
     font-size: $font-size-sm;
     color: $text-tertiary;
   }
-  
+
   &__section {
     margin-top: 32rpx;
   }
-  
+
   &__section-title {
     font-size: $font-size-base;
     font-weight: $font-weight-medium;
     color: $text-primary;
     margin-bottom: 16rpx;
   }
-  
+
   &__options {
     display: flex;
     flex-wrap: wrap;
     gap: 16rpx;
   }
-  
+
   &__option {
     min-width: 120rpx;
     height: 72rpx;
@@ -1140,19 +1204,19 @@ const goToCheckout = () => {
     justify-content: center;
     font-size: $font-size-sm;
     color: $text-secondary;
-    
+
     &--active {
       background: $primary-light;
       border-color: $primary;
       color: $primary;
     }
   }
-  
+
   &__option-price {
     font-size: $font-size-xs;
     margin-top: 4rpx;
   }
-  
+
   &__remark {
     width: 100%;
     height: 120rpx;
@@ -1161,7 +1225,7 @@ const goToCheckout = () => {
     border-radius: $radius-base;
     font-size: $font-size-base;
   }
-  
+
   &__footer {
     display: flex;
     align-items: center;
@@ -1171,10 +1235,70 @@ const goToCheckout = () => {
     padding-bottom: calc(24rpx + constant(safe-area-inset-bottom));
     padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
   }
-  
+
   &__add-btn {
     flex: 1;
     margin-left: 24rpx;
+  }
+}
+
+// 服务呼叫弹窗样式
+.service-popup {
+  padding: 30rpx;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40rpx;
+  }
+
+  &__title {
+    font-size: 32rpx;
+    font-weight: bold;
+    color: #333;
+  }
+
+  &__grid {
+    display: flex;
+    justify-content: space-around;
+    padding-bottom: 30rpx;
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16rpx;
+
+    text {
+      font-size: 26rpx;
+      color: #333;
+    }
+  }
+
+  &__icon {
+    width: 100rpx;
+    height: 100rpx;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &--blue {
+      background-color: #1890ff;
+      box-shadow: 0 4rpx 12rpx rgba(24, 144, 255, 0.3);
+    }
+
+    &--orange {
+      background-color: #fa8c16;
+      box-shadow: 0 4rpx 12rpx rgba(250, 140, 22, 0.3);
+    }
+
+    &--green {
+      background-color: #52c41a;
+      box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.3);
+    }
   }
 }
 </style>

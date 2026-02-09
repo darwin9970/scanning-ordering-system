@@ -1,18 +1,18 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
-import { formatPrice } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from 'react'
+import { api } from '@/lib/api'
+import { formatPrice } from '@/lib/utils'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  SelectValue
+} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   BarChart3,
   TrendingUp,
@@ -22,8 +22,8 @@ import {
   ArrowDownRight,
   Clock,
   Users,
-  Percent,
-} from "lucide-react";
+  Percent
+} from 'lucide-react'
 import {
   BarChart,
   Bar,
@@ -37,73 +37,75 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
-} from "recharts";
+  Legend
+} from 'recharts'
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
+import type { SalesChartItem, CategoryStats, TopProduct } from '@/types'
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d']
 
 export default function ReportsPage() {
-  const [days, setDays] = useState("7");
-  const [salesData, setSalesData] = useState<any[]>([]);
-  const [categoryStats, setCategoryStats] = useState<any[]>([]);
-  const [topProducts, setTopProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [days, setDays] = useState('7')
+  const [salesData, setSalesData] = useState<SalesChartItem[]>([])
+  const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([])
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
+      setLoading(true)
       try {
         const [sales, cats, products] = await Promise.all([
           api.getSalesChart(undefined, Number(days)),
-          api.request<any[]>("/api/dashboard/category-stats"),
-          api.getTopProducts(undefined, 10),
-        ]);
-        setSalesData(sales);
-        setCategoryStats(cats);
-        setTopProducts(products);
+          api.request<CategoryStats[]>('/api/dashboard/category_stats'),
+          api.getTopProducts(undefined, 10)
+        ])
+        setSalesData(sales)
+        setCategoryStats(cats)
+        setTopProducts(products)
       } catch (error) {
-        console.error("Failed to fetch report data:", error);
+        console.error('Failed to fetch report data:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    fetchData();
-  }, [days]);
+    }
+    fetchData()
+  }, [days])
 
-  const totalRevenue = salesData.reduce((sum, d) => sum + d.revenue, 0);
-  const totalOrders = salesData.reduce((sum, d) => sum + d.orders, 0);
-  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  const totalRevenue = salesData.reduce((sum, d) => sum + d.revenue, 0)
+  const totalOrders = salesData.reduce((sum, d) => sum + d.orders, 0)
+  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
 
   // 计算环比变化（模拟数据）
-  const revenueChange = 12.5;
-  const ordersChange = 8.3;
-  const avgChange = 3.8;
+  const revenueChange = 12.5
+  const ordersChange = 8.3
+  const avgChange = 3.8
 
   // 导出CSV
   const exportToCSV = () => {
-    const headers = ["日期", "营收", "订单数"];
-    const rows = salesData.map((d) => [d.date, d.revenue, d.orders]);
-    const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
+    const headers = ['日期', '营收', '订单数']
+    const rows = salesData.map((d) => [d.date, d.revenue, d.orders])
+    const csvContent = [headers, ...rows].map((row) => row.join(',')).join('\n')
 
-    const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `销售报表_${new Date().toISOString().split("T")[0]}.csv`;
-    link.click();
-  };
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `销售报表_${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+  }
 
   // 分类饼图数据
   const categoryPieData = categoryStats.map((cat) => ({
     name: cat.name,
-    value: cat.totalSales || 0,
-  }));
+    value: cat.totalSales || 0
+  }))
 
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
       </div>
-    );
+    )
   }
 
   return (
@@ -203,9 +205,9 @@ export default function ReportsPage() {
                   <YAxis yAxisId="left" fontSize={12} />
                   <YAxis yAxisId="right" orientation="right" fontSize={12} />
                   <Tooltip
-                    formatter={(value: any, name: string) => [
-                      name === "revenue" ? formatPrice(value) : value,
-                      name === "revenue" ? "营收" : "订单数",
+                    formatter={(value: number | string, name: string) => [
+                      name === 'revenue' ? formatPrice(Number(value)) : value,
+                      name === 'revenue' ? '营收' : '订单数'
                     ]}
                   />
                   <Legend />
@@ -326,12 +328,12 @@ export default function ReportsPage() {
                     <div
                       className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
                         index === 0
-                          ? "bg-yellow-500 text-white"
+                          ? 'bg-yellow-500 text-white'
                           : index === 1
-                            ? "bg-gray-400 text-white"
+                            ? 'bg-gray-400 text-white'
                             : index === 2
-                              ? "bg-amber-600 text-white"
-                              : "bg-muted text-muted-foreground"
+                              ? 'bg-amber-600 text-white'
+                              : 'bg-muted text-muted-foreground'
                       }`}
                     >
                       {index + 1}
@@ -345,7 +347,7 @@ export default function ReportsPage() {
                         <div
                           className="h-full bg-primary rounded-full"
                           style={{
-                            width: `${(product.sales / (topProducts[0]?.sales || 1)) * 100}%`,
+                            width: `${(product.sales / (topProducts[0]?.sales || 1)) * 100}%`
                           }}
                         />
                       </div>
@@ -364,5 +366,5 @@ export default function ReportsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

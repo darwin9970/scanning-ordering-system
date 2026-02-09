@@ -1,208 +1,229 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { PRINTER_TYPE_MAP } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
+import { PRINTER_TYPE_MAP } from '@/lib/utils'
+import type {
+  Printer,
+  Category,
+  CreatePrinterRequest,
+  UpdatePrinterRequest,
+  PrinterType
+} from '@/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  TableRow
+} from '@/components/ui/table'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  SelectValue
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  DialogTitle
+} from '@/components/ui/dialog'
 import {
   Plus,
-  Printer,
+  Printer as PrinterIcon,
   Edit,
   Trash2,
   Link2,
   TestTube,
   FileText,
   AlertCircle,
-  CheckCircle2,
-} from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { toast } from "sonner";
+  CheckCircle2
+} from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { toast } from 'sonner'
 
 export default function PrintersPage() {
-  const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [bindDialogOpen, setBindDialogOpen] = useState(false);
+  const queryClient = useQueryClient()
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [bindDialogOpen, setBindDialogOpen] = useState(false)
 
-  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
-  const [previewPrinter, setPreviewPrinter] = useState<any>(null);
-  const [editingPrinter, setEditingPrinter] = useState<any>(null);
-  const [bindingPrinter, setBindingPrinter] = useState<any>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingPrinterId, setDeletingPrinterId] = useState<number | null>(null);
-  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
+  const [previewPrinter, setPreviewPrinter] = useState<Printer | null>(null)
+  const [editingPrinter, setEditingPrinter] = useState<Printer | null>(null)
+  const [bindingPrinter, setBindingPrinter] = useState<Printer | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deletingPrinterId, setDeletingPrinterId] = useState<number | null>(null)
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([])
   const [testStatus, setTestStatus] = useState<{
-    id: number;
-    status: "loading" | "success" | "error";
-  } | null>(null);
-  const [formData, setFormData] = useState({
-    sn: "",
-    key: "",
-    name: "",
-    type: "KITCHEN",
-  });
+    id: number
+    status: 'loading' | 'success' | 'error'
+  } | null>(null)
+  const [formData, setFormData] = useState<{
+    sn: string
+    key: string
+    name: string
+    type: PrinterType
+  }>({
+    sn: '',
+    key: '',
+    name: '',
+    type: 'KITCHEN'
+  })
 
   const { data: printers, isLoading } = useQuery({
-    queryKey: ["printers"],
-    queryFn: () => api.getPrinters({ pageSize: 100 }),
-  });
+    queryKey: ['printers'],
+    queryFn: () => api.getPrinters({ pageSize: 100 })
+  })
 
   const { data: categories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => api.getCategories({ pageSize: 100 }),
-  });
+    queryKey: ['categories'],
+    queryFn: () => api.getCategories({ pageSize: 100 })
+  })
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.createPrinter(data),
+    mutationFn: (data: CreatePrinterRequest) => api.createPrinter(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["printers"] });
-      setDialogOpen(false);
-      resetForm();
+      queryClient.invalidateQueries({ queryKey: ['printers'] })
+      setDialogOpen(false)
+      resetForm()
     },
-    onError: (error: any) => {
-      toast.error(error.message || "操作失败");
-    },
-  });
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : '操作失败')
+    }
+  })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => api.updatePrinter(id, data),
+    mutationFn: ({ id, data }: { id: number; data: UpdatePrinterRequest }) =>
+      api.updatePrinter(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["printers"] });
-      setDialogOpen(false);
-      resetForm();
+      queryClient.invalidateQueries({ queryKey: ['printers'] })
+      setDialogOpen(false)
+      resetForm()
     },
-  });
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : '更新失败')
+    }
+  })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.deletePrinter(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["printers"] });
-      toast.success("打印机删除成功");
+      queryClient.invalidateQueries({ queryKey: ['printers'] })
+      toast.success('打印机删除成功')
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "删除打印机失败");
-    },
-  });
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : '删除打印机失败')
+    }
+  })
 
   const testMutation = useMutation({
     mutationFn: (id: number) => {
-      setTestStatus({ id, status: "loading" });
-      return api.testPrinter(id);
+      setTestStatus({ id, status: 'loading' })
+      return api.testPrinter(id)
     },
     onSuccess: (_, id) => {
-      setTestStatus({ id, status: "success" });
-      setTimeout(() => setTestStatus(null), 3000);
+      setTestStatus({ id, status: 'success' })
+      setTimeout(() => setTestStatus(null), 3000)
     },
-    onError: (error: any, id) => {
-      setTestStatus({ id, status: "error" });
-      setTimeout(() => setTestStatus(null), 3000);
-    },
-  });
+    onError: (error: unknown, id) => {
+      setTestStatus({ id, status: 'error' })
+      setTimeout(() => setTestStatus(null), 3000)
+    }
+  })
 
-  const openPreviewDialog = (printer: any) => {
-    setPreviewPrinter(printer);
-    setPreviewDialogOpen(true);
-  };
+  const openPreviewDialog = (printer: Printer) => {
+    setPreviewPrinter(printer)
+    setPreviewDialogOpen(true)
+  }
 
   const bindMutation = useMutation({
     mutationFn: ({ id, categoryIds }: { id: number; categoryIds: number[] }) =>
       api.bindPrinterCategories(id, categoryIds),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["printers"] });
-      setBindDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['printers'] })
+      setBindDialogOpen(false)
     },
-  });
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : '绑定失败')
+    }
+  })
 
   const resetForm = () => {
-    setFormData({ sn: "", key: "", name: "", type: "KITCHEN" });
-    setEditingPrinter(null);
-  };
+    setFormData({ sn: '', key: '', name: '', type: 'KITCHEN' })
+    setEditingPrinter(null)
+  }
 
   const openCreateDialog = () => {
-    resetForm();
-    setDialogOpen(true);
-  };
+    resetForm()
+    setDialogOpen(true)
+  }
 
-  const openEditDialog = (printer: any) => {
-    setEditingPrinter(printer);
+  const openEditDialog = (printer: Printer) => {
+    setEditingPrinter(printer)
     setFormData({
       sn: printer.sn,
       key: printer.key,
       name: printer.name,
-      type: printer.type,
-    });
-    setDialogOpen(true);
-  };
+      type: printer.type
+    })
+    setDialogOpen(true)
+  }
 
-  const openBindDialog = (printer: any) => {
-    setBindingPrinter(printer);
-    setSelectedCategories(printer.categories?.map((c: any) => c.category.id) || []);
-    setBindDialogOpen(true);
-  };
+  const openBindDialog = (printer: Printer) => {
+    setBindingPrinter(printer)
+    setSelectedCategories(
+      (printer.categories?.map((c) => c.category?.id || 0).filter(Boolean) as number[]) || []
+    )
+    setBindDialogOpen(true)
+  }
 
   const handleSubmit = () => {
     const data = {
       storeId: 1,
-      ...formData,
-    };
+      ...formData
+    }
 
     if (editingPrinter) {
-      updateMutation.mutate({ id: editingPrinter.id, data: formData });
+      updateMutation.mutate({ id: editingPrinter.id, data: formData })
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(data)
     }
-  };
+  }
 
   const handleDelete = (id: number) => {
-    setDeletingPrinterId(id);
-    setDeleteDialogOpen(true);
-  };
+    setDeletingPrinterId(id)
+    setDeleteDialogOpen(true)
+  }
 
   const confirmDelete = () => {
     if (deletingPrinterId !== null) {
-      deleteMutation.mutate(deletingPrinterId);
-      setDeletingPrinterId(null);
+      deleteMutation.mutate(deletingPrinterId)
+      setDeletingPrinterId(null)
     }
-  };
+  }
 
   const handleBind = () => {
     if (bindingPrinter) {
-      bindMutation.mutate({ id: bindingPrinter.id, categoryIds: selectedCategories });
+      bindMutation.mutate({ id: bindingPrinter.id, categoryIds: selectedCategories })
     }
-  };
+  }
 
   const toggleCategory = (catId: number) => {
     setSelectedCategories((prev) =>
       prev.includes(catId) ? prev.filter((id) => id !== catId) : [...prev, catId]
-    );
-  };
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -239,11 +260,11 @@ export default function PrintersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {printers?.list.map((printer: any) => (
+                {printers?.list.map((printer: Printer) => (
                   <TableRow key={printer.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
-                        <Printer className="h-4 w-4 text-muted-foreground" />
+                        <PrinterIcon className="h-4 w-4 text-muted-foreground" />
                         {printer.name}
                       </div>
                     </TableCell>
@@ -255,9 +276,9 @@ export default function PrintersPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {printer.categories?.map((c: any) => (
-                          <Badge key={c.category.id} variant="secondary">
-                            {c.category.name}
+                        {printer.categories?.map((c) => (
+                          <Badge key={c.category?.id} variant="secondary">
+                            {c.category?.name}
                           </Badge>
                         ))}
                         {(!printer.categories || printer.categories.length === 0) && (
@@ -266,8 +287,8 @@ export default function PrintersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={printer.status === "ACTIVE" ? "default" : "secondary"}>
-                        {printer.status === "ACTIVE" ? "在线" : "离线"}
+                      <Badge variant={printer.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                        {printer.status === 'ACTIVE' ? '在线' : '离线'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -283,28 +304,28 @@ export default function PrintersPage() {
                         <Button
                           size="sm"
                           variant={
-                            testStatus?.id === printer.id && testStatus?.status === "success"
-                              ? "default"
-                              : "ghost"
+                            testStatus?.id === printer.id && testStatus?.status === 'success'
+                              ? 'default'
+                              : 'ghost'
                           }
                           onClick={() => testMutation.mutate(printer.id)}
                           title="测试打印"
                           disabled={testMutation.isPending && testStatus?.id === printer.id}
                           className={
                             testStatus?.id === printer.id
-                              ? testStatus?.status === "success"
-                                ? "bg-green-500 hover:bg-green-600"
-                                : testStatus?.status === "error"
-                                  ? "bg-red-500 hover:bg-red-600"
-                                  : ""
-                              : ""
+                              ? testStatus?.status === 'success'
+                                ? 'bg-green-500 hover:bg-green-600'
+                                : testStatus?.status === 'error'
+                                  ? 'bg-red-500 hover:bg-red-600'
+                                  : ''
+                              : ''
                           }
                         >
-                          {testStatus?.id === printer.id && testStatus?.status === "loading" ? (
+                          {testStatus?.id === printer.id && testStatus?.status === 'loading' ? (
                             <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                          ) : testStatus?.id === printer.id && testStatus?.status === "success" ? (
+                          ) : testStatus?.id === printer.id && testStatus?.status === 'success' ? (
                             <CheckCircle2 className="h-4 w-4 text-white" />
-                          ) : testStatus?.id === printer.id && testStatus?.status === "error" ? (
+                          ) : testStatus?.id === printer.id && testStatus?.status === 'error' ? (
                             <AlertCircle className="h-4 w-4 text-white" />
                           ) : (
                             <TestTube className="h-4 w-4" />
@@ -348,7 +369,7 @@ export default function PrintersPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingPrinter ? "编辑打印机" : "添加打印机"}</DialogTitle>
+            <DialogTitle>{editingPrinter ? '编辑打印机' : '添加打印机'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -379,7 +400,7 @@ export default function PrintersPage() {
               <Label>类型</Label>
               <Select
                 value={formData.type}
-                onValueChange={(v) => setFormData({ ...formData, type: v })}
+                onValueChange={(v) => setFormData({ ...formData, type: v as PrinterType })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -397,7 +418,7 @@ export default function PrintersPage() {
               取消
             </Button>
             <Button onClick={handleSubmit} disabled={!formData.name || !formData.sn}>
-              {editingPrinter ? "保存" : "添加"}
+              {editingPrinter ? '保存' : '添加'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -414,10 +435,10 @@ export default function PrintersPage() {
               选择该打印机需要打印的商品分类，实现自动分单
             </p>
             <div className="grid grid-cols-2 gap-2">
-              {categories?.list.map((cat: any) => (
+              {categories?.list.map((cat: Category) => (
                 <Button
                   key={cat.id}
-                  variant={selectedCategories.includes(cat.id) ? "default" : "outline"}
+                  variant={selectedCategories.includes(cat.id) ? 'default' : 'outline'}
                   onClick={() => toggleCategory(cat.id)}
                   className="justify-start"
                 >
@@ -450,11 +471,11 @@ export default function PrintersPage() {
             <div className="text-center border-b pb-2 mb-2">
               <p className="font-bold text-lg">
                 【
-                {previewPrinter?.type === "KITCHEN"
-                  ? "后厨"
-                  : previewPrinter?.type === "BAR"
-                    ? "吧台"
-                    : "收银"}
+                {previewPrinter?.type === 'KITCHEN'
+                  ? '后厨'
+                  : previewPrinter?.type === 'BAR'
+                    ? '吧台'
+                    : '收银'}
                 单】
               </p>
               <p className="text-xs text-muted-foreground">门店名称</p>
@@ -508,10 +529,10 @@ export default function PrintersPage() {
           <div className="space-y-2">
             <p className="text-sm font-medium">绑定的分类:</p>
             <div className="flex flex-wrap gap-1">
-              {previewPrinter?.categories?.length > 0 ? (
-                previewPrinter.categories.map((c: any) => (
-                  <Badge key={c.category.id} variant="secondary">
-                    {c.category.name}
+              {previewPrinter?.categories && previewPrinter.categories.length > 0 ? (
+                previewPrinter.categories.map((c) => (
+                  <Badge key={c.category?.id} variant="secondary">
+                    {c.category?.name}
                   </Badge>
                 ))
               ) : (
@@ -537,8 +558,8 @@ export default function PrintersPage() {
             </Button>
             <Button
               onClick={() => {
-                testMutation.mutate(previewPrinter?.id);
-                setPreviewDialogOpen(false);
+                testMutation.mutate(previewPrinter?.id || 0)
+                setPreviewDialogOpen(false)
               }}
             >
               <TestTube className="h-4 w-4 mr-2" />
@@ -558,5 +579,5 @@ export default function PrintersPage() {
         cancelText="取消"
       />
     </div>
-  );
+  )
 }

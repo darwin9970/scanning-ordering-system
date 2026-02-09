@@ -9,7 +9,7 @@
     "按钮",
     "悬浮按钮",
     "fab"
-],
+  ],
   "repository": "https://github.com/dcloudio/uni-ui",
   "engines": {
     "HBuilderX": ""
@@ -17,7 +17,7 @@
   "directories": {
     "example": "../../temps/example_temps"
   },
-"dcloudext": {
+  "dcloudext": {
     "sale": {
       "regular": {
         "price": "0.00"
@@ -38,7 +38,10 @@
     "type": "component-vue"
   },
   "uni_modules": {
-    "dependencies": ["uni-scss","uni-icons"],
+    "dependencies": [
+      "uni-scss",
+      "uni-icons"
+    ],
     "encrypt": [],
     "platforms": {
       "cloud": {
@@ -75,8 +78,8 @@
           "联盟": "u"
         },
         "Vue": {
-            "vue2": "y",
-            "vue3": "y"
+          "vue2": "y",
+          "vue3": "y"
         }
       }
     }

@@ -1,17 +1,17 @@
-"use client";
+'use client'
 
-import { usePermission } from "@/hooks/use-permission";
-import type { Permission } from "@/types";
+import { usePermission } from '@/hooks/use-permission'
+import type { Permission } from '@/types'
 
 interface PermissionGuardProps {
   /** 需要的权限（满足任一即可） */
-  permissions: Permission | Permission[];
+  permissions: Permission | Permission[]
   /** 需要所有权限都满足 */
-  requireAll?: boolean;
+  requireAll?: boolean
   /** 无权限时显示的内容 */
-  fallback?: React.ReactNode;
+  fallback?: React.ReactNode
   /** 子元素 */
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 /**
@@ -38,23 +38,23 @@ export function PermissionGuard({
   permissions,
   requireAll = false,
   fallback = null,
-  children,
+  children
 }: PermissionGuardProps) {
-  const { can, canAny, canAll } = usePermission();
+  const { can, canAny, canAll } = usePermission()
 
-  const permissionList = Array.isArray(permissions) ? permissions : [permissions];
+  const permissionList = Array.isArray(permissions) ? permissions : [permissions]
 
   const hasAccess = requireAll
     ? canAll(permissionList)
     : permissionList.length === 1
       ? can(permissionList[0])
-      : canAny(permissionList);
+      : canAny(permissionList)
 
   if (!hasAccess) {
-    return <>{fallback}</>;
+    return <>{fallback}</>
   }
 
-  return <>{children}</>;
+  return <>{children}</>
 }
 
 /**
@@ -63,17 +63,17 @@ export function PermissionGuard({
 export function CanWrite({
   resource,
   children,
-  fallback,
+  fallback
 }: {
-  resource: string;
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  resource: string
+  children: React.ReactNode
+  fallback?: React.ReactNode
 }) {
   return (
     <PermissionGuard permissions={`${resource}:write` as Permission} fallback={fallback}>
       {children}
     </PermissionGuard>
-  );
+  )
 }
 
 /**
@@ -82,15 +82,15 @@ export function CanWrite({
 export function CanDelete({
   resource,
   children,
-  fallback,
+  fallback
 }: {
-  resource: string;
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  resource: string
+  children: React.ReactNode
+  fallback?: React.ReactNode
 }) {
   return (
     <PermissionGuard permissions={`${resource}:delete` as Permission} fallback={fallback}>
       {children}
     </PermissionGuard>
-  );
+  )
 }

@@ -10,7 +10,7 @@
     "级联",
     "省市区",
     ""
-],
+  ],
   "repository": "https://github.com/dcloudio/uni-ui",
   "engines": {
     "HBuilderX": ""
@@ -18,7 +18,7 @@
   "directories": {
     "example": "../../temps/example_temps"
   },
-"dcloudext": {
+  "dcloudext": {
     "sale": {
       "regular": {
         "price": "0.00"
@@ -41,8 +41,8 @@
   "uni_modules": {
     "dependencies": [
       "uni-load-more",
-			"uni-icons",
-			"uni-scss"
+      "uni-icons",
+      "uni-scss"
     ],
     "encrypt": [],
     "platforms": {
@@ -74,16 +74,16 @@
           "阿里": "y",
           "百度": "y",
           "字节跳动": "y",
-        "QQ": "y",
-        "京东": "u"
+          "QQ": "y",
+          "京东": "u"
         },
         "快应用": {
           "华为": "u",
           "联盟": "u"
         },
         "Vue": {
-            "vue2": "y",
-            "vue3": "y"
+          "vue2": "y",
+          "vue3": "y"
         }
       }
     }

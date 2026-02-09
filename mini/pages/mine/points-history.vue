@@ -4,9 +4,7 @@
     <view class="stats-card">
       <view class="stats-card__item">
         <text class="stats-card__label">累计获得</text>
-        <text class="stats-card__value stats-card__value--positive">
-          +{{ totalEarned }}
-        </text>
+        <text class="stats-card__value stats-card__value--positive">+{{ totalEarned }}</text>
       </view>
       <view class="stats-card__divider" />
       <view class="stats-card__item">
@@ -45,19 +43,11 @@
         text="暂无积分记录"
         tip="消费或使用积分后会有记录哦~"
       />
-      
+
       <view v-else class="points-list">
-        <view
-          v-for="log in filteredLogs"
-          :key="log.id"
-          class="points-item"
-        >
+        <view v-for="log in filteredLogs" :key="log.id" class="points-item">
           <view class="points-item__icon">
-            <uni-icons
-              :type="getLogIcon(log.change)"
-              :size="24"
-              :color="getLogColor(log.change)"
-            />
+            <uni-icons :type="getLogIcon(log.change)" :size="24" :color="getLogColor(log.change)" />
           </view>
           <view class="points-item__content">
             <text class="points-item__reason">
@@ -66,9 +56,7 @@
             <text class="points-item__time">
               {{ formatTime(log.createdAt) }}
             </text>
-            <text v-if="log.orderNo" class="points-item__order">
-              订单号: {{ log.orderNo }}
-            </text>
+            <text v-if="log.orderNo" class="points-item__order">订单号: {{ log.orderNo }}</text>
           </view>
           <view class="points-item__change" :class="getChangeClass(log.change)">
             {{ log.change > 0 ? '+' : '' }}{{ log.change }}
@@ -112,25 +100,21 @@ const filteredLogs = computed(() => {
   if (activeFilter.value === 'all') {
     return pointsLogs.value
   } else if (activeFilter.value === 'earn') {
-    return pointsLogs.value.filter(log => log.change > 0)
+    return pointsLogs.value.filter((log) => log.change > 0)
   } else {
-    return pointsLogs.value.filter(log => log.change < 0)
+    return pointsLogs.value.filter((log) => log.change < 0)
   }
 })
 
 // 累计获得
 const totalEarned = computed(() => {
-  return pointsLogs.value
-    .filter(log => log.change > 0)
-    .reduce((sum, log) => sum + log.change, 0)
+  return pointsLogs.value.filter((log) => log.change > 0).reduce((sum, log) => sum + log.change, 0)
 })
 
 // 累计使用
 const totalUsed = computed(() => {
   return Math.abs(
-    pointsLogs.value
-      .filter(log => log.change < 0)
-      .reduce((sum, log) => sum + log.change, 0)
+    pointsLogs.value.filter((log) => log.change < 0).reduce((sum, log) => sum + log.change, 0)
   )
 })
 
@@ -164,7 +148,7 @@ const formatTime = (time) => {
   const now = new Date()
   const diff = now - date
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
+
   if (days === 0) {
     const hours = Math.floor(diff / (1000 * 60 * 60))
     if (hours === 0) {
@@ -192,12 +176,12 @@ const loadPointsHistory = async () => {
   }
 
   loading.value = true
-  
+
   try {
     const res = await getPointsHistory({
       storeId: tableStore.store.id
     })
-    
+
     if (res.success) {
       pointsLogs.value = res.data.logs || []
       currentPoints.value = res.data.currentPoints || 0
@@ -234,38 +218,38 @@ onMounted(() => {
   background: $bg-card;
   border-radius: $radius-lg;
   box-shadow: $shadow-sm;
-  
+
   &__item {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
   }
-  
+
   &__label {
     font-size: $font-size-sm;
     color: $text-secondary;
     margin-bottom: 12rpx;
   }
-  
+
   &__value {
     font-size: $font-size-xl;
     font-weight: $font-weight-bold;
     line-height: 1;
-    
+
     &--positive {
-      color: #52C41A;
+      color: #52c41a;
     }
-    
+
     &--negative {
-      color: #FF4D4F;
+      color: #ff4d4f;
     }
-    
+
     &--current {
       color: $primary;
     }
   }
-  
+
   &__divider {
     width: 1rpx;
     height: 60rpx;
@@ -280,7 +264,7 @@ onMounted(() => {
   padding: 0 24rpx;
   margin-bottom: 20rpx;
   gap: 16rpx;
-  
+
   &__item {
     padding: 12rpx 24rpx;
     background: $bg-card;
@@ -288,10 +272,10 @@ onMounted(() => {
     font-size: $font-size-base;
     color: $text-secondary;
     transition: all $duration-fast $ease-out;
-    
+
     &--active {
       background: $primary;
-      color: #FFFFFF;
+      color: #ffffff;
       font-weight: $font-weight-medium;
     }
   }
@@ -310,7 +294,7 @@ onMounted(() => {
   background: $bg-card;
   border-radius: $radius-lg;
   box-shadow: $shadow-sm;
-  
+
   &__icon {
     width: 48rpx;
     height: 48rpx;
@@ -322,44 +306,43 @@ onMounted(() => {
     margin-right: 20rpx;
     flex-shrink: 0;
   }
-  
+
   &__content {
     flex: 1;
     display: flex;
     flex-direction: column;
   }
-  
+
   &__reason {
     font-size: $font-size-base;
     font-weight: $font-weight-medium;
     color: $text-primary;
     margin-bottom: 8rpx;
   }
-  
+
   &__time {
     font-size: $font-size-sm;
     color: $text-tertiary;
     margin-bottom: 4rpx;
   }
-  
+
   &__order {
     font-size: $font-size-xs;
     color: $text-tertiary;
   }
-  
+
   &__change {
     font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
     line-height: 1;
-    
+
     &--positive {
-      color: #52C41A;
+      color: #52c41a;
     }
-    
+
     &--negative {
-      color: #FF4D4F;
+      color: #ff4d4f;
     }
   }
 }
 </style>
-

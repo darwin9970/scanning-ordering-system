@@ -26,15 +26,11 @@
         >
           <view class="coupon-card__left">
             <view class="coupon-card__value">
-              <text v-if="coupon.type === 'AMOUNT'" class="coupon-card__symbol">
-                ¥
-              </text>
+              <text v-if="coupon.type === 'AMOUNT'" class="coupon-card__symbol">¥</text>
               <text class="coupon-card__amount">
                 {{ coupon.type === 'AMOUNT' ? coupon.value : coupon.value * 10 }}
               </text>
-              <text v-if="coupon.type === 'DISCOUNT'" class="coupon-card__unit">
-                折
-              </text>
+              <text v-if="coupon.type === 'DISCOUNT'" class="coupon-card__unit">折</text>
             </view>
             <text class="coupon-card__condition">
               {{ getConditionText(coupon) }}
@@ -112,7 +108,7 @@ const coupons = ref([
 
 // 筛选后的优惠券
 const filteredCoupons = computed(() => {
-  return coupons.value.filter(c => c.status === activeTab.value)
+  return coupons.value.filter((c) => c.status === activeTab.value)
 })
 
 // 获取使用条件文字
@@ -201,7 +197,7 @@ const useCoupon = (_coupon) => {
     opacity: 0.6;
 
     .coupon-card__left {
-      background: #CCCCCC;
+      background: #cccccc;
     }
   }
 
@@ -219,7 +215,7 @@ const useCoupon = (_coupon) => {
   &__value {
     display: flex;
     align-items: baseline;
-    color: #FFFFFF;
+    color: #ffffff;
   }
 
   &__symbol {
@@ -272,7 +268,7 @@ const useCoupon = (_coupon) => {
     align-self: flex-end;
     padding: 12rpx 24rpx;
     background: $primary;
-    color: #FFFFFF;
+    color: #ffffff;
     font-size: $font-size-sm;
     border-radius: $radius-base;
     margin-top: 16rpx;

@@ -1,22 +1,22 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link'
+import { useEffect } from 'react'
+import { Button } from '@/components/ui/button'
 
 // Global fallback for unhandled errors; keeps the app responsive and offers recovery actions.
 export default function GlobalError({
   error,
-  reset,
+  reset
 }: {
-  error: Error & { digest?: string };
-  reset: () => void;
+  error: Error & { digest?: string }
+  reset: () => void
 }) {
   useEffect(() => {
     // Basic client-side logging; hook your observability pipeline here if available.
 
-    console.error("Global error boundary caught an error:", error);
-  }, [error]);
+    console.error('Global error boundary caught an error:', error)
+  }, [error])
 
   return (
     <html lang="zh-CN">
@@ -42,5 +42,5 @@ export default function GlobalError({
         </div>
       </body>
     </html>
-  );
+  )
 }

@@ -1,82 +1,82 @@
-"use client";
+'use client'
 
-import { useEffect, useState, useCallback } from "react";
-import { useWebSocket, WS_EVENTS, type WSEvent } from "@/lib/websocket";
-import { Bell, X, CheckCircle, AlertCircle, ShoppingCart } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { formatPrice } from "@/lib/utils";
+import { useEffect, useState, useCallback } from 'react'
+import { useWebSocket, WS_EVENTS, type WSEvent } from '@/lib/websocket'
+import { Bell, X, CheckCircle, AlertCircle, ShoppingCart } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { formatPrice } from '@/lib/utils'
 
 type Notification = {
-  id: string;
-  type: "order" | "status" | "refund" | "info";
-  title: string;
-  message: string;
-  timestamp: number;
-};
+  id: string
+  type: 'order' | 'status' | 'refund' | 'info'
+  title: string
+  message: string
+  timestamp: number
+}
 
 export function RealtimeNotifications({ storeId }: { storeId: number }) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [showPanel, setShowPanel] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [showPanel, setShowPanel] = useState(false)
 
   const handleEvent = useCallback((event: WSEvent) => {
-    let notification: Notification | null = null;
+    let notification: Notification | null = null
 
     switch (event.event) {
       case WS_EVENTS.NEW_ORDER: {
         const data = event.data as {
-          order: { orderNo: string; payAmount: string };
-          itemCount: number;
-        };
+          order: { orderNo: string; payAmount: string }
+          itemCount: number
+        }
         notification = {
           id: `${event.timestamp}`,
-          type: "order",
-          title: "新订单",
+          type: 'order',
+          title: '新订单',
           message: `订单 ${data.order.orderNo}，${formatPrice(Number(data.order.payAmount))}，${data.itemCount} 件商品`,
-          timestamp: event.timestamp,
-        };
+          timestamp: event.timestamp
+        }
         // 播放提示音
-        playNotificationSound();
-        break;
+        playNotificationSound()
+        break
       }
       case WS_EVENTS.ORDER_STATUS_CHANGED: {
-        const data = event.data as { order: { orderNo: string }; newStatus: string };
-        const statusText = getStatusText(data.newStatus);
+        const data = event.data as { order: { orderNo: string }; newStatus: string }
+        const statusText = getStatusText(data.newStatus)
         notification = {
           id: `${event.timestamp}`,
-          type: "status",
-          title: "订单状态变更",
+          type: 'status',
+          title: '订单状态变更',
           message: `订单 ${data.order.orderNo} 已${statusText}`,
-          timestamp: event.timestamp,
-        };
-        break;
+          timestamp: event.timestamp
+        }
+        break
       }
       case WS_EVENTS.ORDER_REFUNDED: {
-        const data = event.data as { order: { orderNo: string } };
+        const data = event.data as { order: { orderNo: string } }
         notification = {
           id: `${event.timestamp}`,
-          type: "refund",
-          title: "订单退款",
+          type: 'refund',
+          title: '订单退款',
           message: `订单 ${data.order.orderNo} 已退款`,
-          timestamp: event.timestamp,
-        };
-        break;
+          timestamp: event.timestamp
+        }
+        break
       }
     }
 
     if (notification) {
-      setNotifications((prev) => [notification!, ...prev].slice(0, 20));
+      setNotifications((prev) => [notification!, ...prev].slice(0, 20))
     }
-  }, []);
+  }, [])
 
-  const { isConnected } = useWebSocket(storeId, handleEvent);
+  const { isConnected } = useWebSocket(storeId, handleEvent)
 
   const clearNotifications = () => {
-    setNotifications([]);
-  };
+    setNotifications([])
+  }
 
   const removeNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
+    setNotifications((prev) => prev.filter((n) => n.id !== id))
+  }
 
   return (
     <div className="relative">
@@ -89,7 +89,7 @@ export function RealtimeNotifications({ storeId }: { storeId: number }) {
         <Bell className="h-5 w-5" />
         {notifications.length > 0 && (
           <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-            {notifications.length > 9 ? "9+" : notifications.length}
+            {notifications.length > 9 ? '9+' : notifications.length}
           </span>
         )}
         {isConnected && (
@@ -119,13 +119,13 @@ export function RealtimeNotifications({ storeId }: { storeId: number }) {
               notifications.map((notification) => (
                 <div key={notification.id} className="flex gap-3 border-b p-3 hover:bg-gray-50">
                   <div className="flex-shrink-0">
-                    {notification.type === "order" && (
+                    {notification.type === 'order' && (
                       <ShoppingCart className="h-5 w-5 text-blue-500" />
                     )}
-                    {notification.type === "status" && (
+                    {notification.type === 'status' && (
                       <CheckCircle className="h-5 w-5 text-green-500" />
                     )}
-                    {notification.type === "refund" && (
+                    {notification.type === 'refund' && (
                       <AlertCircle className="h-5 w-5 text-orange-500" />
                     )}
                   </div>
@@ -151,33 +151,33 @@ export function RealtimeNotifications({ storeId }: { storeId: number }) {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function getStatusText(status: string): string {
   const map: Record<string, string> = {
-    PENDING: "待支付",
-    PAID: "支付",
-    PREPARING: "开始制作",
-    COMPLETED: "完成",
-    CANCELLED: "取消",
-    REFUNDED: "退款",
-  };
-  return map[status] || status;
+    PENDING: '待支付',
+    PAID: '支付',
+    PREPARING: '开始制作',
+    COMPLETED: '完成',
+    CANCELLED: '取消',
+    REFUNDED: '退款'
+  }
+  return map[status] || status
 }
 
 function formatTime(timestamp: number): string {
-  const date = new Date(timestamp);
-  return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+  const date = new Date(timestamp)
+  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
 }
 
 function playNotificationSound() {
   try {
-    const audio = new Audio("/notification.mp3");
-    audio.volume = 0.5;
+    const audio = new Audio('/notification.mp3')
+    audio.volume = 0.5
     audio.play().catch(() => {
       // 忽略自动播放限制错误
-    });
+    })
   } catch {
     // 忽略错误
   }

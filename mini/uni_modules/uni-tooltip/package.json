@@ -9,7 +9,7 @@
     "tooltip",
     "tip",
     "文字提示"
-],
+  ],
   "repository": "https://github.com/dcloudio/uni-ui",
   "engines": {
     "HBuilderX": ""
@@ -17,7 +17,7 @@
   "directories": {
     "example": "../../temps/example_temps"
   },
-"dcloudext": {
+  "dcloudext": {
     "sale": {
       "regular": {
         "price": "0.00"

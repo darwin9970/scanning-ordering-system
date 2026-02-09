@@ -12,7 +12,7 @@
   bottom: 0;
   align-items: center;
   justify-content: center;
-  background-color: rgba(150, 150, 150, .1);
+  background-color: rgba(150, 150, 150, 0.1);
 }
 
 .error {
@@ -21,7 +21,7 @@
 }
 
 .error-text {
-  color: #DD524D;
+  color: #dd524d;
 }
 
 .selected-node-list {
@@ -57,7 +57,7 @@
 }
 
 .item-text-disabled {
-  opacity: .5;
+  opacity: 0.5;
 }
 
 .item-text-overflow {

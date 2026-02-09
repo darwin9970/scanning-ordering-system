@@ -1,283 +1,289 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { api } from "@/lib/api";
-import { formatPrice, PRODUCT_STATUS_MAP } from "@/lib/utils";
-import { productSchema, type ProductFormData } from "@/lib/validations";
-import type { ProductStatus, Product } from "@/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { api } from '@/lib/api'
+import { formatPrice, PRODUCT_STATUS_MAP } from '@/lib/utils'
+import { productSchema, type ProductFormData } from '@/lib/validations'
+import type { ProductStatus, Product } from '@/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  TableRow
+} from '@/components/ui/table'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  SelectValue
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Plus, Search, Edit, Trash2, ImageIcon, X, Package } from "lucide-react";
-import { ImageUpload } from "@/components/ui/image-upload";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { toast } from "sonner";
+  DialogTitle
+} from '@/components/ui/dialog'
+import { Plus, Search, Edit, Trash2, ImageIcon, X, Package } from 'lucide-react'
+import { ImageUpload } from '@/components/ui/image-upload'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Switch } from '@/components/ui/switch'
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { toast } from 'sonner'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
 
 interface Variant {
-  id?: number;
-  name: string;
-  price: number;
-  stock: number;
+  id?: number
+  name: string
+  price: number
+  stock: number
 }
 
 interface Attribute {
-  id?: number;
-  name: string;
-  options: string[];
-  required: boolean;
+  id?: number
+  name: string
+  options: string[]
+  required: boolean
 }
 
 export default function ProductsPage() {
-  const queryClient = useQueryClient();
-  const [page, setPage] = useState(1);
-  const [categoryId, setCategoryId] = useState<string>("");
-  const [keyword, setKeyword] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const queryClient = useQueryClient()
+  const [page, setPage] = useState(1)
+  const [categoryId, setCategoryId] = useState<string>('')
+  const [keyword, setKeyword] = useState('')
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
-  const [imageUrl, setImageUrl] = useState<string | undefined>();
-  const [productType, setProductType] = useState<"SINGLE" | "VARIANT">("SINGLE");
-  const [variants, setVariants] = useState<Variant[]>([]);
-  const [attributes, setAttributes] = useState<Attribute[]>([]);
-  const [stock, setStock] = useState<number>(999);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingProductId, setDeletingProductId] = useState<number | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | undefined>()
+  const [productType, setProductType] = useState<'SINGLE' | 'VARIANT'>('SINGLE')
+  const [variants, setVariants] = useState<Variant[]>([])
+  const [attributes, setAttributes] = useState<Attribute[]>([])
+  const [stock, setStock] = useState<number>(999)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deletingProductId, setDeletingProductId] = useState<number | null>(null)
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       storeId: 1,
       categoryId: 0,
-      name: "",
-      description: "",
+      name: '',
+      description: '',
       basePrice: 0,
-      type: "SINGLE",
-    },
-  });
+      type: 'SINGLE'
+    }
+  })
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", page, categoryId, keyword],
+    queryKey: ['products', page, categoryId, keyword],
     queryFn: () =>
       api.getProducts({
         page,
         pageSize: 10,
         categoryId: categoryId ? Number(categoryId) : undefined,
-        keyword: keyword || undefined,
-      }),
-  });
+        keyword: keyword || undefined
+      })
+  })
 
   const { data: categories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => api.getCategories({ pageSize: 100 }),
-  });
+    queryKey: ['categories'],
+    queryFn: () => api.getCategories({ pageSize: 100 })
+  })
 
   const createMutation = useMutation({
     mutationFn: (data: ProductFormData) => api.createProduct(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      setDialogOpen(false);
-      toast.success("商品创建成功");
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      setDialogOpen(false)
+      toast.success('商品创建成功')
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "创建商品失败");
-    },
-  });
+      toast.error(error instanceof Error ? error.message : '创建商品失败')
+    }
+  })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<ProductFormData> }) =>
       api.updateProduct(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      setDialogOpen(false);
-      toast.success("商品更新成功");
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      setDialogOpen(false)
+      toast.success('商品更新成功')
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "更新商品失败");
-    },
-  });
+      toast.error(error instanceof Error ? error.message : '更新商品失败')
+    }
+  })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.deleteProduct(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      toast.success("商品删除成功");
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      toast.success('商品删除成功')
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "删除商品失败");
-    },
-  });
+      toast.error(error instanceof Error ? error.message : '删除商品失败')
+    }
+  })
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: ProductStatus }) =>
       api.updateProductStatus(id, status),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-    },
-  });
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+    }
+  })
 
   const openCreateDialog = () => {
-    setEditingProduct(null);
-    setImageUrl(undefined);
-    setProductType("SINGLE");
-    setVariants([]);
-    setAttributes([]);
-    setStock(999);
+    setEditingProduct(null)
+    setImageUrl(undefined)
+    setProductType('SINGLE')
+    setVariants([])
+    setAttributes([])
+    setStock(999)
     form.reset({
       storeId: 1,
       categoryId: 0,
-      name: "",
-      description: "",
+      name: '',
+      description: '',
       basePrice: 0,
-      type: "SINGLE",
-    });
-    setDialogOpen(true);
-  };
+      type: 'SINGLE'
+    })
+    setDialogOpen(true)
+  }
 
   const openEditDialog = (product: Product) => {
-    setEditingProduct(product);
-    setImageUrl(product.imageUrl || undefined);
-    setProductType(product.type as "SINGLE" | "VARIANT");
+    setEditingProduct(product)
+    setImageUrl(product.imageUrl || undefined)
+    setProductType(product.type as 'SINGLE' | 'VARIANT')
     // 加载规格
     setVariants(
       product.variants?.map((v) => ({
         id: v.id,
-        name: v.name || "默认",
+        name: v.name || '默认',
         price: Number(v.price),
-        stock: v.stock ?? 999,
+        stock: v.stock ?? 999
       })) || []
-    );
+    )
     // 加载属性
     setAttributes(
       product.attributes?.map((a) => ({
         id: a.id,
         name: a.name,
         options: a.options,
-        required: a.required ?? false,
+        required: a.required ?? false
       })) || []
-    );
-    setStock(999); // TODO: 从后端获取单品库存
+    )
+    setStock(999) // TODO: 从后端获取单品库存
     form.reset({
       storeId: product.storeId,
       categoryId: product.categoryId,
       name: product.name,
-      description: product.description || "",
+      description: product.description || '',
       basePrice: Number(product.basePrice),
-      type: product.type as "SINGLE" | "VARIANT",
-    });
-    setDialogOpen(true);
-  };
+      type: product.type as 'SINGLE' | 'VARIANT'
+    })
+    setDialogOpen(true)
+  }
 
   // 规格管理
   const addVariant = () => {
-    setVariants([...variants, { name: "", price: 0, stock: 999 }]);
-  };
+    setVariants([...variants, { name: '', price: 0, stock: 999 }])
+  }
 
-  const updateVariant = (index: number, field: keyof Variant, value: any) => {
-    const newVariants = [...variants];
-    newVariants[index] = { ...newVariants[index], [field]: value };
-    setVariants(newVariants);
-  };
+  const updateVariant = (index: number, field: keyof Variant, value: string | number) => {
+    const newVariants = [...variants]
+    const updatedVariant = { ...newVariants[index], [field]: value } as Variant
+    newVariants[index] = updatedVariant
+    setVariants(newVariants)
+  }
 
   const removeVariant = (index: number) => {
-    setVariants(variants.filter((_, i) => i !== index));
-  };
+    setVariants(variants.filter((_, i) => i !== index))
+  }
 
   // 属性管理
   const addAttribute = () => {
-    setAttributes([...attributes, { name: "", options: [""], required: false }]);
-  };
+    setAttributes([...attributes, { name: '', options: [''], required: false }])
+  }
 
-  const updateAttribute = (index: number, field: keyof Attribute, value: any) => {
-    const newAttrs = [...attributes];
-    newAttrs[index] = { ...newAttrs[index], [field]: value };
-    setAttributes(newAttrs);
-  };
+  const updateAttribute = (
+    index: number,
+    field: keyof Attribute,
+    value: string | boolean | string[]
+  ) => {
+    const newAttrs = [...attributes]
+    const updatedAttr = { ...newAttrs[index], [field]: value } as Attribute
+    newAttrs[index] = updatedAttr
+    setAttributes(newAttrs)
+  }
 
   const removeAttribute = (index: number) => {
-    setAttributes(attributes.filter((_, i) => i !== index));
-  };
+    setAttributes(attributes.filter((_, i) => i !== index))
+  }
 
   const addOption = (attrIndex: number) => {
-    const newAttrs = [...attributes];
-    newAttrs[attrIndex].options.push("");
-    setAttributes(newAttrs);
-  };
+    const newAttrs = [...attributes]
+    newAttrs[attrIndex].options.push('')
+    setAttributes(newAttrs)
+  }
 
   const updateOption = (attrIndex: number, optIndex: number, value: string) => {
-    const newAttrs = [...attributes];
-    newAttrs[attrIndex].options[optIndex] = value;
-    setAttributes(newAttrs);
-  };
+    const newAttrs = [...attributes]
+    newAttrs[attrIndex].options[optIndex] = value
+    setAttributes(newAttrs)
+  }
 
   const removeOption = (attrIndex: number, optIndex: number) => {
-    const newAttrs = [...attributes];
-    newAttrs[attrIndex].options = newAttrs[attrIndex].options.filter((_, i) => i !== optIndex);
-    setAttributes(newAttrs);
-  };
+    const newAttrs = [...attributes]
+    newAttrs[attrIndex].options = newAttrs[attrIndex].options.filter((_, i) => i !== optIndex)
+    setAttributes(newAttrs)
+  }
 
   const onSubmit = (data: ProductFormData) => {
-    const submitData: any = {
+    const submitData = {
       ...data,
       imageUrl,
       type: productType,
-      variants: productType === "VARIANT" ? variants.filter((v) => v.name) : undefined,
-      attributes: attributes.filter((a) => a.name && a.options.some((o) => o)),
-    };
-    if (editingProduct) {
-      updateMutation.mutate({ id: editingProduct.id, data: submitData });
-    } else {
-      createMutation.mutate(submitData);
+      variants: productType === 'VARIANT' ? variants.filter((v) => v.name) : undefined,
+      attributes: attributes.filter((a) => a.name && a.options.some((o) => o))
     }
-  };
+    if (editingProduct) {
+      updateMutation.mutate({ id: editingProduct.id, data: submitData })
+    } else {
+      createMutation.mutate(submitData as any) // TODO: align ProductFormData with extra fields if needed or cast as needed
+    }
+  }
 
   const handleDelete = (id: number) => {
-    setDeletingProductId(id);
-    setDeleteDialogOpen(true);
-  };
+    setDeletingProductId(id)
+    setDeleteDialogOpen(true)
+  }
 
   const confirmDelete = () => {
     if (deletingProductId !== null) {
-      deleteMutation.mutate(deletingProductId);
-      setDeletingProductId(null);
+      deleteMutation.mutate(deletingProductId)
+      setDeletingProductId(null)
     }
-  };
+  }
 
   const handleStatusToggle = (product: Product) => {
-    const newStatus: ProductStatus = product.status === "AVAILABLE" ? "SOLDOUT" : "AVAILABLE";
-    statusMutation.mutate({ id: product.id, status: newStatus });
-  };
+    const newStatus: ProductStatus = product.status === 'AVAILABLE' ? 'SOLDOUT' : 'AVAILABLE'
+    statusMutation.mutate({ id: product.id, status: newStatus })
+  }
 
   return (
     <div className="space-y-6">
@@ -307,8 +313,8 @@ export default function ProductsPage() {
                 />
               </div>
               <Select
-                value={categoryId || "ALL"}
-                onValueChange={(v) => setCategoryId(v === "ALL" ? "" : v)}
+                value={categoryId || 'ALL'}
+                onValueChange={(v) => setCategoryId(v === 'ALL' ? '' : v)}
               >
                 <SelectTrigger className="w-[130px]">
                   <SelectValue placeholder="全部分类" />
@@ -367,7 +373,7 @@ export default function ProductsPage() {
                         {product.imageUrl ? (
                           <img
                             src={
-                              product.imageUrl.startsWith("http")
+                              product.imageUrl.startsWith('http')
                                 ? product.imageUrl
                                 : `${API_BASE}${product.imageUrl}`
                             }
@@ -385,15 +391,15 @@ export default function ProductsPage() {
                       <TableCell>{formatPrice(product.basePrice)}</TableCell>
                       <TableCell>{product.sales}</TableCell>
                       <TableCell>
-                        <Badge variant={product.type === "VARIANT" ? "secondary" : "outline"}>
-                          {product.type === "VARIANT" ? "多规格" : "单品"}
+                        <Badge variant={product.type === 'VARIANT' ? 'secondary' : 'outline'}>
+                          {product.type === 'VARIANT' ? '多规格' : '单品'}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={PRODUCT_STATUS_MAP[product.status]?.color || ""}
+                          className={PRODUCT_STATUS_MAP[product.status]?.color || ''}
                           onClick={() => handleStatusToggle(product)}
-                          style={{ cursor: "pointer" }}
+                          style={{ cursor: 'pointer' }}
                         >
                           {PRODUCT_STATUS_MAP[product.status]?.label}
                         </Badge>
@@ -452,7 +458,7 @@ export default function ProductsPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingProduct ? "编辑商品" : "添加商品"}</DialogTitle>
+            <DialogTitle>{editingProduct ? '编辑商品' : '添加商品'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <Tabs defaultValue="basic" className="w-full">
@@ -471,7 +477,7 @@ export default function ProductsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>商品名称 *</Label>
-                    <Input {...form.register("name")} placeholder="请输入商品名称" />
+                    <Input {...form.register('name')} placeholder="请输入商品名称" />
                     {form.formState.errors.name && (
                       <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
                     )}
@@ -479,9 +485,9 @@ export default function ProductsPage() {
                   <div className="space-y-2">
                     <Label>所属分类 *</Label>
                     <Select
-                      value={form.watch("categoryId") ? String(form.watch("categoryId")) : ""}
+                      value={form.watch('categoryId') ? String(form.watch('categoryId')) : ''}
                       onValueChange={(v) =>
-                        form.setValue("categoryId", Number(v), { shouldValidate: true })
+                        form.setValue('categoryId', Number(v), { shouldValidate: true })
                       }
                     >
                       <SelectTrigger>
@@ -504,7 +510,7 @@ export default function ProductsPage() {
                       type="number"
                       step="0.01"
                       min="0"
-                      {...form.register("basePrice", { valueAsNumber: true })}
+                      {...form.register('basePrice', { valueAsNumber: true })}
                       placeholder="请输入价格"
                     />
                   </div>
@@ -512,7 +518,7 @@ export default function ProductsPage() {
                     <Label>商品类型</Label>
                     <Select
                       value={productType}
-                      onValueChange={(v) => setProductType(v as "SINGLE" | "VARIANT")}
+                      onValueChange={(v) => setProductType(v as 'SINGLE' | 'VARIANT')}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -527,7 +533,7 @@ export default function ProductsPage() {
                 <div className="space-y-2">
                   <Label>描述</Label>
                   <Textarea
-                    {...form.register("description")}
+                    {...form.register('description')}
                     placeholder="请输入商品描述（选填）"
                     rows={3}
                   />
@@ -536,7 +542,7 @@ export default function ProductsPage() {
 
               {/* 规格/SKU */}
               <TabsContent value="variants" className="space-y-4 mt-4">
-                {productType === "SINGLE" ? (
+                {productType === 'SINGLE' ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
                     <p>当前为单品模式</p>
@@ -566,7 +572,7 @@ export default function ProductsPage() {
                               <Input
                                 placeholder="规格名称（如：大份、小份）"
                                 value={variant.name}
-                                onChange={(e) => updateVariant(index, "name", e.target.value)}
+                                onChange={(e) => updateVariant(index, 'name', e.target.value)}
                               />
                             </div>
                             <div className="w-24">
@@ -576,7 +582,7 @@ export default function ProductsPage() {
                                 placeholder="价格"
                                 value={variant.price}
                                 onChange={(e) =>
-                                  updateVariant(index, "price", Number(e.target.value))
+                                  updateVariant(index, 'price', Number(e.target.value))
                                 }
                               />
                             </div>
@@ -586,7 +592,7 @@ export default function ProductsPage() {
                                 placeholder="库存"
                                 value={variant.stock}
                                 onChange={(e) =>
-                                  updateVariant(index, "stock", Number(e.target.value))
+                                  updateVariant(index, 'stock', Number(e.target.value))
                                 }
                               />
                             </div>
@@ -630,13 +636,13 @@ export default function ProductsPage() {
                           <Input
                             placeholder="属性名称（如：辣度）"
                             value={attr.name}
-                            onChange={(e) => updateAttribute(attrIndex, "name", e.target.value)}
+                            onChange={(e) => updateAttribute(attrIndex, 'name', e.target.value)}
                             className="flex-1"
                           />
                           <div className="flex items-center gap-2">
                             <Switch
                               checked={attr.required}
-                              onCheckedChange={(v) => updateAttribute(attrIndex, "required", v)}
+                              onCheckedChange={(v) => updateAttribute(attrIndex, 'required', v)}
                             />
                             <span className="text-sm text-muted-foreground">必选</span>
                           </div>
@@ -695,7 +701,7 @@ export default function ProductsPage() {
                 取消
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {editingProduct ? "保存" : "添加"}
+                {editingProduct ? '保存' : '添加'}
               </Button>
             </DialogFooter>
           </form>
@@ -712,5 +718,5 @@ export default function ProductsPage() {
         cancelText="取消"
       />
     </div>
-  );
+  )
 }

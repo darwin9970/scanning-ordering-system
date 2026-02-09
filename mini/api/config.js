@@ -12,10 +12,10 @@ const isDev = process.env.NODE_ENV === 'development'
 export const config = {
   // API 基础地址
   baseUrl: isDev ? DEV_BASE_URL : PROD_BASE_URL,
-  
+
   // 请求超时时间 (毫秒)
   timeout: 10000,
-  
+
   // WebSocket 地址
   wsUrl: isDev ? 'ws://localhost:4000/ws' : 'wss://api.example.com/ws'
 }

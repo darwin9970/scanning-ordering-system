@@ -1,16 +1,16 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Trash2, GripVertical } from "lucide-react";
-import type { PageComponent } from "@/types";
-import { ComponentPreview } from "./ComponentPreview";
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { Button } from '@/components/ui/button'
+import { Eye, EyeOff, Trash2, GripVertical } from 'lucide-react'
+import type { PageComponent } from '@/types'
+import { ComponentPreview } from './ComponentPreview'
 
 interface SortableItemProps {
-  comp: PageComponent;
-  selectedId: string | null;
-  setSelectedId: (id: string) => void;
-  toggleVisibility: (id: string) => void;
-  deleteComponent: (id: string) => void;
+  comp: PageComponent
+  selectedId: string | null
+  setSelectedId: (id: string) => void
+  toggleVisibility: (id: string) => void
+  deleteComponent: (id: string) => void
 }
 
 export function SortableItem({
@@ -18,17 +18,17 @@ export function SortableItem({
   selectedId,
   setSelectedId,
   toggleVisibility,
-  deleteComponent,
+  deleteComponent
 }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: comp.id,
-  });
+    id: comp.id
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+    opacity: isDragging ? 0.5 : 1
+  }
 
   return (
     <div
@@ -36,11 +36,11 @@ export function SortableItem({
       style={style}
       onClick={() => setSelectedId(comp.id)}
       className={`relative group cursor-pointer transition-all ${
-        !comp.visible ? "opacity-40" : ""
+        !comp.visible ? 'opacity-40' : ''
       } ${
         selectedId === comp.id
-          ? "ring-2 ring-primary ring-inset"
-          : "hover:ring-2 hover:ring-primary/50 hover:ring-inset"
+          ? 'ring-2 ring-primary ring-inset'
+          : 'hover:ring-2 hover:ring-primary/50 hover:ring-inset'
       }`}
     >
       {/* 拖拽手柄 */}
@@ -60,8 +60,8 @@ export function SortableItem({
           variant="secondary"
           className="h-6 w-6"
           onClick={(e) => {
-            e.stopPropagation();
-            toggleVisibility(comp.id);
+            e.stopPropagation()
+            toggleVisibility(comp.id)
           }}
         >
           {comp.visible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
@@ -71,13 +71,13 @@ export function SortableItem({
           variant="destructive"
           className="h-6 w-6"
           onClick={(e) => {
-            e.stopPropagation();
-            deleteComponent(comp.id);
+            e.stopPropagation()
+            deleteComponent(comp.id)
           }}
         >
           <Trash2 className="h-3 w-3" />
         </Button>
       </div>
     </div>
-  );
+  )
 }

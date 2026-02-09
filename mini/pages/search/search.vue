@@ -8,9 +8,9 @@
           v-model="keyword"
           class="search-bar__input"
           placeholder="搜索商品名称"
+          :focus="autoFocus"
           @input="handleInput"
           @confirm="handleSearch"
-          :focus="autoFocus"
         />
         <view v-if="keyword" class="search-bar__clear" @tap="clearKeyword">
           <uni-icons type="clear" size="16" color="#999" />
@@ -70,8 +70,13 @@
             mode="aspectFill"
           />
           <view class="search-result-item__content">
-            <text class="search-result-item__name" v-html="highlightKeyword(product.name, keyword)"></text>
-            <text class="search-result-item__desc">{{ product.description }}</text>
+            <rich-text
+              class="search-result-item__name"
+              :nodes="highlightKeyword(product.name, keyword)"
+            />
+            <text class="search-result-item__desc">
+              {{ product.description }}
+            </text>
             <view class="search-result-item__footer">
               <q-price :value="product.price" size="medium" />
               <text class="search-result-item__sales">月售 {{ product.sales || 0 }}</text>
@@ -97,7 +102,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useTableStore } from '@/store/table'
 import QEmpty from '@/components/q-empty/q-empty.vue'
 import QSkeleton from '@/components/q-skeleton/q-skeleton.vue'
@@ -144,17 +149,17 @@ const performSearch = async () => {
   }
 
   loading.value = true
-  
+
   try {
     // 从 store 中搜索商品
     const allProducts = Object.values(tableStore.productsByCategory || {}).flat()
-    const results = allProducts.filter(product => {
+    const results = allProducts.filter((product) => {
       const name = (product.name || '').toLowerCase()
       const desc = (product.description || '').toLowerCase()
       const kw = keyword.value.toLowerCase()
       return name.includes(kw) || desc.includes(kw)
     })
-    
+
     searchResults.value = results
   } catch (error) {
     console.error('搜索失败:', error)
@@ -170,9 +175,9 @@ const performSearch = async () => {
 // 搜索确认
 const handleSearch = () => {
   if (!keyword.value.trim()) return
-  
+
   performSearch()
-  
+
   // 保存搜索历史
   if (!searchHistory.value.includes(keyword.value)) {
     searchHistory.value.unshift(keyword.value)
@@ -249,7 +254,7 @@ onMounted(() => {
   padding: 16rpx 24rpx;
   background: $bg-card;
   border-bottom: 1rpx solid $border-lighter;
-  
+
   &__input-wrap {
     flex: 1;
     display: flex;
@@ -259,19 +264,19 @@ onMounted(() => {
     background: $bg-grey;
     border-radius: 36rpx;
   }
-  
+
   &__input {
     flex: 1;
     margin-left: 12rpx;
     font-size: $font-size-base;
     color: $text-primary;
   }
-  
+
   &__clear {
     margin-left: 12rpx;
     padding: 8rpx;
   }
-  
+
   &__cancel {
     margin-left: 16rpx;
     font-size: $font-size-base;
@@ -284,31 +289,31 @@ onMounted(() => {
   padding: 24rpx;
   background: $bg-card;
   margin-bottom: 20rpx;
-  
+
   &__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16rpx;
   }
-  
+
   &__title {
     font-size: $font-size-md;
     font-weight: $font-weight-medium;
     color: $text-primary;
   }
-  
+
   &__clear {
     font-size: $font-size-sm;
     color: $text-tertiary;
   }
-  
+
   &__tags {
     display: flex;
     flex-wrap: wrap;
     gap: 16rpx;
   }
-  
+
   &__tag {
     padding: 12rpx 24rpx;
     background: $bg-grey;
@@ -322,20 +327,20 @@ onMounted(() => {
 .hot-search {
   padding: 24rpx;
   background: $bg-card;
-  
+
   &__title {
     font-size: $font-size-md;
     font-weight: $font-weight-medium;
     color: $text-primary;
     margin-bottom: 16rpx;
   }
-  
+
   &__tags {
     display: flex;
     flex-wrap: wrap;
     gap: 16rpx;
   }
-  
+
   &__tag {
     padding: 12rpx 24rpx;
     background: $primary-light;
@@ -349,16 +354,16 @@ onMounted(() => {
 // 搜索结果
 .search-results {
   padding: 24rpx;
-  
+
   &__header {
     margin-bottom: 20rpx;
   }
-  
+
   &__count {
     font-size: $font-size-sm;
     color: $text-secondary;
   }
-  
+
   &__list {
     display: flex;
     flex-direction: column;
@@ -372,28 +377,28 @@ onMounted(() => {
   background: $bg-card;
   border-radius: $radius-lg;
   box-shadow: $shadow-sm;
-  
+
   &__image {
     width: 160rpx;
     height: 160rpx;
     border-radius: $radius-md;
     flex-shrink: 0;
   }
-  
+
   &__content {
     flex: 1;
     margin-left: 20rpx;
     display: flex;
     flex-direction: column;
   }
-  
+
   &__name {
     font-size: $font-size-md;
     font-weight: $font-weight-medium;
     color: $text-primary;
     line-height: 1.5;
     margin-bottom: 8rpx;
-    
+
     :deep(.highlight) {
       color: $primary;
       font-weight: $font-weight-semibold;
@@ -402,7 +407,7 @@ onMounted(() => {
       border-radius: 4rpx;
     }
   }
-  
+
   &__desc {
     font-size: $font-size-sm;
     color: $text-tertiary;
@@ -411,14 +416,14 @@ onMounted(() => {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  
+
   &__footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-top: auto;
   }
-  
+
   &__sales {
     font-size: $font-size-sm;
     color: $text-tertiary;
@@ -427,27 +432,27 @@ onMounted(() => {
 
 .search-empty {
   padding-top: 200rpx;
-  
+
   &__action {
     margin-top: 40rpx;
     padding: 0 24rpx;
     display: flex;
     justify-content: center;
   }
-  
+
   &__btn {
     padding: 20rpx 48rpx;
     background: $primary;
-    color: #FFFFFF;
+    color: #ffffff;
     border: none;
     border-radius: $radius-base;
     font-size: $font-size-base;
     font-weight: $font-weight-medium;
-    
+
     &::after {
       display: none;
     }
-    
+
     &:active {
       opacity: 0.8;
     }
@@ -458,4 +463,3 @@ onMounted(() => {
   padding: 24rpx;
 }
 </style>
-

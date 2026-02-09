@@ -1,17 +1,17 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  output: "standalone",
+  output: 'standalone',
   // 允许外部图片域名
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "**",
-      },
-    ],
-  },
-};
+        protocol: 'https',
+        hostname: '**'
+      }
+    ]
+  }
+}
 
-export default nextConfig;
+export default nextConfig

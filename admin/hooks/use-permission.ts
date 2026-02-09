@@ -1,17 +1,17 @@
-"use client";
+'use client'
 
-import { useAuthStore } from "@/store/auth";
-import { hasPermission, hasAnyPermission, hasAllPermissions } from "@/lib/permissions";
-import type { Permission } from "@/types";
+import { useAuthStore } from '@/store/auth'
+import { hasPermission, hasAnyPermission, hasAllPermissions } from '@/lib/permissions'
+import type { Permission } from '@/types'
 
 /**
  * 权限检查 Hook
  * 使用后端返回的权限列表进行检查
  */
 export function usePermission() {
-  const { user } = useAuthStore();
-  const role = user?.role;
-  const permissions = user?.permissions;
+  const { user } = useAuthStore()
+  const role = user?.role
+  const permissions = user?.permissions
 
   return {
     // 当前用户角色
@@ -30,12 +30,12 @@ export function usePermission() {
     canAll: (perms: Permission[]) => hasAllPermissions(permissions, perms),
 
     // 是否是超级管理员
-    isSuperAdmin: role === "SUPER_ADMIN",
+    isSuperAdmin: role === 'SUPER_ADMIN',
 
     // 是否是店长及以上
-    isManager: role === "SUPER_ADMIN" || role === "OWNER",
+    isManager: role === 'SUPER_ADMIN' || role === 'OWNER',
 
     // 是否是员工
-    isStaff: role === "STAFF",
-  };
+    isStaff: role === 'STAFF'
+  }
 }

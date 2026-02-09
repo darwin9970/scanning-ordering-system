@@ -3,73 +3,53 @@
     <!-- 设置列表 -->
     <view class="settings-group">
       <view class="settings-item" @tap="goToProfile">
-        <text class="settings-item__label">
-          个人信息
-        </text>
+        <text class="settings-item__label">个人信息</text>
         <view class="settings-item__right">
           <uni-icons type="right" size="14" color="#CCCCCC" />
         </view>
       </view>
 
       <view class="settings-item" @tap="toggleNotification">
-        <text class="settings-item__label">
-          消息通知
-        </text>
+        <text class="settings-item__label">消息通知</text>
         <view class="settings-item__right">
-          <switch
-            :checked="settings.notification"
-            color="#FF6B35"
-            @change="onNotificationChange"
-          />
+          <switch :checked="settings.notification" color="#FF6B35" @change="onNotificationChange" />
         </view>
       </view>
     </view>
 
     <view class="settings-group">
       <view class="settings-item" @tap="showAbout">
-        <text class="settings-item__label">
-          关于我们
-        </text>
+        <text class="settings-item__label">关于我们</text>
         <view class="settings-item__right">
           <uni-icons type="right" size="14" color="#CCCCCC" />
         </view>
       </view>
 
       <view class="settings-item" @tap="showPrivacy">
-        <text class="settings-item__label">
-          隐私政策
-        </text>
+        <text class="settings-item__label">隐私政策</text>
         <view class="settings-item__right">
           <uni-icons type="right" size="14" color="#CCCCCC" />
         </view>
       </view>
 
       <view class="settings-item" @tap="showUserAgreement">
-        <text class="settings-item__label">
-          用户协议
-        </text>
+        <text class="settings-item__label">用户协议</text>
         <view class="settings-item__right">
           <uni-icons type="right" size="14" color="#CCCCCC" />
         </view>
       </view>
 
       <view class="settings-item">
-        <text class="settings-item__label">
-          当前版本
-        </text>
+        <text class="settings-item__label">当前版本</text>
         <view class="settings-item__right">
-          <text class="settings-item__value">
-            v1.0.0
-          </text>
+          <text class="settings-item__value">v1.0.0</text>
         </view>
       </view>
     </view>
 
     <view class="settings-group">
       <view class="settings-item" @tap="clearCache">
-        <text class="settings-item__label">
-          清除缓存
-        </text>
+        <text class="settings-item__label">清除缓存</text>
         <view class="settings-item__right">
           <text class="settings-item__value">
             {{ cacheSize }}
@@ -81,9 +61,7 @@
 
     <!-- 退出登录按钮 -->
     <view class="logout-section">
-      <q-button type="ghost" block @click="handleLogout">
-        退出登录
-      </q-button>
+      <q-button type="ghost" block @click="handleLogout">退出登录</q-button>
     </view>
   </view>
 </template>

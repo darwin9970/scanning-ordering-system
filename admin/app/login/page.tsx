@@ -1,38 +1,38 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/auth";
-import { api } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { UtensilsCrossed, Loader2 } from "lucide-react";
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/store/auth'
+import { api } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { UtensilsCrossed, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { setAuth } = useAuthStore();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const router = useRouter()
+  const { setAuth } = useAuthStore()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
     try {
-      const data = await api.login(username, password);
-      setAuth(data.user, data.token);
-      router.push("/dashboard");
+      const data = await api.login(username, password)
+      setAuth(data.user, data.token)
+      router.push('/dashboard')
     } catch (err: any) {
-      setError(err.message || "登录失败，请检查用户名和密码");
+      setError(err.message || '登录失败，请检查用户名和密码')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -80,5 +80,5 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

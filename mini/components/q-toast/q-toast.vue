@@ -1,14 +1,16 @@
 <template>
   <view v-if="visible" class="q-toast" :class="[`q-toast--${type}`, { 'q-toast--show': show }]">
     <view class="q-toast__content">
-      <uni-icons 
-        v-if="icon" 
-        :type="icon" 
-        :size="iconSize" 
+      <uni-icons
+        v-if="icon"
+        :type="icon"
+        :size="iconSize"
         :color="iconColor"
         class="q-toast__icon"
       />
-      <text class="q-toast__text">{{ message }}</text>
+      <text class="q-toast__text">
+        {{ message }}
+      </text>
     </view>
   </view>
 </template>
@@ -75,7 +77,7 @@ const showToast = () => {
   setTimeout(() => {
     show.value = true
   }, 50)
-  
+
   setTimeout(() => {
     hideToast()
   }, props.duration)
@@ -90,11 +92,15 @@ const hideToast = () => {
 }
 
 // 监听 message 变化
-watch(() => props.message, (newVal) => {
-  if (newVal) {
-    showToast()
-  }
-}, { immediate: true })
+watch(
+  () => props.message,
+  (newVal) => {
+    if (newVal) {
+      showToast()
+    }
+  },
+  { immediate: true }
+)
 
 onMounted(() => {
   if (props.message) {
@@ -117,11 +123,11 @@ defineExpose({
   z-index: $z-index-toast;
   opacity: 0;
   transition: opacity 0.3s $ease-out;
-  
+
   &--show {
     opacity: 1;
   }
-  
+
   &__content {
     display: flex;
     align-items: center;
@@ -133,37 +139,37 @@ defineExpose({
     max-width: 600rpx;
     box-shadow: $shadow-md;
   }
-  
+
   &__icon {
     margin-right: 12rpx;
     flex-shrink: 0;
   }
-  
+
   &__text {
     font-size: $font-size-base;
-    color: #FFFFFF;
+    color: #ffffff;
     line-height: 1.5;
   }
-  
+
   // 类型样式
   &--success {
     .q-toast__content {
       background: rgba(82, 196, 26, 0.9);
     }
   }
-  
+
   &--error {
     .q-toast__content {
       background: rgba(255, 77, 79, 0.9);
     }
   }
-  
+
   &--warning {
     .q-toast__content {
       background: rgba(250, 173, 20, 0.9);
     }
   }
-  
+
   &--info {
     .q-toast__content {
       background: rgba(24, 144, 255, 0.9);
@@ -171,4 +177,3 @@ defineExpose({
   }
 }
 </style>
-

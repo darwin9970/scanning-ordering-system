@@ -15,7 +15,7 @@ export function showSuccess(title, duration = 2000) {
     duration,
     mask: true
   })
-  
+
   // 触觉反馈
   // #ifdef MP-WEIXIN
   uni.vibrateShort({
@@ -37,7 +37,7 @@ export function showError(title, duration = 2000) {
     mask: true,
     image: '/static/images/icon-error.png' // 可选：自定义错误图标
   })
-  
+
   // 触觉反馈
   // #ifdef MP-WEIXIN
   uni.vibrateShort({
@@ -111,4 +111,3 @@ export function showActionError(action, reason) {
   const title = reason ? `${action}失败：${reason}` : `${action}失败，请重试`
   showError(title)
 }
-

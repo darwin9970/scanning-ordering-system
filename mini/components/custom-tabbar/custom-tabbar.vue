@@ -14,7 +14,9 @@
           :color="current === index ? '#FF6B35' : '#999999'"
         />
       </view>
-      <text class="tabbar-text">{{ item.text }}</text>
+      <text class="tabbar-text">
+        {{ item.text }}
+      </text>
     </view>
   </view>
 </template>
@@ -81,7 +83,7 @@ export default {
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -98,7 +100,7 @@ export default {
   flex: 1;
   padding: 16rpx 0 12rpx;
   transition: all 0.2s ease;
-  
+
   &:active {
     opacity: 0.7;
   }
@@ -112,7 +114,7 @@ export default {
   justify-content: center;
   border-radius: 24rpx;
   transition: all 0.25s ease;
-  
+
   &--active {
     background: rgba(255, 107, 53, 0.1);
     transform: scale(1.05);
@@ -125,9 +127,9 @@ export default {
   margin-top: 6rpx;
   font-weight: 400;
   transition: all 0.2s ease;
-  
+
   .active & {
-    color: #FF6B35;
+    color: #ff6b35;
     font-weight: 500;
   }
 }

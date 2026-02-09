@@ -1,13 +1,13 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { AdminWithStore } from "@/types";
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import type { AdminWithStore } from '@/types'
 
 interface AuthState {
-  user: AdminWithStore | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  setAuth: (user: AdminWithStore, token: string) => void;
-  logout: () => void;
+  user: AdminWithStore | null
+  token: string | null
+  isAuthenticated: boolean
+  setAuth: (user: AdminWithStore, token: string) => void
+  logout: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -17,21 +17,21 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       setAuth: (user, token) => {
-        localStorage.setItem("token", token);
-        set({ user, token, isAuthenticated: true });
+        localStorage.setItem('token', token)
+        set({ user, token, isAuthenticated: true })
       },
       logout: () => {
-        localStorage.removeItem("token");
-        set({ user: null, token: null, isAuthenticated: false });
-      },
+        localStorage.removeItem('token')
+        set({ user: null, token: null, isAuthenticated: false })
+      }
     }),
     {
-      name: "auth-storage",
+      name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
         token: state.token,
-        isAuthenticated: state.isAuthenticated,
-      }),
+        isAuthenticated: state.isAuthenticated
+      })
     }
   )
-);
+)

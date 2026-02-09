@@ -1,7 +1,7 @@
-import type { Permission } from "@/types";
+import type { Permission } from '@/types'
 
 // 重新导出 Permission 类型
-export type { Permission } from "@/types";
+export type { Permission } from '@/types'
 
 /**
  * 检查用户是否拥有指定权限
@@ -12,8 +12,8 @@ export function hasPermission(
   userPermissions: Permission[] | undefined,
   permission: Permission
 ): boolean {
-  if (!userPermissions || userPermissions.length === 0) return false;
-  return userPermissions.includes(permission);
+  if (!userPermissions || userPermissions.length === 0) return false
+  return userPermissions.includes(permission)
 }
 
 /**
@@ -23,8 +23,8 @@ export function hasAnyPermission(
   userPermissions: Permission[] | undefined,
   permissions: Permission[]
 ): boolean {
-  if (!userPermissions || userPermissions.length === 0) return false;
-  return permissions.some((p) => userPermissions.includes(p));
+  if (!userPermissions || userPermissions.length === 0) return false
+  return permissions.some((p) => userPermissions.includes(p))
 }
 
 /**
@@ -34,6 +34,6 @@ export function hasAllPermissions(
   userPermissions: Permission[] | undefined,
   permissions: Permission[]
 ): boolean {
-  if (!userPermissions || userPermissions.length === 0) return false;
-  return permissions.every((p) => userPermissions.includes(p));
+  if (!userPermissions || userPermissions.length === 0) return false
+  return permissions.every((p) => userPermissions.includes(p))
 }

@@ -1,16 +1,16 @@
 {
   // 保存时自动格式化
   "editor.formatOnSave": true,
-  
+
   // 保存时自动修复 ESLint 错误
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "never"
   },
-  
+
   // 默认格式化工具
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  
+
   // TypeScript/TSX 使用 Prettier
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -24,34 +24,48 @@
   "[javascriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[jsonc]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
   // ESLint 配置
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact", "vue"],
   "eslint.workingDirectories": [
     { "directory": "admin", "changeProcessCWD": true },
-    { "directory": "api", "changeProcessCWD": true }
+    { "directory": "api", "changeProcessCWD": true },
+    { "directory": "mini", "changeProcessCWD": true }
   ],
-  
+
+  // Prettier 要求使用配置文件
+  "prettier.requireConfig": true,
+
+  // 统一换行符为 LF
+  "files.eol": "\n",
+
   // TypeScript
   "typescript.tsdk": "admin/node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
-  
+
   // 文件关联
   "files.associations": {
     "*.css": "tailwindcss"
   },
-  
+
   // 排除文件
   "files.exclude": {
     "**/.git": true,
@@ -59,12 +73,14 @@
     "**/node_modules": true,
     "**/.next": true
   },
-  
+
   // 搜索排除
   "search.exclude": {
     "**/node_modules": true,
     "**/.next": true,
     "**/dist": true,
-    "**/.git": true
+    "**/.git": true,
+    "**/unpackage": true,
+    "**/uni_modules": true
   }
 }

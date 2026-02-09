@@ -1,121 +1,131 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  TableRow
+} from '@/components/ui/table'
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Plus, Store, Edit, Trash2, MapPin, Phone, Settings } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { toast } from "sonner";
+  DialogTitle
+} from '@/components/ui/dialog'
+import { Plus, Store as StoreIcon, Edit, Trash2, MapPin, Phone, Settings } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
+import { toast } from 'sonner'
+import type { Store } from '@/types'
+import type { StoreFormData } from '@/lib/validations'
 
 export default function StoresPage() {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingStore, setEditingStore] = useState<any>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingStoreId, setDeletingStoreId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    address: "",
-    phone: "",
-  });
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingStore, setEditingStore] = useState<Store | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deletingStoreId, setDeletingStoreId] = useState<number | null>(null)
+  const [formData, setFormData] = useState<StoreFormData>({
+    name: '',
+    address: '',
+    phone: ''
+  })
 
   const { data: stores, isLoading } = useQuery({
-    queryKey: ["stores"],
-    queryFn: () => api.getStores({ pageSize: 100 }),
-  });
+    queryKey: ['stores'],
+    queryFn: () => api.getStores({ pageSize: 100 })
+  })
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.createStore(data),
+    mutationFn: (data: StoreFormData) => api.createStore(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["stores"] });
-      setDialogOpen(false);
-      resetForm();
+      queryClient.invalidateQueries({ queryKey: ['stores'] })
+      setDialogOpen(false)
+      resetForm()
+      toast.success('门店创建成功')
     },
-  });
+    onError: (error: unknown) => {
+      toast.error('创建失败: ' + (error instanceof Error ? error.message : '未知错误'))
+    }
+  })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => api.updateStore(id, data),
+    mutationFn: ({ id, data }: { id: number; data: StoreFormData }) => api.updateStore(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["stores"] });
-      setDialogOpen(false);
-      resetForm();
+      queryClient.invalidateQueries({ queryKey: ['stores'] })
+      setDialogOpen(false)
+      resetForm()
+      toast.success('门店更新成功')
     },
-  });
+    onError: (error: unknown) => {
+      toast.error('更新失败: ' + (error instanceof Error ? error.message : '未知错误'))
+    }
+  })
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.deleteStore(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["stores"] });
-    },
-  });
+      queryClient.invalidateQueries({ queryKey: ['stores'] })
+    }
+  })
 
   const resetForm = () => {
-    setFormData({ name: "", address: "", phone: "" });
-    setEditingStore(null);
-  };
+    setFormData({ name: '', address: '', phone: '' })
+    setEditingStore(null)
+  }
 
   const openCreateDialog = () => {
-    resetForm();
-    setDialogOpen(true);
-  };
+    resetForm()
+    setDialogOpen(true)
+  }
 
-  const openEditDialog = (store: any) => {
-    setEditingStore(store);
+  const openEditDialog = (store: Store) => {
+    setEditingStore(store)
     setFormData({
       name: store.name,
-      address: store.address || "",
-      phone: store.phone || "",
-    });
-    setDialogOpen(true);
-  };
+      address: store.address || '',
+      phone: store.phone || ''
+    })
+    setDialogOpen(true)
+  }
 
   const handleSubmit = () => {
     if (editingStore) {
-      updateMutation.mutate({ id: editingStore.id, data: formData });
+      updateMutation.mutate({ id: editingStore.id, data: formData })
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(formData)
     }
-  };
+  }
 
   const handleDelete = (id: number) => {
-    setDeletingStoreId(id);
-    setDeleteDialogOpen(true);
-  };
+    setDeletingStoreId(id)
+    setDeleteDialogOpen(true)
+  }
 
   const confirmDelete = () => {
     if (deletingStoreId !== null) {
-      deleteMutation.mutate(deletingStoreId);
-      setDeletingStoreId(null);
+      deleteMutation.mutate(deletingStoreId)
+      setDeletingStoreId(null)
     }
-  };
+  }
 
   const statusMap: Record<string, { label: string; color: string }> = {
-    ACTIVE: { label: "营业中", color: "bg-green-100 text-green-800" },
-    CLOSED: { label: "已打烊", color: "bg-gray-100 text-gray-800" },
-    DISABLED: { label: "已停用", color: "bg-red-100 text-red-800" },
-  };
+    ACTIVE: { label: '营业中', color: 'bg-green-100 text-green-800' },
+    CLOSED: { label: '已打烊', color: 'bg-gray-100 text-gray-800' },
+    DISABLED: { label: '已停用', color: 'bg-red-100 text-red-800' }
+  }
 
   return (
     <div className="space-y-6">
@@ -153,30 +163,30 @@ export default function StoresPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {stores?.list.map((store: any) => (
+                {stores?.list.map((store: Store) => (
                   <TableRow key={store.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
-                        <Store className="h-4 w-4 text-muted-foreground" />
+                        <StoreIcon className="h-4 w-4 text-muted-foreground" />
                         {store.name}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
                         <MapPin className="h-3 w-3" />
-                        {store.address || "-"}
+                        {store.address || '-'}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1 text-sm">
                         <Phone className="h-3 w-3 text-muted-foreground" />
-                        {store.phone || "-"}
+                        {store.phone || '-'}
                       </div>
                     </TableCell>
                     <TableCell>{store._count?.tables || 0}</TableCell>
                     <TableCell>{store._count?.products || 0}</TableCell>
                     <TableCell>
-                      <Badge className={statusMap[store.status]?.color || ""}>
+                      <Badge className={statusMap[store.status]?.color || ''}>
                         {statusMap[store.status]?.label || store.status}
                       </Badge>
                     </TableCell>
@@ -210,7 +220,7 @@ export default function StoresPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingStore ? "编辑门店" : "添加门店"}</DialogTitle>
+            <DialogTitle>{editingStore ? '编辑门店' : '添加门店'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -243,7 +253,7 @@ export default function StoresPage() {
               取消
             </Button>
             <Button onClick={handleSubmit} disabled={!formData.name}>
-              {editingStore ? "保存" : "添加"}
+              {editingStore ? '保存' : '添加'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -259,5 +269,5 @@ export default function StoresPage() {
         cancelText="取消"
       />
     </div>
-  );
+  )
 }

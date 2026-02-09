@@ -1,23 +1,23 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { Providers } from "@/components/providers";
-import { Toaster } from "sonner";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { Providers } from '@/components/providers'
+import { Toaster } from 'sonner'
 
 const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
+  variable: '--font-inter',
+  subsets: ['latin']
+})
 
 export const metadata: Metadata = {
-  title: "扫码点单 - 后台管理系统",
-  description: "桌台扫码点单系统后台管理",
-};
+  title: '扫码点单 - 后台管理系统',
+  description: '桌台扫码点单系统后台管理'
+}
 
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="zh-CN">
@@ -26,5 +26,5 @@ export default function RootLayout({
         <Toaster position="top-right" richColors />
       </body>
     </html>
-  );
+  )
 }
